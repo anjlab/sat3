@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace FormulaCreator
 {
-    public class SimpleFormula : ITabularFormula
+    public class SimpleFormula : ICompactTripletsStructure
     {
         public int VarCount { get; private set;}
 
@@ -23,6 +24,24 @@ namespace FormulaCreator
         public IList<IList<ITriplet>> Tiers
         {
             get { return _tiers; }
+        }
+
+        public bool TiersSorted
+        {
+            get
+            {
+                var sorted = true;
+                for (var i = 0; i < Tiers.Count - 1; i++)
+                {
+                    if (_premutation.IndexOf(Tiers[i][0].AName) > 
+                        _premutation.IndexOf(Tiers[i + 1][0].AName))
+                    {
+                        sorted = false;
+                        break;
+                    }
+                }
+                return sorted;
+            }
         }
 
         public void SortTiers()
@@ -63,8 +82,7 @@ namespace FormulaCreator
                                   OrderIs(bIndex, cIndex, aIndex) ? new SimpleTriplet(triplet.BName, triplet.CName, triplet.AName) :
                                   OrderIs(cIndex, bIndex, aIndex) ? new SimpleTriplet(triplet.CName, triplet.BName, triplet.AName) :
                                   OrderIs(aIndex, cIndex, bIndex) ? new SimpleTriplet(triplet.AName, triplet.CName, triplet.BName) :
-                                                                    new SimpleTriplet(triplet.CName, triplet.AName, triplet.BName);
-                                  
+                                                                    new SimpleTriplet(triplet.CName, triplet.AName, triplet.BName) ;
             }
 
             if (targetTier.Contains(triplet))
@@ -174,6 +192,187 @@ namespace FormulaCreator
                 VarCount += 3;
             }
             Add(triplets);
+        }
+
+        public ICompactTripletsStructure Subtract(ITabularFormula formula)
+        {
+            var result = new SimpleFormula();
+
+            foreach (var tier in Tiers)
+            {
+                var subtracted = false;
+                foreach (var tier2 in formula.Tiers)
+                {
+                    if (tier2[0].CanonicalName.Equals(tier[0].CanonicalName))
+                    {
+                        //  Subtract
+
+                        foreach (var triplet in tier)
+                        {
+                            if (!tier2.Contains(triplet))
+                            {
+                                result.Add(triplet);
+                            }
+                        }
+
+                        subtracted = true;
+
+                        break;
+                    }
+                }
+                if (!subtracted)
+                {
+                    result.Add(tier);
+                }
+            }
+
+            result.Cleanup();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Runs clearing procedure on this formula.
+        /// </summary>
+        private void Cleanup()
+        {
+            if (!TiersSorted)
+            {
+                throw new InvalidOperationException("Tiers should be sorted");
+            }
+
+            if (Tiers.Count != VarCount - 2)
+            {
+                Clear();
+                return;
+            }
+
+            var removed = false;
+
+            for (var i = 0; i < Tiers.Count; i++)
+            {
+                var tier = Tiers[i];
+                for (var j = 0; j < tier.Count; j++)
+                {
+                    var triplet = tier[j];
+                    if (i > 0)
+                    {
+                        var prevTier = Tiers[i - 1];
+                        if (!ConcatenatesLeft(triplet, prevTier))
+                        {
+                            tier.RemoveAt(j);
+                            j--;
+                            removed = true;
+                            if (tier.Count == 0)
+                            {
+                                Clear();
+                                return;
+                            }
+                            continue;
+                        }
+                    }
+                    if (i < Tiers.Count - 1)
+                    {
+                        var nextTier = Tiers[i + 1];
+                        if (!ConcatenatesRight(triplet, nextTier))
+                        {
+                            tier.RemoveAt(j);
+                            j--;
+                            removed = true;
+                            if (tier.Count == 0)
+                            {
+                                Clear();
+                                return;
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+            if (removed)
+            {
+                Cleanup();
+            }
+        }
+
+        public ICompactTripletsStructure Union(ICompactTripletsStructure cts)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICompactTripletsStructure Intersect(ICompactTripletsStructure cts)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICompactTripletsStructure Concretize(int varName, bool value)
+        {
+            var result = new SimpleFormula();
+
+            //  Concretization should return CTS with the same premutation
+            foreach (var name in _premutation)
+            {
+                result._premutation.Add(name);
+            }
+            result.VarCount = VarCount;
+
+            foreach (var tier in Tiers)
+            {
+                foreach(var triplet in tier)
+                {
+                    if (!triplet.HasVariable(varName)
+                        || (triplet.AName == varName && triplet.NotA == value)
+                        || (triplet.BName == varName && triplet.NotB == value)
+                        || (triplet.CName == varName && triplet.NotC == value))
+                    {
+                        result.Add(triplet);
+                    }
+                }
+            }
+
+            result.Cleanup();
+
+            return result;
+        }
+
+        public bool IsEmpty
+        {
+            get { return TermCount == 0; }
+        }
+
+        private void Clear()
+        {
+            Tiers.Clear();
+            TermCount = 0;
+        }
+
+        private static bool ConcatenatesRight(ITriplet leftTriplet, IEnumerable<ITriplet> tier)
+        {
+            foreach (var rightTriplet in tier)
+            {
+                if (Concatenates(leftTriplet, rightTriplet))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool Concatenates(ITriplet leftTriplet, ITriplet rightTriplet)
+        {
+            return leftTriplet.NotB == rightTriplet.NotA && leftTriplet.NotC == rightTriplet.NotB;
+        }
+
+        private static bool ConcatenatesLeft(ITriplet rightTriplet, IEnumerable<ITriplet> tier)
+        {
+            foreach (var leftTriplet in tier)
+            {
+                if (Concatenates(leftTriplet, rightTriplet))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

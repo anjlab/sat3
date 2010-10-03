@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{C1F31E55-9297-4782-924E-D24B24E25EDE}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FormulaCreator</RootNamespace>
-    <AssemblyName>FormulaCreator</AssemblyName>
+    <RootNamespace>Tests</RootNamespace>
+    <AssemblyName>Tests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="nunit.framework, Version=2.4.3.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External References\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -45,21 +49,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helper.cs" />
-    <Compile Include="ICompactTripletsStructure.cs" />
-    <Compile Include="JoinMethods.cs" />
-    <Compile Include="ITabularFormula.cs" />
-    <Compile Include="ITriplet.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="TestCTSOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleFormula.cs" />
-    <Compile Include="SimpleTriplet.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="article-example.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Domain.cd" />
+    <ProjectReference Include="..\FormulaCreator\FormulaCreator.csproj">
+      <Project>{C1F31E55-9297-4782-924E-D24B24E25EDE}</Project>
+      <Name>FormulaCreator</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

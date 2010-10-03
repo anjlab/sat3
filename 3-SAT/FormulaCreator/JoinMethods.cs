@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace FormulaCreator
@@ -11,12 +10,12 @@ namespace FormulaCreator
             return new IJoinMethod[]
                        {
                            new Join3AsIs(),
-                           new JoinLeft1(),
+                           new JoinBetweenTiers2(),
                            new JoinLeft2(),
-                           new JoinRight1(),
                            new JoinRight2(),
+                           new JoinLeft1(),
+                           new JoinRight1(),
                            new JoinRight0(),
-                           new JoinBetweenTiers2()
                        };
         }
     }
@@ -376,11 +375,6 @@ namespace FormulaCreator
             }
 
             return result;
-        }
-
-        private static bool FirstIsInTheMiddle(ITabularFormula formula, int aIndex, int bIndex, int cIndex)
-        {
-            return aIndex >= 0 && aIndex > 1 && aIndex < formula.Premutation.Count - 2 && bIndex < 0 && cIndex < 0;
         }
     }
 }

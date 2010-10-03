@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace FormulaCreator
@@ -28,49 +27,94 @@ namespace FormulaCreator
 
             foreach (var tier in formula.Tiers)
             {
-                var dictionary = new Dictionary<int, IList<InternalJoinInfo>>();
+                //  Search possible CTFs to which the tier may join
+                var joinCandidates = GetJoinCandidates(ctf, tier);
 
-                foreach (var f in ctf)
+                if (joinCandidates.Count != 0)
                 {
-                    foreach (var method in JoinMethods.GetMethods())
-                    {
-                        var joinInfo = method.GetJoinInfo(f, tier[0]);
-
-                        if (joinInfo.ConcatenationPower >= 0)
-                        {
-                            var internalJoinInfo = new InternalJoinInfo(joinInfo, f);
-
-                            if (!dictionary.ContainsKey(joinInfo.ConcatenationPower))
-                            {
-                                var list = new List<InternalJoinInfo> {internalJoinInfo};
-                                dictionary.Add(joinInfo.ConcatenationPower, list);
-                            }
-                            else
-                            {
-                                dictionary[joinInfo.ConcatenationPower].Add(internalJoinInfo);
-                            }
-                        }
-                    }
-                }
-
-                if (dictionary.Count != 0)
-                {
-                    var joinInfo = PickAJoin(dictionary);
-                    joinInfo.Formula.ApplyJoin(joinInfo, tier);
+                    var join = PickAJoin(joinCandidates);
+                    join.Formula.ApplyJoin(join, tier);
                 }
                 else
                 {
                     var f = new SimpleFormula();
-                    var join = new JoinInfo(null)
-                                   {
-                                       TargetPremutation = tier[0]
-                                   };
-                    f.ApplyJoin(join, tier);
+                    f.ApplyJoin(new JoinInfo(null) { TargetPremutation = tier[0] }, tier);
                     ctf.Add(f);
                 }
             }
 
             return ctf;
+        }
+
+        public static ICompactTripletsStructure CreateCompleteCTS(IList<int> premutation)
+        {
+            var formula = new SimpleFormula();
+
+            for (var i = 0; i < premutation.Count - 2; i++)
+            {
+                var a = premutation[i];
+                var b = premutation[i + 1];
+                var c = premutation[i + 2];
+
+                var tier = CreateCompleteTier(a, b, c);
+
+                formula.Add(tier);
+            }
+
+            return formula;
+        }
+
+        private static IEnumerable<ITriplet> CreateCompleteTier(int a, int b, int c)
+        {
+            var tier = new List<ITriplet>(8);
+            for (var i = 1; i >= -1; i -= 2)
+                for (var j = 1; j >= -1; j -= 2)
+                    for (var k = 1; k >= -1; k -= 2)
+                        tier.Add(new SimpleTriplet(a*i, b*j, c*k));
+            return tier;
+        }
+
+        public static List<int> CompletePremutation(ICollection<int> premutation, IEnumerable<int> variables)
+        {
+            var result = new List<int>();
+            result.AddRange(premutation);
+            foreach (var variable in variables)
+            {
+                if (!premutation.Contains(variable))
+                {
+                    result.Add(variable);
+                }
+            }
+            return result;
+        }
+
+        private static Dictionary<int, IList<InternalJoinInfo>> GetJoinCandidates(IEnumerable<ITabularFormula> ctf, IList<ITriplet> tier)
+        {
+            var joinCandidates = new Dictionary<int, IList<InternalJoinInfo>>();
+
+            foreach (var f in ctf)
+            {
+                foreach (var method in JoinMethods.GetMethods())
+                {
+                    var joinInfo = method.GetJoinInfo(f, tier[0]);
+
+                    if (joinInfo.ConcatenationPower >= 0)
+                    {
+                        var internalJoinInfo = new InternalJoinInfo(joinInfo, f);
+
+                        if (!joinCandidates.ContainsKey(joinInfo.ConcatenationPower))
+                        {
+                            var list = new List<InternalJoinInfo> {internalJoinInfo};
+                            joinCandidates.Add(joinInfo.ConcatenationPower, list);
+                        }
+                        else
+                        {
+                            joinCandidates[joinInfo.ConcatenationPower].Add(internalJoinInfo);
+                        }
+                    }
+                }
+            }
+            return joinCandidates;
         }
 
         private static InternalJoinInfo PickAJoin(IDictionary<int, IList<InternalJoinInfo>> dictionary)
@@ -124,6 +168,7 @@ namespace FormulaCreator
 
         public static void PrettyPrint(ITabularFormula formula)
         {
+            Console.WriteLine(new string('-', 50));
             int longestVarName = 0;
             foreach (var varName in formula.Premutation)
             {
@@ -136,7 +181,7 @@ namespace FormulaCreator
             }
 
             var builder = new StringBuilder();
-            var spaces = new string(' ', longestVarName + 1);
+            var spaces = new string(' ', longestVarName + 2);
             for (int i = 0; i < formula.VarCount; i++)
             {
                 var varName = formula.Premutation[i];
@@ -145,35 +190,42 @@ namespace FormulaCreator
                 builder.Append(GetLegendName(varName));
             }
             builder.Append('\n');
-            foreach (var tier in formula.Tiers)
+            if (formula.IsEmpty)
             {
-                foreach (var triplet in tier)
+                builder.Append("<empty>\n");
+            }
+            else
+            {
+                foreach (var tier in formula.Tiers)
                 {
-                    for (var i = 0; i < formula.VarCount; i++)
+                    foreach (var triplet in tier)
                     {
-                        var varName = formula.Premutation[i];
+                        for (var i = 0; i < formula.VarCount; i++)
+                        {
+                            var varName = formula.Premutation[i];
 
-                        if (varName == triplet.AName)
-                        {
-                            builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
-                            builder.Append(triplet.NotA ? 1 : 0);
+                            if (varName == triplet.AName)
+                            {
+                                builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
+                                builder.Append(triplet.NotA ? 1 : 0);
+                            }
+                            else if (varName == triplet.BName)
+                            {
+                                builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
+                                builder.Append(triplet.NotB ? 1 : 0);
+                            }
+                            else if (varName == triplet.CName)
+                            {
+                                builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
+                                builder.Append(triplet.NotC ? 1 : 0);
+                            }
+                            else
+                            {
+                                builder.Append(spaces.Substring(0, GetLegendName(varName).Length + 1));
+                            }
                         }
-                        else if (varName == triplet.BName)
-                        {
-                            builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
-                            builder.Append(triplet.NotB ? 1 : 0);
-                        }
-                        else if (varName == triplet.CName)
-                        {
-                            builder.Append(spaces.Substring(0, GetLegendName(varName).Length));
-                            builder.Append(triplet.NotC ? 1 : 0);
-                        }
-                        else
-                        {
-                            builder.Append(spaces.Substring(0, GetLegendName(varName).Length + 1));
-                        }
+                        builder.Append('\n');
                     }
-                    builder.Append('\n');
                 }
             }
             builder.Append("VarCount: "
@@ -191,30 +243,25 @@ namespace FormulaCreator
 
         private static string GetLegendName(int varName)
         {
-            if (false)
-            {
-                return "x" + varName;
-            }
-            else
-            {
-                int count = 0;
+            return "x" + varName;
 
-                while (varName > ABC)
-                {
-                    var mod = varName%ABC;
-                    LegendBuffer[count] = (char) ('a' + mod - 1);
-                    varName = varName - ABC;
-                    count++;
-                }
-
-                if (varName > 0)
-                {
-                    LegendBuffer[count] = (char) ('a' + varName - 1);
-                    count++;
-                }
-
-                return new string(LegendBuffer, 0, count);
-            }
+//            int count = 0;
+//
+//            while (varName > ABC)
+//            {
+//                var mod = varName%ABC;
+//                LegendBuffer[count] = (char) ('a' + mod - 1);
+//                varName = varName - ABC;
+//                count++;
+//            }
+//
+//            if (varName > 0)
+//            {
+//                LegendBuffer[count] = (char) ('a' + varName - 1);
+//                count++;
+//            }
+//
+//            return new string(LegendBuffer, 0, count);
         }
 
         public static void SaveToFile(ITabularFormula formula, string filename)
@@ -253,15 +300,52 @@ namespace FormulaCreator
                 while ((line = reader.ReadLine()) != null)
                 {
                     var values = line.Split(',');
-                    var triplet = new SimpleTriplet(int.Parse(values[0]),
-                                                    int.Parse(values[1]),
-                                                    int.Parse(values[2]));
+                    var triplet = new SimpleTriplet(Int32.Parse(values[0]),
+                                                    Int32.Parse(values[1]),
+                                                    Int32.Parse(values[2]));
 
                     formula.Add(triplet);
                 }
 
                 return formula;
             }
+        }
+
+        public static List<ICompactTripletsStructure> CreateCTS(ITabularFormula formula, List<ITabularFormula> ctf)
+        {
+            var cts = new List<ICompactTripletsStructure>();
+
+            foreach (var f in ctf)
+            {
+                if (!f.TiersSorted)
+                {
+                    throw new InvalidOperationException("Tiers should be sorted");
+                }
+
+                var targetPremutation = CompletePremutation(f.Premutation, formula.Premutation);
+
+                var template = CreateCompleteCTS(targetPremutation);
+
+                var draftCTS = template.Subtract(f);
+
+                cts.Add(draftCTS);
+            }
+            return cts;
+        }
+
+        public static ITabularFormula CreateFormula(int[] values)
+        {
+            if (values.Length%3 != 0)
+            {
+                throw new ArgumentException("Number of values must be a multiple of 3");
+            }
+            var formula = new SimpleFormula();
+            for (var i = 0; i < values.Length; i +=3)
+            {
+                var triplet = new SimpleTriplet(values[i], values[i + 1], values[i + 2]);
+                formula.Add(triplet);
+            }
+            return formula;
         }
     }
 }

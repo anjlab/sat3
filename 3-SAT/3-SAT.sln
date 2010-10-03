@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormulaCreator", "FormulaCreator\FormulaCreator.csproj", "{C1F31E55-9297-4782-924E-D24B24E25EDE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{C1F31E55-9297-4782-924E-D24B24E25EDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1F31E55-9297-4782-924E-D24B24E25EDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1F31E55-9297-4782-924E-D24B24E25EDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAA4DED1-B2B8-405B-B7FD-09B50EB663AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

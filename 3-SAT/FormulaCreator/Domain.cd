@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="FormulaCreator.JoinInfo">
+    <Position X="8.5" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAIAAABAAAAAAAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JoinMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="FormulaCreator.ICompactTripletsStructure">
+    <Position X="4" Y="4" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>ICompactTripletsStructure.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="FormulaCreator.ITriplet">
+    <Position X="0.5" Y="0.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AABAAACAAAAAACgAAAAAAAAAAAAIAAAcAAABAAAAAgA=</HashCode>
+      <FileName>ITriplet.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="FormulaCreator.ITabularFormula">
+    <Position X="4.25" Y="0.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAJAAAAEAAAABAAAAAAAAABAAAAAAAAABQAAAIAAACA=</HashCode>
+      <FileName>ITabularFormula.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
