@@ -131,6 +131,20 @@ public class Helper
                         List<InternalJoinInfo> list = new ArrayList<InternalJoinInfo>();
                         list.add(internalJoinInfo);
                         joinCandidates.put(joinInfo.concatenationPower, list);
+                        
+                        //	According to current implementation of
+                        //	#pickAJoin() we always pick join with greatest
+                        //	concatenationPower.
+                        //	Now JoinMethods.getMethods() returns all
+                        //	joinMethods ordered by concatenation power (descending) 
+                        //	of possible joins they will find.
+                        //	Since in #pickAJoin() we always pick a join that was 
+                        //	founded by first joinMethod we may simply return 
+                        //	first join candidate.
+                        
+                        //	Note: Comment the following line if you want to change implementation of #pickAJoin()
+                        
+                        return joinCandidates;
                     }
                     else
                     {
@@ -151,6 +165,9 @@ public class Helper
         //  This implementation is a greedy algorithm 
     	//	which returns first founded join with maximum concatenation power
 
+    	//	If one want to change this algorithm, make sure you also changed
+    	//	#getJoinCandidates() (see comments in method body)
+    	
         for (int i = 3; i >= 0; i--)
         {
             if (dictionary.containsKey(i))

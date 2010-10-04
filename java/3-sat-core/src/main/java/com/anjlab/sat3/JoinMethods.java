@@ -6,6 +6,7 @@ public class JoinMethods
 	private static final IJoinMethod[] joinMethods = 
 						new IJoinMethod[]
 		                {
+							//	The order matters (see comments in Helper#getJoinCandidates() and Helper#pickAJoin()
 							new Join3AsIs(),
 					        new JoinBetweenTiers2(),
 					        new JoinLeft2(),
