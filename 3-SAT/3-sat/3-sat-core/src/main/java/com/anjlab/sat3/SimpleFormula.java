@@ -42,14 +42,14 @@ public class SimpleFormula implements ICompactTripletsStructure
 		tiersHash.put(tier.canonicalHashCode(), tier);
 	}
 	
-	public int getTermCount() {
-    	int termCount = 0;
+	public int getClausesCount() {
+    	int clausesCount = 0;
     	for (int i = 0; i < tiers.size(); i++)
     	{
     		ITier tier = tiers.get(i);
-			termCount += tier.size();
+			clausesCount += tier.size();
 		}
-    	return termCount;
+    	return clausesCount;
     }
     
     public int getVarCount() {
@@ -261,57 +261,25 @@ public class SimpleFormula implements ICompactTripletsStructure
         add(tier);
     }
 
-	public ICompactTripletsStructure subtract(ITabularFormula formula)
-    {
-        SimpleFormula result = new SimpleFormula(permutation, tiers);
-
-        for (int i = 0; i < tiers.size(); i++)
+	public void subtract(ITabularFormula formula)
+	{
+		SimpleFormula f = (SimpleFormula) formula;
+		for (int i = 0; i < tiers.size(); i++)
         {
         	ITier tier = tiers.get(i);
-            boolean subtracted = false;
-    		GenericArrayList<ITier> otherTiers = formula.getTiers();
-			for (int j = 0; j < otherTiers.size(); j++)
-    		{
-    			ITier other = otherTiers.get(j);
-                if (tier.hasSameVariablesAs(other))
-                {
-                    //  Subtract
-
-                    for (ITripletValue tripletValue : tier)
-                    {
-                        if (!other.contains(tripletValue))
-                        {
-                        	//	Since we created resulting formula 
-                        	//	based on the same tiers as this formula, 
-                        	//	tiers indices should be the same
-                            result.add(result.tiers.get(i), tripletValue);
-                        }
-                    }
-
-                    subtracted = true;
-
-                    break;
-                }
-            }
-            if (!subtracted)
-            {
-            	//	No tiers with same-name variables were in the formula
-            	ITier targetTier = result.tiers.get(i);
-                for (ITripletValue tripletValue : tier) {
-					result.add(targetTier, tripletValue);
-				}
-            }
+        	long key = tier.canonicalHashCode();
+        	if (!f.tiersHash.containsKey(key))
+        	{
+        		continue;
+        	}
+        	ITier t = (ITier) f.tiersHash.get(key);
+        	tier.subtract(t);
         }
 
-        result.cleanup();
+        cleanup();
+	}
 
-        return result;
-    }
-
-    /// <summary>
-    /// Runs clearing procedure on this formula.
-    /// </summary>
-    private void cleanup()
+    public void cleanup()
     {
         if (!tiersSorted())
         {
@@ -332,13 +300,13 @@ public class SimpleFormula implements ICompactTripletsStructure
             Iterator<ITripletValue> triplets = tier.iterator();
             while (triplets.hasNext())
             {
-                ITripletValue triplet = triplets.next();
+                ITripletValue tripletValue = triplets.next();
                 if (i > 0)
                 {
                     ITier prevTier = tiers.get(i - 1);
-                    if (!concatenatesLeft(triplet, prevTier))
+                    if (!concatenatesLeft(tripletValue, prevTier))
                     {
-                        tier.remove(triplet);
+                        tier.remove(tripletValue);
                         removed = true;
                         if (tier.size() == 0)
                         {
@@ -351,9 +319,9 @@ public class SimpleFormula implements ICompactTripletsStructure
                 if (i < tiers.size() - 1)
                 {
                     ITier nextTier = tiers.get(i + 1);
-                    if (!concatenatesRight(triplet, nextTier))
+                    if (!concatenatesRight(tripletValue, nextTier))
                     {
-                        tier.remove(triplet);
+                        tier.remove(tripletValue);
                         removed = true;
                         if (tier.size() == 0)
                         {
@@ -389,14 +357,14 @@ public class SimpleFormula implements ICompactTripletsStructure
         for (int i = 0; i < tiers.size(); i++)
         {
         	ITier tier = tiers.get(i);
-            for (ITripletValue triplet : tier)
+            for (ITripletValue tripletValue : tier)
             {
                 if (!tier.hasVariable(varName)
-                    || (tier.getAName() == varName && triplet.isNotA() == value)
-                    || (tier.getBName() == varName && triplet.isNotB() == value)
-                    || (tier.getCName() == varName && triplet.isNotC() == value))
+                    || (tier.getAName() == varName && tripletValue.isNotA() == value)
+                    || (tier.getBName() == varName && tripletValue.isNotB() == value)
+                    || (tier.getCName() == varName && tripletValue.isNotC() == value))
                 {
-                    result.add(result.tiers.get(i), triplet);
+                    result.add(result.tiers.get(i), tripletValue);
                 }
             }
         }
@@ -408,7 +376,7 @@ public class SimpleFormula implements ICompactTripletsStructure
 
     public boolean isEmpty()
     {
-        return getTermCount() == 0;
+        return getClausesCount() == 0;
     }
 
     private void clear()
@@ -449,7 +417,7 @@ public class SimpleFormula implements ICompactTripletsStructure
     {
     	return permutation.toString() 
     	     + " : varCount=" + getVarCount() 
-    	     + ", termCount=" + getTermCount() 
-    	     + ", tierCount=" + tiers.size();
+    	     + ", clausesCount=" + getClausesCount() 
+    	     + ", tiersCount=" + tiers.size();
     }
 }

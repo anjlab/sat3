@@ -25,25 +25,25 @@ public class TestCTSOperations
 //              1  0  1   
 //                 0  1  0
 //                 0  0  1
-//            VarCount: 4; TermCount: 4; TiersCount: 2
+//            VarCount: 4; ClausesCount: 4; TiersCount: 2
 
     	ICompactTripletsStructure s2 = s1.concretize(3, true);
 
 //             x4 x1 x2 x3
 //              0  1  1   
 //                 1  1  1
-//            VarCount: 4; TermCount: 2; TiersCount: 2
+//            VarCount: 4; ClausesCount: 2; TiersCount: 2
 
         Helper.prettyPrint(s1);
         Helper.prettyPrint(s2);
 
-        assertEquals(2, s2.getTermCount());
+        assertEquals(2, s2.getClausesCount());
         assertEquals(SimpleTripletValueFactory._101_instance, s2.getTiers().get(0).iterator().next());
         assertEquals(SimpleTripletValueFactory._010_instance, s2.getTiers().get(1).iterator().next());
     }
 
     @Test
-    public void TestConcretizeWithCleanup()
+    public void testConcretizeWithCleanup()
     {
     	ICompactTripletsStructure s1 = (ICompactTripletsStructure)
                  Helper.createFormula(
@@ -62,7 +62,7 @@ public class TestCTSOperations
 //                 0  1  0   
 //                 0  0  1   
 //                    0  1  0
-//            VarCount: 5; TermCount: 5; TiersCount: 3
+//            VarCount: 5; ClausesCount: 5; TiersCount: 3
 
     	ICompactTripletsStructure s2 = s1.concretize(2, true);
 
@@ -73,7 +73,7 @@ public class TestCTSOperations
     }
 
     @Test
-    public void TestUnion()
+    public void testUnion()
     {
     	ICompactTripletsStructure s1 = (ICompactTripletsStructure)
                  Helper.createFormula(
@@ -90,7 +90,7 @@ public class TestCTSOperations
 //              1  0  1   
 //                 0  1  0
 //                 0  0  1
-//            VarCount: 4; TermCount: 4; TiersCount: 2
+//            VarCount: 4; ClausesCount: 4; TiersCount: 2
 
     	ICompactTripletsStructure s2 = (ICompactTripletsStructure)
                  Helper.createFormula(
@@ -107,9 +107,33 @@ public class TestCTSOperations
 //              0  1  1   
 //                 0  0  0
 //                 1  1  1
-//            VarCount: 4; TermCount: 4; TiersCount: 2
+//            VarCount: 4; ClausesCount: 4; TiersCount: 2
 
         Helper.prettyPrint(s1);
         Helper.prettyPrint(s2);
+    }
+    
+    @Test
+    public void testSubtract()
+    {
+    	SimpleTier t1 = SimpleTier.createCompleteTier(1, 2, 3);
+    	
+    	SimpleTier t2 = new SimpleTier(1, 2, 3);
+    	t2.add(SimpleTripletValueFactory._001_instance);
+    	t2.add(SimpleTripletValueFactory._101_instance);
+    	
+    	t1.subtract(t2);
+    	
+    	assertEquals(6, t1.size());
+    	
+    	assertTrue(t1.contains(SimpleTripletValueFactory._000_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._010_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._011_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._100_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._110_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._111_instance));
+    	
+    	assertTrue(!t1.contains(SimpleTripletValueFactory._001_instance));
+    	assertTrue(!t1.contains(SimpleTripletValueFactory._101_instance));
     }
 }

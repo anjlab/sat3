@@ -21,7 +21,7 @@ public class TestLoadSave {
         prettyPrint(formula);
         
         assertEquals(8, formula.getVarCount());
-        assertEquals(44, formula.getTermCount());
+        assertEquals(44, formula.getClausesCount());
 	}
 	
 	@Test
@@ -36,7 +36,7 @@ public class TestLoadSave {
         ITabularFormula formula2 = loadFromDIMACSFileFormat("target/test-classes/test.cnf");
         
         assertEquals(formula.getVarCount(), formula2.getVarCount());
-        assertEquals(formula.getTermCount(), formula2.getTermCount());
+        assertEquals(formula.getClausesCount(), formula2.getClausesCount());
 	}
 
 	@Test
@@ -47,8 +47,8 @@ public class TestLoadSave {
         long end = System.currentTimeMillis();
         
         System.out.println("varCount=" + formula.getVarCount() 
-        		+ ", termCount=" + formula.getTermCount()
-        		+ ", tierCount=" + formula.getTiers().size()
+        		+ ", clausesCount=" + formula.getClausesCount()
+        		+ ", tiersCount=" + formula.getTiers().size()
         		+ ", loadTime=" + (end - start));
     }
 }

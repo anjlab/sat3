@@ -4,27 +4,19 @@ public class StopWatch
 {
 	private long start;
 	private long end;
-	public StopWatch(boolean startImediately)
+	private String comment;
+
+	public void start(String comment)
 	{
-		if (startImediately)
-		{
-			start();
-		}
-	}
-	public void start()
-	{
+		this.comment = comment;
 		start = System.currentTimeMillis();
 	}
-	private void stop()
+	public void stop()
 	{
 		end = System.currentTimeMillis();
 	}
-	public void nextLap(String comment)
+	public void printElapsed()
 	{
-		stop();
-		
 		System.out.println(comment + ": " + (end - start) + "ms");
-		
-		start();
 	}
 }

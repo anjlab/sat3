@@ -1,10 +1,9 @@
 package com.anjlab.sat3;
 
-
 public interface ITabularFormula
 {
     int getVarCount();
-    int getTermCount();
+    int getClausesCount();
     GenericArrayList<ITier> getTiers();
     boolean tiersSorted();
     void sortTiers();

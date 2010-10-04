@@ -163,18 +163,18 @@ public class Helper
         throw new RuntimeException();
     }
 
-    public static ITabularFormula createRandomFormula(Random random, int varCount, int termCount)
+    public static ITabularFormula createRandomFormula(Random random, int varCount, int clausesCount)
     {
     	int mMax = getMaxNumberOfUniqueTriplets(varCount);
     	
-		if (termCount > mMax) { 
+		if (clausesCount > mMax) { 
     		throw new IllegalArgumentException(MessageFormat
-				.format("3-SAT formula of {0} variables may have at most {1} valuable terms, but requested to create formula with " + termCount + " terms",
+				.format("3-SAT formula of {0} variables may have at most {1} valuable clauses, but requested to create formula with " + clausesCount + " clauses",
 						varCount, mMax));
 		}
     	
         ITabularFormula formula = new SimpleFormula();
-        while (formula.getTermCount() < termCount)
+        while (formula.getClausesCount() < clausesCount)
         {
             formula.add(createRandomTriplet(random, varCount));
         }
@@ -241,7 +241,7 @@ public class Helper
 	    		for (int j = 0; j < tiers.size(); j++)
 	    		{
 	    			ITier tier = tiers.get(j);
-	                for (ITripletValue triplet : tier)
+	                for (ITripletValue tripletValue : tier)
 	                {
 	                    for (int i = 0; i < formula.getVarCount(); i++)
 	                    {
@@ -250,18 +250,18 @@ public class Helper
 	                        if (varName == tier.getAName())
 	                        {
 	                            builder.append(spaces.substring(0, getLegendName(varName).length()));
-	                            builder.append(triplet.isNotA() ? 1 : 0);
+	                            builder.append(tripletValue.isNotA() ? 1 : 0);
 	                        }
 	                        else if (varName == tier.getBName())
 	                        {
 	                            builder.append(spaces.substring(0, getLegendName(varName).length()));
-	                            builder.append(triplet.isNotB() ? 1 : 0);
+	                            builder.append(tripletValue.isNotB() ? 1 : 0);
 	                        }
 	                        else if (varName == tier.getCName())
 	                        {
 	                            builder.append(spaces.substring(0, getLegendName(varName).length()
 	                            		));
-	                            builder.append(triplet.isNotC() ? 1 : 0);
+	                            builder.append(tripletValue.isNotC() ? 1 : 0);
 	                        }
 	                        else
 	                        {
@@ -276,9 +276,9 @@ public class Helper
     	
         builder.append("VarCount: "
                        + formula.getVarCount()
-                       + "; TermCount: "
-                       + formula.getTermCount()
-                       + "; TierCount: "
+                       + "; ClausesCount: "
+                       + formula.getClausesCount()
+                       + "; TiersCount: "
                        + formula.getTiers().size());
 
         System.out.println(builder);
@@ -320,21 +320,21 @@ public class Helper
 			builder.append("p cnf ");
 			builder.append(formula.getVarCount());
 			builder.append(" ");
-			builder.append(formula.getTermCount());
+			builder.append(formula.getClausesCount());
 			builder.append('\n');
 	        GenericArrayList<ITier> tiers = formula.getTiers();
 			for (int i = 0; i < tiers.size(); i++)
 			{
 				ITier tier = tiers.get(i);
-	            for (ITripletValue triplet : tier)
+	            for (ITripletValue tripletValue : tier)
 	            {
-	                if (triplet.isNotA()) builder.append('-');
+	                if (tripletValue.isNotA()) builder.append('-');
 	                builder.append(tier.getAName());
 	                builder.append(' ');
-	                if (triplet.isNotB()) builder.append('-');
+	                if (tripletValue.isNotB()) builder.append('-');
 	                builder.append(tier.getBName());
 	                builder.append(' ');
-	                if (triplet.isNotC()) builder.append('-');
+	                if (tripletValue.isNotC()) builder.append('-');
 	                builder.append(tier.getCName());
 	                builder.append(" 0\n");
 	            }
@@ -369,7 +369,7 @@ public class Helper
     	}
     }
 
-	public static GenericArrayList<ICompactTripletsStructure> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
+	public static GenericArrayList<? extends ITabularFormula> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
     {
         GenericArrayList<ICompactTripletsStructure> cts = new GenericArrayList<ICompactTripletsStructure>(ctf.size());
 
@@ -386,13 +386,13 @@ public class Helper
 
             ICompactTripletsStructure template = createCompleteCTS(targetPermutation);
 
-            ICompactTripletsStructure draftCTS = template.subtract(f);
+            template.subtract(f);
 
-            cts.add(draftCTS);
+            cts.add(template);
         }
         return cts;
     }
-
+	
     public static ITabularFormula createFormula(int[] values)
     {
         if (values.length%3 != 0)
@@ -469,7 +469,7 @@ public class Helper
 //					
 //					if (lineNumber % 1000 == 0)
 //					{
-//						System.out.println((System.currentTimeMillis() - prevTime) + " " + lineNumber + " vc=" + formula.getVarCount() + " tc=" + formula.getTermCount() + " t=" + formula.getTiers().size());
+//						System.out.println((System.currentTimeMillis() - prevTime) + " " + lineNumber + " vc=" + formula.getVarCount() + " tc=" + formula.getClausesCount() + " t=" + formula.getTiers().size());
 //						prevTime = System.currentTimeMillis();
 //					}
 					

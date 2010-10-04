@@ -185,4 +185,16 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 		builder.append(getCName());
 		return builder.toString();
 	}
+
+	public void subtract(ITier tier)
+	{
+		if (size != 8)
+			throw new UnsupportedOperationException("Operation implemented only when subtracting from complete tier");
+		
+		if (canonicalHashCode() != tier.canonicalHashCode())
+			throw new IllegalArgumentException("Cannot subtract tiers with different set of variables: " + this + " and " + tier);
+		
+		size -= tier.size();
+		keys = keys ^ ((SimpleTier) tier).keys;
+	}
 }

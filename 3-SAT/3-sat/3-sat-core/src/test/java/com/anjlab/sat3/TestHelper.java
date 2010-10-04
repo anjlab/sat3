@@ -18,7 +18,7 @@ public class TestHelper {
 		ITabularFormula formula = Helper.createRandomFormula(new Random(), 3, 6);
 		
 		assertEquals(3, formula.getVarCount());
-		assertEquals(6, formula.getTermCount());
+		assertEquals(6, formula.getClausesCount());
 		
 		try
 		{
@@ -28,7 +28,7 @@ public class TestHelper {
 		}
 		catch (IllegalArgumentException e)
 		{
-			assertEquals("3-SAT formula of 4 variables may have at most 64 valuable terms, but requested to create formula with 700 terms", e.getMessage());
+			assertEquals("3-SAT formula of 4 variables may have at most 64 valuable clauses, but requested to create formula with 700 clauses", e.getMessage());
 		}
 	}
 }

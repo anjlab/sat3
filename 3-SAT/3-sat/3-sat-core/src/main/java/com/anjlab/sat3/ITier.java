@@ -10,4 +10,6 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
 	void remove(ITripletValue triplet);
 
+	void subtract(ITier tier);
+
 }

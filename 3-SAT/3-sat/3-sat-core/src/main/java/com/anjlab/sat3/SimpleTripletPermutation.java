@@ -16,13 +16,13 @@ public class SimpleTripletPermutation implements ITripletPermutation
 	{
 		//	See comments in #setCanonicalName()
 		if (a > _2_power_21 || b > _2_power_21 || c > _2_power_21)
-			throw new IndexOutOfBoundsException("a > _2_power_21 || b > _2_power_21 || c > _2_power_21");
+			throw new IndexOutOfBoundsException("a > _2_power_21 || b > _2_power_21 || c > _2_power_21 (" + a + "," + b + "," + c + ")");
 			
 		if (a <= 0 || b <= 0 || c <= 0)
-			throw new IllegalArgumentException("a <= 0 || b <= 0 || c <= 0");
+			throw new IllegalArgumentException("a <= 0 || b <= 0 || c <= 0 (" + a + "," + b + "," + c + ")");
 		
         if (a == b || b == c || a == c)
-            throw new IllegalArgumentException("a == b || b == c || a == c");
+            throw new IllegalArgumentException("a == b || b == c || a == c (" + a + "," + b + "," + c + ")");
 
         this.a = a;
         this.b = b;
