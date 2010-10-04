@@ -46,8 +46,8 @@ public class SimpleTripletValueFactory {
 		return (IMutableTripletValue) values.get(key);
 	}
 
-	public static ITripletValue getTripletValue(int key) {
-		ITripletValue tripletValue = (ITripletValue) values.get(key);
+	public static ITripletValue getTripletValue(int tierKey) {
+		ITripletValue tripletValue = (ITripletValue) values.get(tierKey);
 		return tripletValue;
 	}
 	

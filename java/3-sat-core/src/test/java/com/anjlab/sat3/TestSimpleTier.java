@@ -8,7 +8,7 @@ public class TestSimpleTier {
 	@Test
 	public void testAddSameTripletSeveralTimes()
 	{
-		SimpleTier tier = new SimpleTier(1, 2, 3);
+		ITier tier = new SimpleTier(1, 2, 3);
 		
 		tier.add(new SimpleTriplet(1, 2, 3));
 		tier.add(new SimpleTriplet(1, 2, 3));
@@ -22,7 +22,7 @@ public class TestSimpleTier {
 	@Test
 	public void testRemoveTriplet()
 	{
-		SimpleTier tier = new SimpleTier(1, 2, 3);
+		ITier tier = new SimpleTier(1, 2, 3);
 		
 		tier.add(new SimpleTriplet(1, 2, 3));
 		tier.add(new SimpleTriplet(1, -2, 3));
@@ -39,7 +39,7 @@ public class TestSimpleTier {
 	@Test
 	public void testTripletsIterator()
 	{
-		SimpleTier tier = new SimpleTier(1, 2, 3);
+		ITier tier = new SimpleTier(1, 2, 3);
 		
 		tier.add(new SimpleTriplet(1, 2, 3));
 		tier.add(new SimpleTriplet(1, -2, 3));
@@ -52,7 +52,7 @@ public class TestSimpleTier {
 	@Test
 	public void testFullTierIterator()
 	{
-		SimpleTier tier = new SimpleTier(1, 2, 3);
+		ITier tier = new SimpleTier(1, 2, 3);
 		
 		tier.add(SimpleTripletValueFactory._000_instance);
 		tier.add(SimpleTripletValueFactory._001_instance);

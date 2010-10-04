@@ -116,9 +116,9 @@ public class TestCTSOperations
     @Test
     public void testSubtract()
     {
-    	SimpleTier t1 = SimpleTier.createCompleteTier(1, 2, 3);
+    	ITier t1 = SimpleTier.createCompleteTier(1, 2, 3);
     	
-    	SimpleTier t2 = new SimpleTier(1, 2, 3);
+    	ITier t2 = new SimpleTier(1, 2, 3);
     	t2.add(SimpleTripletValueFactory._001_instance);
     	t2.add(SimpleTripletValueFactory._101_instance);
     	
@@ -136,4 +136,49 @@ public class TestCTSOperations
     	assertTrue(!t1.contains(SimpleTripletValueFactory._001_instance));
     	assertTrue(!t1.contains(SimpleTripletValueFactory._101_instance));
     }
+    
+    @Test
+    public void testAdjoinRight()
+    {
+    	ITier t1 = new SimpleTier(1, 2, 3);
+    	t1.add(SimpleTripletValueFactory._000_instance);
+    	t1.add(SimpleTripletValueFactory._001_instance);
+    	t1.add(SimpleTripletValueFactory._011_instance);
+    	
+    	ITier t2 = new SimpleTier(2, 3, 4);
+    	t2.add(SimpleTripletValueFactory._001_instance);
+    	t2.add(SimpleTripletValueFactory._001_instance);
+    	t2.add(SimpleTripletValueFactory._111_instance);
+    	
+    	t1.adjoinRight(t2);
+    	
+    	assertEquals(2, t1.size());
+    	assertTrue(t1.contains(SimpleTripletValueFactory._000_instance));
+    	assertTrue(t1.contains(SimpleTripletValueFactory._011_instance));
+    	
+    	assertTrue(!t1.contains(SimpleTripletValueFactory._001_instance));
+    }
+    
+    @Test
+    public void testAdjoinLeft()
+    {
+    	ITier t1 = new SimpleTier(1, 2, 3);
+    	t1.add(SimpleTripletValueFactory._001_instance);
+    	t1.add(SimpleTripletValueFactory._011_instance);
+    	t1.add(SimpleTripletValueFactory._111_instance);
+
+    	ITier t2 = new SimpleTier(2, 3, 4);
+    	t2.add(SimpleTripletValueFactory._000_instance);
+    	t2.add(SimpleTripletValueFactory._001_instance);
+    	t2.add(SimpleTripletValueFactory._011_instance);
+
+    	t2.adjoinLeft(t1);
+    	
+    	assertEquals(1, t2.size());
+    	assertTrue(t2.contains(SimpleTripletValueFactory._011_instance));
+    	
+    	assertTrue(!t2.contains(SimpleTripletValueFactory._000_instance));
+    	assertTrue(!t2.contains(SimpleTripletValueFactory._001_instance));
+    }
+
 }

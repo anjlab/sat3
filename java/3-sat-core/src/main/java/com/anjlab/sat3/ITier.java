@@ -12,4 +12,8 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
 	void subtract(ITier tier);
 
+	public abstract void adjoinLeft(ITier tier);
+
+	public abstract void adjoinRight(ITier tier);
+
 }

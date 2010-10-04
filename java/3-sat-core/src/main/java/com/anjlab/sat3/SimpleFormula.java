@@ -1,7 +1,6 @@
 package com.anjlab.sat3;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import cern.colt.map.OpenLongObjectHashMap;
@@ -294,45 +293,25 @@ public class SimpleFormula implements ICompactTripletsStructure
 
         boolean removed = false;
 
+        int size = 0;
+        
         for (int i = 0; i < tiers.size(); i++)
         {
             ITier tier = tiers.get(i);
-            Iterator<ITripletValue> triplets = tier.iterator();
-            while (triplets.hasNext())
+            if (i > 0)
             {
-                ITripletValue tripletValue = triplets.next();
-                if (i > 0)
-                {
-                    ITier prevTier = tiers.get(i - 1);
-                    if (!concatenatesLeft(tripletValue, prevTier))
-                    {
-                        tier.remove(tripletValue);
-                        removed = true;
-                        if (tier.size() == 0)
-                        {
-                            clear();
-                            return;
-                        }
-                        continue;
-                    }
-                }
-                if (i < tiers.size() - 1)
-                {
-                    ITier nextTier = tiers.get(i + 1);
-                    if (!concatenatesRight(tripletValue, nextTier))
-                    {
-                        tier.remove(tripletValue);
-                        removed = true;
-                        if (tier.size() == 0)
-                        {
-                            clear();
-                            return;
-                        }
-                        continue;
-                    }
-                }
+            	size = tier.size();
+            	tier.adjoinLeft(tiers.get(i - 1));
+            	removed = tier.size() != size;
+            }
+            if (i < tiers.size() - 1)
+            {
+            	size = tier.size();
+            	tier.adjoinRight(tiers.get(i + 1));
+            	removed = tier.size() != size;
             }
         }
+        
         if (removed)
         {
             cleanup();
@@ -382,35 +361,6 @@ public class SimpleFormula implements ICompactTripletsStructure
     private void clear()
     {
         tiers.clear();
-    }
-
-    private static boolean concatenatesRight(ITripletValue leftTriplet, ITier tier)
-    {
-        for (ITripletValue rightTriplet : tier)
-        {
-            if (concatenates(leftTriplet, rightTriplet))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean concatenates(ITripletValue leftTriplet, ITripletValue rightTriplet)
-    {
-        return leftTriplet.isNotB() == rightTriplet.isNotA() && leftTriplet.isNotC() == rightTriplet.isNotB();
-    }
-
-    private static boolean concatenatesLeft(ITripletValue rightTriplet, ITier tier)
-    {
-        for (ITripletValue leftTriplet : tier)
-        {
-            if (concatenates(leftTriplet, rightTriplet))
-            {
-                return true;
-            }
-        }
-        return false;
     }
     
     public String toString()
