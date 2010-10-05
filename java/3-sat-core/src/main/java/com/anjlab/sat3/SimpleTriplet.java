@@ -2,65 +2,35 @@ package com.anjlab.sat3;
 
 import java.text.MessageFormat;
 
-public class SimpleTriplet extends SimpleTripletPermutation implements ITriplet
+public class SimpleTriplet extends SimpleTier implements ITriplet
 {
-	private IMutableTripletValue value;
-
-	public SimpleTriplet(int a, int b, int c)
+    public SimpleTriplet(int a, int b, int c)
     {
-    	super(Math.abs(a), Math.abs(b), Math.abs(c));
-    	
-    	value = SimpleTripletValueFactory.getTripletValue(a, b, c);
+        super(Math.abs(a), Math.abs(b), Math.abs(c));
+        
+        keys_73516240 = 1;
+        
+        if (a < 0) keys_73516240 <<= 4;
+        if (b < 0) keys_73516240 <<= 2;
+        if (c < 0) keys_73516240 <<= 1;
     }
 
-    public boolean isNotA() { return value.isNotA(); }
-    public boolean isNotB() { return value.isNotB(); }
-    public boolean isNotC() { return value.isNotC(); }
+    public final boolean isNotA() { return (keys_73516240 >= 0x10); }
+    public final boolean isNotB() { return (keys_73516240 & 0xCC) != 0; }
+    public final boolean isNotC() { return (keys_73516240 & 0xAA) != 0; }
+
+    public final int getTierKey()
+    {
+        return keys_73516240;
+    }
 
     public String toString()
     {
         return MessageFormat.format(
-        		"{0}={1},{2}={3},{4}={5}", 
-        		getAName(), value.isNotA(),
-				getBName(), value.isNotB(), 
-				getCName(), value.isNotC());
+                "{0}={1},{2}={3},{4}={5}", 
+                getAName(), isNotA(),
+                getBName(), isNotB(), 
+                getCName(), isNotC());
     }
 
-    public boolean equals(Object obj)
-    {
-        if (obj == null || getClass() != obj.getClass())
-        {
-            return false;
-        }
-
-        SimpleTriplet other = (SimpleTriplet) obj;
-        
-        return value == other.value
-            && getAName() == other.getAName()
-            && getBName() == other.getBName()
-            && getCName() == other.getCName();
-    }
-
-	public int getTierKey()
-	{
-		return value.getTierKey();
-	}
-
-	public void swapAB()
-	{
-		super.swapAB();
-		value = value.swapAB();
-	}
-	
-	public void swapAC()
-	{
-		super.swapAC();
-		value = value.swapAC();
-	}
-	
-	public void swapBC()
-	{
-		super.swapBC();
-		value = value.swapBC();
-	}
 }

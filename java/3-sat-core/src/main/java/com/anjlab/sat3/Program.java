@@ -1,15 +1,13 @@
 package com.anjlab.sat3;
 
-
-
 public class Program
 {
     public static void main(String[] args) throws Exception
     {
         if (args.length != 1)
         {
-        	System.out.println("Usage:\n\tjava " + Program.class.getName() + " formula.cnf");
-        	System.exit(0);
+            System.out.println("Usage:\n\tjava " + Program.class.getName() + " formula.cnf");
+            System.exit(0);
         }
 
         StopWatch stopWatch = new StopWatch();
@@ -33,7 +31,7 @@ public class Program
         stopWatch.start("Sort CTF tiers");
         for (int i = 0; i < ctf.size(); i++)
         {
-        	ctf.get(i).sortTiers();
+            ctf.get(i).sortTiers();
         }
         stopWatch.stop();
 
@@ -54,25 +52,25 @@ public class Program
 
         System.out.println("CTF: " + ctf.size());
 
-        System.out.println("Saving CTS to file system...");
-        
-        for (int i = 0; i < cts.size(); i++)
-        {
-        	ITabularFormula f = cts.get(i);
-        	String filename = args[0] + "-cts-" + i + ".cnf";
-        	System.out.print("Saving " + filename + "...");
-			Helper.saveToDIMACSFileFormat(f, filename);
-			System.out.println(" done");
-        }
+//        System.out.println("Saving CTS to file system...");
+//        
+//        for (int i = 0; i < cts.size(); i++)
+//        {
+//            ITabularFormula f = cts.get(i);
+//            String filename = args[0] + "-cts-" + i + ".cnf";
+//            System.out.print("Saving " + filename + "...");
+//            Helper.saveToDIMACSFileFormat(f, filename);
+//            System.out.println(" done");
+//        }
         
         System.out.println("Program completed");
     }
 
-	private static void printFormulas(GenericArrayList<ITabularFormula> formulas)
-	{
-		for (int i = 0; i < formulas.size(); i++)
+    private static void printFormulas(GenericArrayList<ITabularFormula> formulas)
+    {
+        for (int i = 0; i < formulas.size(); i++)
         {
             Helper.prettyPrint(formulas.get(i));
         }
-	}
+    }
 }

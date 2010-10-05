@@ -1,26 +1,27 @@
 package com.anjlab.sat3;
 
-
 public class JoinMethods
 {
-	private static final IJoinMethod[] joinMethods = 
-						new IJoinMethod[]
-		                {
-							//	The order matters (see comments in Helper#getJoinCandidates() and Helper#pickAJoin()
-							new Join3AsIs(),
-					        new JoinBetweenTiers2(),
-					        new JoinLeft2(),
-					        new JoinRight2(),
-					        new JoinLeft1(),
-					        new JoinRight1(),
-					        new JoinRight0(),
-					    };  
-	
+    private static final IJoinMethod[] joinMethods = 
+                        new IJoinMethod[]
+                        {
+                            //    The order matters (see comments in Helper#getJoinCandidates() and Helper#pickAJoin()
+                            new Join3AsIs(),
+                            new JoinBetweenTiers2(),
+                            new JoinLeft2(),
+                            new JoinRight2(),
+                            new JoinLeft1(),
+                            new JoinRight1(),
+                            new JoinRight0(),
+                        };  
+    
     public static IJoinMethod[] getMethods()
     {
         return joinMethods;
     }
 }
+
+//  TODO Implementations of IJoinMethod not optimized and are subject improve
 
 class Join3AsIs implements IJoinMethod
 {
@@ -34,6 +35,7 @@ class Join3AsIs implements IJoinMethod
 
         if (aIndex >= 0 && bIndex >= 0 && cIndex >= 0)
         {
+            //  TODO Rewrite. See implementation of SimpleTripletPermutation#setCanonicalName()
             if (follows(aIndex, bIndex, cIndex))
             {
                 result.rule = "1";
@@ -310,8 +312,8 @@ class JoinBetweenTiers2 implements IJoinMethod
         
         if (follows(aIndex, bIndex) && cIndex < 0)
         {
-        	GenericArrayList<ITier> aTiers = findTiersWithVariable(formula.getTiers(), tier.getAName());
-        	GenericArrayList<ITier> bTiers = findTiersWithVariable(formula.getTiers(), tier.getBName());
+            GenericArrayList<ITier> aTiers = findTiersWithVariable(formula.getTiers(), tier.getAName());
+            GenericArrayList<ITier> bTiers = findTiersWithVariable(formula.getTiers(), tier.getBName());
 
             ITier aTier = aTiers.size() > 0 ? aTiers.get(0) : null;
             ITier bTier = bTiers.size() > 0 ? bTiers.get(0) : null;
@@ -326,8 +328,8 @@ class JoinBetweenTiers2 implements IJoinMethod
         }
         else if (follows(cIndex, bIndex) && aIndex < 0)
         {
-        	GenericArrayList<ITier> cTiers = findTiersWithVariable(formula.getTiers(), tier.getCName());
-        	GenericArrayList<ITier> bTiers = findTiersWithVariable(formula.getTiers(), tier.getBName());
+            GenericArrayList<ITier> cTiers = findTiersWithVariable(formula.getTiers(), tier.getCName());
+            GenericArrayList<ITier> bTiers = findTiersWithVariable(formula.getTiers(), tier.getBName());
 
             ITier cTier = cTiers.size() > 0 ? cTiers.get(0) : null;
             ITier bTier = bTiers.size() > 0 ? bTiers.get(0) : null;
@@ -360,16 +362,16 @@ class JoinBetweenTiers2 implements IJoinMethod
         return result;
     }
 
-	private GenericArrayList<ITier> findTiersWithVariable(GenericArrayList<ITier> tiers, int varName) {
-		GenericArrayList<ITier> result = new GenericArrayList<ITier>();
-		for (int i = 0; i < tiers.size(); i++)
-		{
-			ITier tier = tiers.get(i);
-			if (tier.hasVariable(varName))
-			{
-				result.add(tier);
-			}
-		}
-		return result;
-	}
+    private GenericArrayList<ITier> findTiersWithVariable(GenericArrayList<ITier> tiers, int varName) {
+        GenericArrayList<ITier> result = new GenericArrayList<ITier>();
+        for (int i = 0; i < tiers.size(); i++)
+        {
+            ITier tier = tiers.get(i);
+            if (tier.hasVariable(varName))
+            {
+                result.add(tier);
+            }
+        }
+        return result;
+    }
 }

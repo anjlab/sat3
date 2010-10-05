@@ -9,5 +9,5 @@ public interface ICompactTripletsStructure extends ITabularFormula
      * Runs clearing procedure on this formula.
      */
     void cleanup();
-	void subtract(ITabularFormula formula);
+    void subtract(ITabularFormula formula);
 }
