@@ -6,7 +6,7 @@ public class Program
     {
         if (args.length != 1)
         {
-            System.out.println("Usage:\n\tjava " + Program.class.getName() + " formula.cnf");
+            System.out.println("Usage:\n\tjava [-Dverbose=true] " + Program.class.getName() + " formula.cnf");
             System.exit(0);
         }
 

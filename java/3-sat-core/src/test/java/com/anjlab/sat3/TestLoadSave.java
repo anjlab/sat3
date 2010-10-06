@@ -11,8 +11,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class TestLoadSave {
-
+public class TestLoadSave
+{
     @Test
     public void testLoadFromDIMACS() throws IOException
     {

@@ -5,7 +5,6 @@ import org.junit.Test;
 
 public class TestSimplePermutation
 {
-
     @Test
     public void testIndexOf()
     {

@@ -3,8 +3,8 @@ package com.anjlab.sat3;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestSimpleTier {
-
+public class TestSimpleTier
+{
     @Test
     public void testAddSameTripletSeveralTimes()
     {

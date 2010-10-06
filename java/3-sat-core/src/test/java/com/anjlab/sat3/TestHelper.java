@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.anjlab.sat3.Helper;
 import com.anjlab.sat3.ITabularFormula;
 
-public class TestHelper {
-
+public class TestHelper
+{
     @Test
     public void testCreateRandomFormulaWithRespectToMaxM()
     {

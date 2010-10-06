@@ -6,7 +6,6 @@ import org.junit.Test;
 
 public class TestHashCode
 {
-
     @Test
     public void testHashCodeForArray()
     {

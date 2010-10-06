@@ -4,7 +4,7 @@ import static java.text.MessageFormat.format;
 
 public class StopWatch
 {
-	private long overall;
+    private long overall;
     private long start;
     private long end;
     private String comment;
