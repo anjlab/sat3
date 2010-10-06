@@ -74,7 +74,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         {
             private int key = 0;
             private byte counter = 0;
-            private byte shiftCount = 0;
             public boolean hasNext()
             {
                 return counter < size;
@@ -82,12 +81,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
             public ITripletValue next()
             {
                 key = key == 0 ? 1 : key << 1;
-                shiftCount++;
                 boolean hasValue = (keys_73516240 & key) == key;
-                while (!hasValue && shiftCount < 8)
+                while (!hasValue)
                 {
-                    key = key << 1;
-                    shiftCount++;
+                    key <<= 1;
                     hasValue = (keys_73516240 & key) == key;
                 }
                 
