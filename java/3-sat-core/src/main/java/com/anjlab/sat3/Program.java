@@ -10,6 +10,10 @@ public class Program
             System.exit(0);
         }
 
+        String verbose = System.getProperty("verbose");
+        
+        Helper.UsePrettyPrint = verbose != null && verbose.equalsIgnoreCase("true");
+
         StopWatch stopWatch = new StopWatch();
         
         stopWatch.start("Load formula");

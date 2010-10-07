@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Random;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.anjlab.sat3.Helper;
@@ -12,6 +13,13 @@ import com.anjlab.sat3.ITabularFormula;
 
 public class TestHelper
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestHelper.class.getName());
+    }
+    
     @Test
     public void testCreateRandomFormulaWithRespectToMaxM()
     {

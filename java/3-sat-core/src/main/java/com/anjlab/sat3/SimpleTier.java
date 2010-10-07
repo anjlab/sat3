@@ -151,13 +151,13 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getAName());
-        builder.append(",");
-        builder.append(getBName());
-        builder.append(",");
-        builder.append(getCName());
-        return builder.toString();
+        SimplePermutation permutation = new SimplePermutation();
+        permutation.add(getAName());
+        permutation.add(getBName());
+        permutation.add(getCName());
+        SimpleFormula formula = new SimpleFormula(permutation);
+        formula.addTier(this);
+        return Helper.buildPrettyOutput(formula).toString();
     }
 
     public void subtract(ITier tier)
@@ -250,6 +250,11 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         return keys_7351oooo | (keys_6240oooo >> 4);
     }
 
+    public boolean isEmpty()
+    {
+        return size == 0;
+    }
+    
     private int get_keys_76325410()
     {
         int keys_7351oooo = (keys_73516240 & 0xF0);

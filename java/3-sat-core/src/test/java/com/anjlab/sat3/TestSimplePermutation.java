@@ -1,10 +1,18 @@
 package com.anjlab.sat3;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestSimplePermutation
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestSimplePermutation.class.getName());
+    }
+    
     @Test
     public void testIndexOf()
     {

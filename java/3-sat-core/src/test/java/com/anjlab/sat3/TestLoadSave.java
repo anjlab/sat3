@@ -9,10 +9,18 @@ import static junit.framework.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Random;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestLoadSave
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestLoadSave.class.getName());
+    }
+    
     @Test
     public void testLoadFromDIMACS() throws IOException
     {

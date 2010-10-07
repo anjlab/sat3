@@ -2,10 +2,18 @@ package com.anjlab.sat3;
 
 import junit.framework.Assert;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestHashCode
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestHashCode.class.getName());
+    }
+    
     @Test
     public void testHashCodeForArray()
     {

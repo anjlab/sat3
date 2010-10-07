@@ -1,12 +1,21 @@
 package com.anjlab.sat3;
 
+import static com.anjlab.sat3.Helper.prettyPrint;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestCTSOperations
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestCTSOperations.class.getName());
+    }
+    
     @Test
     public void testConcretize()
     {
@@ -181,4 +190,44 @@ public class TestCTSOperations
         assertTrue(!t2.contains(SimpleTripletValueFactory._001_instance));
     }
 
+    @Test
+    public void testCleanupFormulaThatHasEmptyTier()
+    {
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+            Helper.createFormula(
+                new int[]
+                    {
+                        1, 2, 3,
+                        2, 3, 4,
+                        3, 4, 5
+                    });
+        
+        s.getTiers().get(1).remove(SimpleTripletValueFactory._000_instance);
+        
+        prettyPrint(s);
+        
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+    }
+
+    @Test
+    public void testCleanupToEmpty()
+    {
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+            Helper.createFormula(
+                new int[]
+                    {
+                        1, 2, 3,
+                        2, 3, 4,
+                        -3, -4, -5
+                    });
+        
+        
+        prettyPrint(s);
+        
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+    }
 }

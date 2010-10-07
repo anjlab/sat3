@@ -2,10 +2,18 @@ package com.anjlab.sat3;
 
 import static org.junit.Assert.assertTrue;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestSimpleTriplet
 {
+    @BeforeClass
+    public static void setup()
+    {
+        Helper.UsePrettyPrint = true;
+        System.out.println(TestSimpleTriplet.class.getName());
+    }
+    
     @Test
     public void testNotX()
     {

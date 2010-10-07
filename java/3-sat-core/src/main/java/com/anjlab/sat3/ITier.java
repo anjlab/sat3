@@ -18,4 +18,6 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
     void union(ITier tier);
 
+    boolean isEmpty();
+
 }

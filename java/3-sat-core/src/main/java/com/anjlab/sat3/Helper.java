@@ -18,6 +18,8 @@ import cern.colt.map.OpenIntObjectHashMap;
 
 public class Helper
 {
+    public static boolean UsePrettyPrint = false;
+    
     private static class InternalJoinInfo extends JoinInfo
     {
         public ITabularFormula formula;
@@ -219,9 +221,16 @@ public class Helper
     {
         printLine('-', 50);
 
+        StringBuilder builder = buildPrettyOutput(formula);
+
+        System.out.println(builder);
+    }
+
+   public static StringBuilder buildPrettyOutput(ITabularFormula formula)
+    {
         StringBuilder builder = new StringBuilder();
 
-        if (System.getProperty("verbose") != null)
+        if (UsePrettyPrint)
         {
             int longestVarName = 0;
             IPermutation permutation = formula.getPermutation();
@@ -297,8 +306,7 @@ public class Helper
                        + formula.getClausesCount()
                        + "; TiersCount: "
                        + formula.getTiers().size());
-
-        System.out.println(builder);
+        return builder;
     }
 
     static final char[] LEGEND_BUFFER = new char[100];

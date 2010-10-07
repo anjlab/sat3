@@ -18,7 +18,8 @@ public class SimpleFormula implements ICompactTripletsStructure
         tiersHash = new OpenLongObjectHashMap();
     }
 
-    public SimpleFormula(IPermutation permutation, GenericArrayList<ITier> tiers) {
+    public SimpleFormula(IPermutation permutation, GenericArrayList<ITier> tiers)
+    {
         this.permutation = permutation;
         this.tiers = new GenericArrayList<ITier>(tiers.size());
         this.tiersHash = new OpenLongObjectHashMap(tiers.size());
@@ -29,7 +30,8 @@ public class SimpleFormula implements ICompactTripletsStructure
         }
     }
     
-    public SimpleFormula(IPermutation permutation) {
+    public SimpleFormula(IPermutation permutation)
+    {
         this.permutation = permutation;
         tiers = new GenericArrayList<ITier>();
         tiersHash = new OpenLongObjectHashMap(); 
@@ -276,28 +278,28 @@ public class SimpleFormula implements ICompactTripletsStructure
             return;
         }
 
-        boolean removed = false;
-
-        int size = 0;
+        int tiersSizeMinusOne = tiers.size() - 1;
         
-        for (int i = 0; i < tiers.size(); i++)
+        for (int i = 0; i < tiersSizeMinusOne; i++)
         {
             ITier tier = tiers.get(i);
-            size = tier.size();
-            if (i > 0)
+            tier.adjoinRight(tiers.get(i + 1));
+            if (tier.isEmpty())
             {
-                tier.adjoinLeft(tiers.get(i - 1));
+                clear();
+                return;
             }
-            if (i < tiers.size() - 1)
-            {
-                tier.adjoinRight(tiers.get(i + 1));
-            }
-            removed = tier.size() != size;
         }
-        
-        if (removed)
+
+        for (int i = tiersSizeMinusOne; i > 0; i--)
         {
-            cleanup();
+            ITier tier = tiers.get(i);
+            tier.adjoinLeft(tiers.get(i - 1));
+            if (tier.isEmpty())
+            {
+                clear();
+                return;
+            }
         }
     }
 
@@ -345,13 +347,11 @@ public class SimpleFormula implements ICompactTripletsStructure
     private void clear()
     {
         tiers.clear();
+        tiersHash.clear();
     }
     
     public String toString()
     {
-        return permutation.toString() 
-             + " : varCount=" + getVarCount() 
-             + ", clausesCount=" + getClausesCount() 
-             + ", tiersCount=" + tiers.size();
+        return Helper.buildPrettyOutput(this).toString();
     }
 }
