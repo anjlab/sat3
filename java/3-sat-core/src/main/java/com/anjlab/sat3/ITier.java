@@ -2,7 +2,7 @@ package com.anjlab.sat3;
 
 public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 {
-    boolean add(ITripletValue triplet);
+    void add(ITripletValue triplet);
 
     int size();
 
@@ -16,8 +16,14 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
     void adjoinRight(ITier tier);
 
+    boolean isEmpty();
+
+    void intersect(ITier tier);
+
     void union(ITier tier);
 
-    boolean isEmpty();
+    void concretize(int varName, boolean value);
+
+    ITier clone();
 
 }

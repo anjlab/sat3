@@ -11,7 +11,7 @@ public class SimpleTripletPermutation implements ITripletPermutation
 
     private int[] canonicalName;
     private long canonicalHashCode;
-
+    
     public SimpleTripletPermutation(int a, int b, int c)
     {
         this.a = a;

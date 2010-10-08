@@ -2,10 +2,13 @@ package com.anjlab.sat3;
 
 import java.util.Iterator;
 
+//  TODO Replace inheritance with adapter? (to have the ability to 
+//  share SimpleTripletPermutation instance across different tier instances
+//  that will be created as a result of clone method)
 public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
     protected int keys_73516240;
-    private int size;
+    protected int size;
     
     public static SimpleTier createCompleteTier(int a, int b, int c)
     {
@@ -27,17 +30,20 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
              tripletPermutation.getCName());
     }
 
-    public boolean add(ITripletValue triplet)
+    public ITier clone()
+    {
+        SimpleTier tier = new SimpleTier(this);
+        tier.keys_73516240 = keys_73516240;
+        tier.size = size;
+        return tier;
+    }
+    
+    public void add(ITripletValue triplet)
     {
         if (!contains(triplet)) //    We need this check to keep value of size correct 
         {
-            size++;
             keys_73516240 = keys_73516240 | triplet.getTierKey();
-            return true;
-        }
-        else
-        {
-            return false;
+            size++;
         }
     }
 
@@ -284,13 +290,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         return keys_76325410;
     }
 
-    public void union(ITier tier)
-    {
-        keys_73516240 = keys_73516240 | ((SimpleTier) tier).keys_73516240;
-        
-        updateSize();
-    }
-
 //    private void printBits(int keys)
 //    {
 //        int mask = 0x80;
@@ -308,4 +307,35 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 //        }
 //        System.out.println();
 //    }
+    
+    public void intersect(ITier tier)
+    {
+        keys_73516240 = keys_73516240 & ((SimpleTier)tier).keys_73516240;
+        updateSize();
+    }
+    
+    public void union(ITier tier)
+    {
+        keys_73516240 = keys_73516240 | ((SimpleTier)tier).keys_73516240;
+        updateSize();
+    }
+    
+    public void concretize(int varName, boolean value)
+    {
+        if (getAName() == varName)
+        {
+            keys_73516240 = value ? keys_73516240 & 0x0F : keys_73516240 & 0xF0; 
+            updateSize();
+        }
+        else if (getBName() == varName)
+        {
+            keys_73516240 = value ? keys_73516240 & 0x33 : keys_73516240 & 0xCC; 
+            updateSize();
+        }
+        else if (getCName() == varName)
+        {
+            keys_73516240 = value ? keys_73516240 & 0x55 : keys_73516240 & 0xAA; 
+            updateSize();
+        }
+    }
 }

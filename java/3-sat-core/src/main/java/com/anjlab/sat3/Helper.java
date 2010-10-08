@@ -464,8 +464,6 @@ public class Helper
         private int r = 0;
         private int a, b, c;
 
-//        private int lineNumber;
-        
         public String toString()
         {
             return "n=" + n + ", sign=" + sign + ", r=" + r + ", a=" + a + ", b=" + b + ", c=" + c;
@@ -473,11 +471,8 @@ public class Helper
         
         private ITabularFormula formula = new SimpleFormula();
 
-//        private long prevTime;
-        
         public ITabularFormula readFormula(BufferedReader reader) throws IOException
         {
-//            prevTime = System.currentTimeMillis();
             readMetadata(reader);
             
             int ch;
@@ -490,14 +485,6 @@ public class Helper
                 }
                 if (ch == '0' && r == 0)
                 {
-//                    lineNumber++;
-//                    
-//                    if (lineNumber % 1000 == 0)
-//                    {
-//                        System.out.println((System.currentTimeMillis() - prevTime) + " " + lineNumber + " vc=" + formula.getVarCount() + " tc=" + formula.getClausesCount() + " t=" + formula.getTiers().size());
-//                        prevTime = System.currentTimeMillis();
-//                    }
-                    
                     continue;
                 }
                 if (ch == '-')
@@ -522,7 +509,6 @@ public class Helper
             String line;
             while ((line = reader.readLine()) != null)
             {
-//                lineNumber++;
                 if (line.startsWith("c"))
                 {
                     continue;

@@ -1,6 +1,5 @@
 package com.anjlab.sat3;
 
-import java.text.MessageFormat;
 
 public class SimpleTriplet extends SimpleTier implements ITriplet
 {
@@ -8,6 +7,7 @@ public class SimpleTriplet extends SimpleTier implements ITriplet
     {
         super(Math.abs(a), Math.abs(b), Math.abs(c));
         
+        size = 1;
         keys_73516240 = 1;
         
         if (a < 0) keys_73516240 <<= 4;
@@ -22,15 +22,6 @@ public class SimpleTriplet extends SimpleTier implements ITriplet
     public final int getTierKey()
     {
         return keys_73516240;
-    }
-
-    public String toString()
-    {
-        return MessageFormat.format(
-                "{0}={1},{2}={3},{4}={5}", 
-                getAName(), isNotA(),
-                getBName(), isNotB(), 
-                getCName(), isNotC());
     }
 
 }

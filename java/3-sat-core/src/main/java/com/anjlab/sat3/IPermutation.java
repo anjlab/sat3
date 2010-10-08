@@ -23,4 +23,5 @@ public interface IPermutation
      * @return
      */
     int get(int index);
+    boolean same(IPermutation permutation);
 }

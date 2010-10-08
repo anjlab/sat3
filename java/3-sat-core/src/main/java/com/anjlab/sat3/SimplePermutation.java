@@ -1,5 +1,7 @@
 package com.anjlab.sat3;
 
+import java.util.Arrays;
+
 import cern.colt.list.IntArrayList;
 import cern.colt.map.OpenIntIntHashMap;
 
@@ -102,5 +104,12 @@ public class SimplePermutation implements IPermutation
     public String toString()
     {
         return permutation.toString();
+    }
+    
+    public boolean same(IPermutation permutation)
+    {
+        return Arrays.equals(
+                this.permutation.elements(),
+                ((SimplePermutation) permutation).permutation.elements());
     }
 }

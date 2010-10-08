@@ -2,7 +2,6 @@ package com.anjlab.sat3;
 
 import java.util.Comparator;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import cern.colt.map.OpenLongObjectHashMap;
 
 public class SimpleFormula implements ICompactTripletsStructure
@@ -18,18 +17,26 @@ public class SimpleFormula implements ICompactTripletsStructure
         tiersHash = new OpenLongObjectHashMap();
     }
 
-    public SimpleFormula(IPermutation permutation, GenericArrayList<ITier> tiers)
+    /**
+     * Creates copy of <code>formula</code>. 
+     * 
+     * New formula uses the same instance of <code>permutation</code> and cloned instances of tiers.
+     * Be careful about modifying permutation of new formula, because these changes will also affect initial formula.
+     * 
+     * @param formula
+     */
+    private SimpleFormula(SimpleFormula formula)
     {
-        this.permutation = permutation;
-        this.tiers = new GenericArrayList<ITier>(tiers.size());
-        this.tiersHash = new OpenLongObjectHashMap(tiers.size());
-        for (int i = 0; i < tiers.size(); i++)
+        this.permutation = formula.permutation;
+        this.tiers = new GenericArrayList<ITier>(formula.tiers.size());
+        this.tiersHash = new OpenLongObjectHashMap(formula.tiers.size());
+        for (int i = 0; i < formula.tiers.size(); i++)
         {
-            ITier tier = tiers.get(i);
-            addTier(new SimpleTier(tier));
+            ITier tier = formula.tiers.get(i);
+            addTier(tier.clone());
         }
     }
-    
+
     public SimpleFormula(IPermutation permutation)
     {
         this.permutation = permutation;
@@ -37,12 +44,6 @@ public class SimpleFormula implements ICompactTripletsStructure
         tiersHash = new OpenLongObjectHashMap(); 
     }
 
-    void addTier(ITier tier)
-    {
-        tiers.add(tier);
-        tiersHash.put(tier.canonicalHashCode(), tier);
-    }
-    
     public int getClausesCount() {
         int clausesCount = 0;
         for (int i = 0; i < tiers.size(); i++)
@@ -65,10 +66,10 @@ public class SimpleFormula implements ICompactTripletsStructure
     public boolean tiersSorted()
     {
         boolean sorted = true;
-        for (int i = 0; i < getTiers().size() - 1; i++)
+        for (int i = 0; i < tiers.size() - 1; i++)
         {
-            if (permutation.indexOf(getTiers().get(i).getAName()) > 
-                permutation.indexOf(getTiers().get(i + 1).getAName()))
+            if (permutation.indexOf(tiers.get(i).getAName()) > 
+                permutation.indexOf(tiers.get(i + 1).getAName()))
             {
                 sorted = false;
                 break;
@@ -96,7 +97,7 @@ public class SimpleFormula implements ICompactTripletsStructure
 
         triplet.transposeTo(targetTier);
         
-        add(targetTier, triplet);
+        targetTier.add(triplet);
     }
 
     private void add(ITier tier)
@@ -107,7 +108,13 @@ public class SimpleFormula implements ICompactTripletsStructure
 
         targetTier.union(tier);
     }
-    
+
+    void addTier(ITier tier)
+    {
+        tiers.add(tier);
+        tiersHash.put(tier.canonicalHashCode(), tier);
+    }
+
     private ITier findOrCreateTargetTierFor(ITripletPermutation triplet) {
         ITier targetTier = findTierFor(triplet);
 
@@ -141,17 +148,6 @@ public class SimpleFormula implements ICompactTripletsStructure
                           orderIs(aIndex, cIndex, bIndex) ? new SimpleTripletPermutation(variables.getAName(), variables.getCName(), variables.getBName()) :
                                                             new SimpleTripletPermutation(variables.getCName(), variables.getAName(), variables.getBName());
         return tierPermutation;
-    }
-
-    private void add(ITier targetTier, ITripletValue tripletValue) {
-        if (targetTier.add(tripletValue))
-        {
-            //    Value added
-        }
-        else
-        {
-            //  Duplicate value wasn't added (same triplets won't affect formula satisfiability)
-        }
     }
 
     private ITier findTierFor(ITripletPermutation tripletPermutation) {
@@ -267,9 +263,9 @@ public class SimpleFormula implements ICompactTripletsStructure
 
     public void cleanup()
     {
-        if (!tiersSorted())
+        if (tiers.size() == 1)
         {
-            throw new RuntimeException("Tiers should be sorted");
+            return;
         }
 
         if (tiers.size() != getVarCount() - 2)
@@ -278,60 +274,108 @@ public class SimpleFormula implements ICompactTripletsStructure
             return;
         }
 
-        int tiersSizeMinusOne = tiers.size() - 1;
-        
-        for (int i = 0; i < tiersSizeMinusOne; i++)
+        if (!tiersSorted())
         {
-            ITier tier = tiers.get(i);
-            tier.adjoinRight(tiers.get(i + 1));
-            if (tier.isEmpty())
-            {
-                clear();
-                return;
-            }
+            throw new RuntimeException("Tiers should be sorted");
         }
 
-        for (int i = tiersSizeMinusOne; i > 0; i--)
+        internalCleanup();
+    }
+
+    private void internalCleanup()
+    {        
+        boolean someClausesRemoved = false;
+
+        int tiersSize = tiers.size();
+        int tiersSizeMinusOne = tiersSize - 1;
+        
+        for (int i = 0; i < tiersSize; i++)
         {
             ITier tier = tiers.get(i);
-            tier.adjoinLeft(tiers.get(i - 1));
+            int size = tier.size();
+            if (i < tiersSizeMinusOne) tier.adjoinRight(tiers.get(i + 1));
+            if (i > 0) tier.adjoinLeft(tiers.get(i - 1));
             if (tier.isEmpty())
             {
                 clear();
                 return;
             }
+            if (size != tier.size())
+            {
+                someClausesRemoved = true;
+            }
+        }
+        
+        if (someClausesRemoved)
+        {
+            internalCleanup();
         }
     }
 
     public ICompactTripletsStructure union(ICompactTripletsStructure cts)
     {
-        throw new NotImplementedException();
+        SimpleFormula other = (SimpleFormula) cts;
+        
+        assertSamePermutation(other);
+        
+        //  Union will return CTS with the same permutation
+        SimpleFormula result = new SimpleFormula(this);
+
+        for (int i = 0; i < tiers.size(); i++)
+        {
+            ITier tier = result.tiers.get(i);
+            
+            ITier otherTier = other.tiers.get(i);
+            
+            tier.union(otherTier);
+        }
+
+        //  No need in running clearing procedure on result
+        
+        return result;
+    }
+
+    private void assertSamePermutation(SimpleFormula operand)
+    {
+        if (!permutation.same(operand.permutation))
+        {
+            throw new IllegalArgumentException("Operand permutation should be the same as the formula permutation");
+        }
     }
 
     public ICompactTripletsStructure intersect(ICompactTripletsStructure cts)
     {
-        throw new NotImplementedException();
-    }
-
-    //    TODO Rewrite using bit operations
-    public ICompactTripletsStructure concretize(int varName, boolean value)
-    {
-        //  Concretization should return CTS with the same permutation
-        SimpleFormula result = new SimpleFormula(permutation, tiers);
+        SimpleFormula other = (SimpleFormula) cts;
+        
+        assertSamePermutation(other);
+        
+        //  Intersect will return CTS with the same permutation
+        SimpleFormula result = new SimpleFormula(this);
 
         for (int i = 0; i < tiers.size(); i++)
         {
-            ITier tier = tiers.get(i);
-            for (ITripletValue tripletValue : tier)
-            {
-                if (!tier.hasVariable(varName)
-                    || (tier.getAName() == varName && tripletValue.isNotA() == value)
-                    || (tier.getBName() == varName && tripletValue.isNotB() == value)
-                    || (tier.getCName() == varName && tripletValue.isNotC() == value))
-                {
-                    result.add(result.tiers.get(i), tripletValue);
-                }
-            }
+            ITier tier = result.tiers.get(i);
+            
+            ITier otherTier = other.tiers.get(i);
+            
+            tier.intersect(otherTier);
+        }
+
+        result.cleanup();
+        
+        return result;
+    }
+
+    public ICompactTripletsStructure concretize(int varName, boolean value)
+    {
+        //  Concretization should return CTS with the same permutation
+        SimpleFormula result = new SimpleFormula(this);
+
+        for (int i = 0; i < tiers.size(); i++)
+        {
+            ITier tier = result.tiers.get(i);
+            
+            tier.concretize(varName, value);
         }
 
         result.cleanup();
