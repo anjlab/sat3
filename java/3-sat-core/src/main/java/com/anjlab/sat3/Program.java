@@ -1,5 +1,7 @@
 package com.anjlab.sat3;
 
+import java.io.IOException;
+
 public class Program
 {
     public static void main(String[] args) throws Exception
@@ -46,8 +48,7 @@ public class Program
         Helper.printLine('*', 70);
 
         stopWatch.start("Create CTS");
-        @SuppressWarnings("unchecked")
-        GenericArrayList<ITabularFormula> cts = (GenericArrayList<ITabularFormula>)Helper.createCTS(formula, ctf);
+        GenericArrayList<ICompactTripletsStructure> cts = Helper.createCTS(formula, ctf);
         stopWatch.stop();
 
         printFormulas(cts);
@@ -56,25 +57,37 @@ public class Program
 
         System.out.println("CTF: " + ctf.size());
 
-//        System.out.println("Saving CTS to file system...");
-//        
-//        for (int i = 0; i < cts.size(); i++)
-//        {
-//            ITabularFormula f = cts.get(i);
-//            String filename = args[0] + "-cts-" + i + ".cnf";
-//            System.out.print("Saving " + filename + "...");
-//            Helper.saveToDIMACSFileFormat(f, filename);
-//            System.out.println(" done");
-//        }
+//        saveCTS(args[0], cts);
+        
+        stopWatch.start("Unify all CTS");
+        Helper.unify(cts);
+        stopWatch.stop();
+        
+        stopWatch.printElapsed();
         
         System.out.println("Program completed");
     }
 
-    private static void printFormulas(GenericArrayList<ITabularFormula> formulas)
+    @SuppressWarnings("unused")
+    private static void saveCTS(String filenamePrefix, GenericArrayList<ITabularFormula> cts) throws IOException
+    {
+        System.out.println("Saving CTS to file system...");
+        
+        for (int i = 0; i < cts.size(); i++)
+        {
+            ITabularFormula f = cts.get(i);
+            String filename = filenamePrefix + "-cts-" + i + ".cnf";
+            System.out.print("Saving " + filename + "...");
+            Helper.saveToDIMACSFileFormat(f, filename);
+            System.out.println(" done");
+        }
+    }
+
+    private static void printFormulas(GenericArrayList<?> formulas)
     {
         for (int i = 0; i < formulas.size(); i++)
         {
-            Helper.prettyPrint(formulas.get(i));
+            Helper.prettyPrint((ITabularFormula) formulas.get(i));
         }
     }
 }

@@ -22,8 +22,12 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
     void union(ITier tier);
 
-    void concretize(int varName, boolean value);
+    void concretize(int varName, Value value);
 
     ITier clone();
+
+    Value valueOfA();
+    Value valueOfB();
+    Value valueOfC();
 
 }

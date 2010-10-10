@@ -41,6 +41,9 @@ public class SimplePermutation implements IPermutation
 
     public int indexOf(int varName)
     {
+        //  TODO Replacing zero-based indexing with the 1-based
+        //  allow remove invocation of containsKey method here
+        
         //    O(1)
         return permutationHash.containsKey(varName)
              ? permutationHash.get(varName)

@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 //  TODO Replace inheritance with adapter? (to have the ability to 
 //  share SimpleTripletPermutation instance across different tier instances
-//  that will be created as a result of clone method)
+//  created as a result of clone method)
 public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
     protected int keys_73516240;
@@ -250,7 +250,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
             keys_7o3o5o1o <<= 1;
             keys_6o2o4o0o <<= 1;
             mask          >>= 1;
-
         }
         
         return keys_7351oooo | (keys_6240oooo >> 4);
@@ -320,22 +319,67 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         updateSize();
     }
     
-    public void concretize(int varName, boolean value)
+    public void concretize(int varName, Value value)
     {
+        if (value != Value.AllPlain && value != Value.AllNegative)
+        {
+            throw new IllegalArgumentException(
+                    "Value should be one of (" + Value.AllPlain + ", " + Value.AllNegative 
+                    + ") but was " + value);
+        }
+        
         if (getAName() == varName)
         {
-            keys_73516240 = value ? keys_73516240 & 0x0F : keys_73516240 & 0xF0; 
+            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x0F : keys_73516240 & 0xF0; 
             updateSize();
         }
         else if (getBName() == varName)
         {
-            keys_73516240 = value ? keys_73516240 & 0x33 : keys_73516240 & 0xCC; 
+            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x33 : keys_73516240 & 0xCC; 
             updateSize();
         }
         else if (getCName() == varName)
         {
-            keys_73516240 = value ? keys_73516240 & 0x55 : keys_73516240 & 0xAA; 
+            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x55 : keys_73516240 & 0xAA; 
             updateSize();
         }
+        else
+        {
+            throw new IllegalArgumentException("Can't concretize tier on varName="
+                    + varName + " because varName is not from the tier's permutation");
+        }
+    }
+    
+    public Value valueOfA()
+    {
+        return size == 0 
+             ? Value.Mixed  //  empty tier 
+             : keys_73516240 <= 0x0F 
+                 ? Value.AllPlain 
+                 : (keys_73516240 & 0xF0) == keys_73516240 
+                     ? Value.AllNegative
+                     : Value.Mixed;
+    }
+    
+    public Value valueOfB()
+    {
+        return size == 0 
+             ? Value.Mixed  //  empty tier 
+             : (keys_73516240 & 0x33) == keys_73516240 
+                 ? Value.AllPlain 
+                 : (keys_73516240 & 0xCC) == keys_73516240 
+                     ? Value.AllNegative
+                     : Value.Mixed;
+    }
+    
+    public Value valueOfC()
+    {
+        return size == 0 
+             ? Value.Mixed  //  empty tier 
+             : (keys_73516240 & 0x55) == keys_73516240 
+                 ? Value.AllPlain 
+                 : (keys_73516240 & 0xAA) == keys_73516240 
+                     ? Value.AllNegative
+                     : Value.Mixed;
     }
 }

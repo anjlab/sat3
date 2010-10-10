@@ -31,7 +31,9 @@ public class TestCTSOperations
                              2, 3, -4    //                 0  0  1                               
                          });             //            VarCount: 4; ClausesCount: 4; TiersCount: 2
 
-        ICompactTripletsStructure s2 = s1.concretize(3, false);
+        Helper.prettyPrint(s1);
+
+        s1.concretize(3, Value.AllNegative);
 
                                          //             x4 x1 x2 x3
                                          //              0  1  1   
@@ -39,11 +41,10 @@ public class TestCTSOperations
                                          //            VarCount: 4; ClausesCount: 2; TiersCount: 2
 
         Helper.prettyPrint(s1);
-        Helper.prettyPrint(s2);
 
-        assertEquals(2, s2.getClausesCount());
-        assertEquals(SimpleTripletValueFactory._101_instance, s2.getTiers().get(0).iterator().next());
-        assertEquals(SimpleTripletValueFactory._010_instance, s2.getTiers().get(1).iterator().next());
+        assertEquals(2, s1.getClausesCount());
+        assertEquals(SimpleTripletValueFactory._101_instance, s1.getTiers().get(0).iterator().next());
+        assertEquals(SimpleTripletValueFactory._010_instance, s1.getTiers().get(1).iterator().next());
     }
 
     @Test
@@ -60,12 +61,13 @@ public class TestCTSOperations
                              3, -4, 5    //                    0  1  0                            
                          });             //            VarCount: 5; ClausesCount: 5; TiersCount: 3
 
-        ICompactTripletsStructure s2 = s1.concretize(2, false);
+        Helper.prettyPrint(s1);
+
+        s1.concretize(2, Value.AllNegative);
 
         Helper.prettyPrint(s1);
-        Helper.prettyPrint(s2);
 
-        assertTrue(s2.isEmpty());
+        assertTrue(s1.isEmpty());
     }
 
     @Test

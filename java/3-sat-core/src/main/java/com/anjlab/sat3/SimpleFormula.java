@@ -261,28 +261,33 @@ public class SimpleFormula implements ICompactTripletsStructure
         cleanup();
     }
 
-    public void cleanup()
+    public boolean cleanup()
     {
         if (tiers.size() == 1)
         {
-            return;
+            return false;
         }
 
         if (tiers.size() != getVarCount() - 2)
         {
             clear();
-            return;
+            return true;
         }
 
-        if (!tiersSorted())
-        {
-            throw new RuntimeException("Tiers should be sorted");
-        }
+        assertTiersSorted();
 
-        internalCleanup();
+        return internalCleanup();
     }
 
-    private void internalCleanup()
+    private void assertTiersSorted()
+    {
+        if (!tiersSorted())
+        {
+            throw new IllegalStateException("Tiers should be sorted");
+        }
+    }
+
+    private boolean internalCleanup()
     {        
         boolean someClausesRemoved = false;
 
@@ -298,7 +303,7 @@ public class SimpleFormula implements ICompactTripletsStructure
             if (tier.isEmpty())
             {
                 clear();
-                return;
+                return true;
             }
             if (size != tier.size())
             {
@@ -310,6 +315,8 @@ public class SimpleFormula implements ICompactTripletsStructure
         {
             internalCleanup();
         }
+        
+        return someClausesRemoved;
     }
 
     public ICompactTripletsStructure union(ICompactTripletsStructure cts)
@@ -366,26 +373,60 @@ public class SimpleFormula implements ICompactTripletsStructure
         return result;
     }
 
-    public ICompactTripletsStructure concretize(int varName, boolean value)
+    public boolean concretize(int varName, Value value)
     {
-        //  Concretization should return CTS with the same permutation
-        SimpleFormula result = new SimpleFormula(this);
-
-        for (int i = 0; i < tiers.size(); i++)
+        if (value != Value.AllPlain && value != Value.AllNegative)
         {
-            ITier tier = result.tiers.get(i);
-            
-            tier.concretize(varName, value);
+            throw new IllegalArgumentException(
+                    "Value should be one of (" + Value.AllPlain + ", " + Value.AllNegative 
+                    + ") but was " + value);
         }
+        
+        int indexOf = permutation.indexOf(varName);
+        
+        if (indexOf < 0)
+        {
+            throw new IllegalArgumentException("Can't concretize on varName=" 
+                    + varName + " because varName is not from the formula's permutation");
+        }
+        
+        //  Find tiers containing varName (there are maximum 3 of them), 
+        //  and concretize only them
 
-        result.cleanup();
-
-        return result;
+        boolean someClausesRemoved = false;
+        
+        for (int i = 0, tierIndex = indexOf; i < 3 && tierIndex >= 0; i++, tierIndex--)
+        {
+            if (tierIndex < tiers.size())
+            {
+                ITier tier = tiers.get(tierIndex);
+                if (!someClausesRemoved)
+                {
+                    int size = tier.size(); 
+                    tier.concretize(varName, value);
+                    if (size != tier.size())
+                    {
+                        someClausesRemoved = true;
+                    }
+                }
+                else
+                {
+                    tier.concretize(varName, value);
+                }
+            }
+        }
+        
+        if (someClausesRemoved)
+        {
+            return cleanup();
+        }
+        
+        return false;
     }
 
     public boolean isEmpty()
     {
-        return getClausesCount() == 0;
+        return tiers.size() == 0;
     }
 
     private void clear()
@@ -397,5 +438,103 @@ public class SimpleFormula implements ICompactTripletsStructure
     public String toString()
     {
         return Helper.buildPrettyOutput(this).toString();
+    }
+
+    public Value valueOf(int varName)
+    {
+        
+        int indexOf = permutation.indexOf(varName);
+        
+        if (indexOf < 0)
+        {
+            throw new IllegalArgumentException("Can't get value of varName=" 
+                    + varName + " because varName is not from the formula's permutation");
+        }
+        
+        Value value = Value.Mixed;
+        
+        for (int i = 0, tierIndex = indexOf; i < 3 && tierIndex >= 0; i++, tierIndex--)
+        {
+            if (tierIndex < tiers.size())
+            {
+                if (i == 0)
+                {
+                    value = tiers.get(tierIndex).valueOfA();
+                    if (value == Value.Mixed)
+                    {
+                        break;
+                    }
+                }
+                else if (i == 1)
+                {
+                    Value value2 = tiers.get(tierIndex).valueOfB();
+                    if (value2 != value)
+                    {
+                        value = Value.Mixed;
+                        break;
+                    }
+                }
+                else
+                {
+                    Value value3 = tiers.get(tierIndex).valueOfC();
+                    if (value3 != value)
+                    {
+                        value = Value.Mixed;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return value;
+    }
+    
+    public ITier findTierWithVarNames(int varName1, int varName2)
+    {
+        //  This really slows down execution
+//        assertTiersSorted();
+        
+        int i = permutation.indexOf(varName1);
+        if (i < 0)
+        {
+            return null;
+        }
+        int j = i - 2;
+        if (j >= 0 && permutation.get(j) == varName2)
+        {
+            if (j >= tiers.size())
+            {
+                j = tiers.size() - 1;
+            }
+            return tiers.get(j);
+        }
+        j = i - 1;
+        if (j >= 0 && permutation.get(j) == varName2)
+        {
+            if (j >= tiers.size())
+            {
+                j = tiers.size() - 1;
+            }
+            return tiers.get(j);
+        }
+        j = i + 1;
+        if (j < permutation.size() && permutation.get(j) == varName2)
+        {
+            if (i >= tiers.size())
+            {
+                i = tiers.size() - 1;
+            }
+            return tiers.get(i);
+        }
+        j = i + 2;
+        if (j < permutation.size() && permutation.get(j) == varName2)
+        {
+            if (i >= tiers.size())
+            {
+                i = tiers.size() - 1;
+            }
+            return tiers.get(i);
+        }
+        return null;
     }
 }

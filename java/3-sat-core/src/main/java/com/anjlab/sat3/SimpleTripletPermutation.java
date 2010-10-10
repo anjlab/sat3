@@ -9,8 +9,8 @@ public class SimpleTripletPermutation implements ITripletPermutation
     private int b;
     private int c;
 
-    private int[] canonicalName;
-    private long canonicalHashCode;
+    private final int[] canonicalName;
+    private final long canonicalHashCode;
     
     public SimpleTripletPermutation(int a, int b, int c)
     {
@@ -18,20 +18,12 @@ public class SimpleTripletPermutation implements ITripletPermutation
         this.b = b;
         this.c = c;
 
-        //    See comments in #setCanonicalName()
-        if (a > _2_power_21 || b > _2_power_21 || c > _2_power_21)
-            throw new IndexOutOfBoundsException("a > _2_power_21 || b > _2_power_21 || c > _2_power_21 (" + this + ")");
-            
         if (a <= 0 || b <= 0 || c <= 0)
             throw new IllegalArgumentException("a <= 0 || b <= 0 || c <= 0 (" + this + ")");
         
         if (a == b || b == c || a == c)
             throw new IllegalArgumentException("a == b || b == c || a == c (" + this + ")");
 
-        setCanonicalName(a, b, c);
-    }
-
-    private void setCanonicalName(int a, int b, int c) {
         if (a < b)
         {
             if (b < c) canonicalName = new int[] {a, b, c}; else
@@ -47,6 +39,10 @@ public class SimpleTripletPermutation implements ITripletPermutation
         
         //    Fitting three integer to 64-bit long
         //    requires each integer be <= 2^21
+
+        if (a > _2_power_21 || b > _2_power_21 || c > _2_power_21)
+            throw new IndexOutOfBoundsException("a > _2_power_21 || b > _2_power_21 || c > _2_power_21 (" + this + ")");
+
         canonicalHashCode = (long)((long) canonicalName[2] << (21 * 2))
                           | (long)((long) canonicalName[1] << 21)
                           | (canonicalName[0]);
@@ -94,20 +90,35 @@ public class SimpleTripletPermutation implements ITripletPermutation
             throw new IllegalArgumentException(targetPermutation + " should have same variables as " + this);
         }
         
-        if (targetPermutation.getAName() != getAName())
-        {
-            if (targetPermutation.getAName() == getBName()) swapAB(); else swapAC();
-        }
-        if (targetPermutation.getBName() != getBName())
-        {
-            if (targetPermutation.getBName() == getAName()) swapAB(); else swapBC();
-        }
-        if (targetPermutation.getAName() != getAName())
-        {
-            if (targetPermutation.getAName() == getBName()) swapAB(); else swapAC();
-        }
+        transpose(targetPermutation.getAName(), targetPermutation.getBName());
     }
 
+    public void transposeTo(int targetA, int targetB, int targetC)
+    {
+        if (!(hasVariable(targetA) && hasVariable(targetB) && hasVariable(targetC)))
+        {
+            throw new IllegalArgumentException(targetA + "," + targetB + "," + targetC + " should have same variables as " + this);
+        }
+        
+        transpose(targetA, targetB);
+    }
+
+    private void transpose(int targetA, int targetB)
+    {
+        if (targetA != getAName())
+        {
+            if (targetA == getBName()) swapAB(); else swapAC();
+        }
+        if (targetB != getBName())
+        {
+            if (targetB == getAName()) swapAB(); else swapBC();
+        }
+        if (targetA != getAName())
+        {
+            if (targetA == getBName()) swapAB(); else swapAC();
+        }
+    }
+    
     public void swapAB()
     {
         a = a + b;

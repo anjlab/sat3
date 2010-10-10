@@ -18,6 +18,7 @@ public interface ITripletPermutation
     boolean hasVariable(int varName);
     
     void transposeTo(ITripletPermutation targetPermutation);
+    void transposeTo(int targetA, int targetB, int targetC);
 
     void swapAB();
     void swapAC();

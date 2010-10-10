@@ -16,6 +16,10 @@ public class GenericArrayList<T>
     {
         tiers = new ObjectArrayList(initialCapacity);
     }
+    public GenericArrayList(T[] elements)
+    {
+        tiers = new ObjectArrayList(elements);
+    }
     public void add(T element)
     {
         tiers.add(element);

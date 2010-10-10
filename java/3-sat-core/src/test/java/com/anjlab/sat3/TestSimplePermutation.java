@@ -54,7 +54,7 @@ public class TestSimplePermutation
     @Test
     public void testTransposition()
     {
-        SimpleTripletPermutation stp;
+        ITripletPermutation stp;
         
         stp =           new SimpleTripletPermutation(1, 2, 3);
         stp.transposeTo(new SimpleTripletPermutation(1, 2, 3));
@@ -102,7 +102,7 @@ public class TestSimplePermutation
     @Test
     public void testCanonicalName()
     {
-        SimpleTripletPermutation stp;
+        ITripletPermutation stp;
         
         stp = new SimpleTripletPermutation(1, 2, 3);
         Assert.assertArrayEquals(new int[] {1, 2, 3}, stp.getCanonicalName());

@@ -394,7 +394,7 @@ public class Helper
         }
     }
 
-    public static GenericArrayList<? extends ITabularFormula> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
+    public static GenericArrayList<ICompactTripletsStructure> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
     {
         GenericArrayList<ICompactTripletsStructure> cts = new GenericArrayList<ICompactTripletsStructure>(ctf.size());
 
@@ -556,5 +556,167 @@ public class Helper
 
             formula.add(triplet);
         }
+    }
+
+    public static void unify(GenericArrayList<ICompactTripletsStructure> cts) throws EmptyStructureException
+    {
+        if (cts.size() < 2)
+        {
+            throw new IllegalArgumentException("Unification is a q-ary operation where q should be > 1");
+        }
+
+        boolean someClausesRemoved = false;
+
+        int varCount = cts.get(0).getPermutation().size();
+        
+        for (int varName = 1; varName <= varCount; varName++)
+        {
+            System.out.println(System.currentTimeMillis() + ": var #" + varName + " of " + varCount);
+            for (int i = 0; i < cts.size(); i++)
+            {
+                ICompactTripletsStructure s = cts.get(i);
+                if (s.isEmpty())
+                {
+                    throw new EmptyStructureException(s);
+                }
+                Value value = s.valueOf(varName);
+                if (value != Value.Mixed)
+                {
+                    //  Concretize all other CTS with (varName -> value)
+                    for (int j = 0; j < cts.size(); j++)
+                    {
+                        if (i == j) continue;
+                        
+                        ICompactTripletsStructure sj = cts.get(j);
+                        someClausesRemoved |= sj.concretize(varName, value);
+                        
+                        if (sj.isEmpty())
+                        {
+                            throw new EmptyStructureException(sj);
+                        }
+                    }
+                }
+                
+                for (int j = 0; j < s.getTiers().size(); j++)
+                {
+                    ITier tj = s.getTiers().get(j);
+                    int size = tj.size();
+                    for (int k = 0; k < cts.size(); k++)
+                    {
+                        if (k == i) continue;
+                        
+                        ICompactTripletsStructure sk = cts.get(k);
+                        
+                        someClausesRemoved |= unify(sk, tj, tj.getAName(), tj.getBName());
+                        someClausesRemoved |= unify(sk, tj, tj.getBName(), tj.getCName());
+                        someClausesRemoved |= unify(sk, tj, tj.getCName(), tj.getAName());
+                    }
+                    if (size != tj.size())
+                    {
+                        someClausesRemoved = true;
+                        s.cleanup();
+                        if (s.isEmpty())
+                        {
+                            throw new EmptyStructureException(s);
+                        }
+                    }
+                }
+            }
+        }
+        if (someClausesRemoved)
+        {
+            unify(cts);
+        }
+    }
+
+    /**
+     * 
+     * @param sk
+     * @param tj
+     * @param varName1
+     * @param varName2
+     * @return True if some clauses were removed from <code>sk</code>.
+     * @throws EmptyStructureException
+     */
+    private static boolean unify(ICompactTripletsStructure sk, ITier tj, int varName1, int varName2) throws EmptyStructureException
+    {
+        ITier tk = sk.findTierWithVarNames(varName1, varName2);
+        if (tk != null)
+        {
+            int aj = tj.getAName();
+            int bj = tj.getBName();
+            int cj = tj.getCName();
+            
+            int ak = tk.getAName();
+            int bk = tk.getBName();
+            int ck = tk.getCName();
+            
+            int a = getCanonicalVarName3(varName1, varName2, tj.getCanonicalName());
+            int c = getCanonicalVarName3(varName1, varName2, tk.getCanonicalName());
+            
+            tj.transposeTo(a, varName1, varName2);
+            tk.transposeTo(varName1, varName2, c);
+            
+            int size = tk.size();
+            
+            tj.adjoinRight(tk);
+            tk.adjoinLeft(tj);
+            
+            tj.transposeTo(aj, bj, cj);
+            tk.transposeTo(ak, bk, ck);
+            
+            if (size != tk.size())
+            {
+                sk.cleanup();
+                if (sk.isEmpty())
+                {
+                    throw new EmptyStructureException(sk);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * @param varName1
+     * @param varName2
+     * @param canonicalName array of {a, b, c}, where a < b < c
+     * @return
+     * 
+     * @author Viacheslav Rudyuk <viacheslav.rudyuk@gmail.com>
+     */
+    public static int getCanonicalVarName3(int varName1, int varName2, int[] canonicalName)
+    {
+        int varName3;
+        if (varName1 == canonicalName[1])
+        {
+            if (varName2 == canonicalName[2])
+            {
+                varName3 = canonicalName[0];
+            } else
+            {
+                varName3 = canonicalName[2];
+            }
+        }
+        else
+        {
+            if (varName2 == canonicalName[1])
+            {
+                if (varName1 > varName2)
+                {
+                    varName3 = canonicalName[0];
+                }
+                else
+                {
+                    varName3 = canonicalName[2];
+                }
+            }
+            else
+            {
+                varName3 = canonicalName[1];
+            }
+        }
+        return varName3;
     }
 }
