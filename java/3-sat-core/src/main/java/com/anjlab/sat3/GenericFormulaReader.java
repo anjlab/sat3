@@ -120,5 +120,7 @@ public class GenericFormulaReader
             }
             formula.add(new SimpleTriplet(-last, elements[count - 2], elements[count -1]));
         }
+        
+        //System.out.println(formula.getVarCount());
     }
 }

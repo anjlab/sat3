@@ -88,8 +88,8 @@ public class TestLoadSave
     public void testGenericLoadSpeed2() throws IOException
     {
         long start = System.currentTimeMillis();
-//        ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/gss-31-s100.cnf");
-        ITabularFormula formula = loadFromGenericDIMACSFileFormat("C:\\Temp\\SAT-Race-2010-CNF\\hardware-verification\\velev\\16pipe_16_ooo.cnf");
+        ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/gss-31-s100.cnf");
+//        ITabularFormula formula = loadFromGenericDIMACSFileFormat("C:\\Temp\\SAT-Race-2010-CNF\\hardware-verification\\velev\\16pipe_16_ooo.cnf");
         long end = System.currentTimeMillis();
         
         System.out.println("varCount=" + formula.getVarCount() 
