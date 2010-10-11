@@ -9,6 +9,8 @@ public class GenericFormulaReader
 {
     private int n = 0;
     private int m = 0;
+    private int b = 0;
+    private int c = 0;
    
     private final IntArrayList values = new IntArrayList();
     
@@ -81,6 +83,10 @@ public class GenericFormulaReader
                 
                 n = Integer.parseInt(pLine[2]);
                 m = Integer.parseInt(pLine[3]);
+                //b is first additional variable
+                b = ++n;
+                //c is second additional variable
+                c = ++n;
                 
                 break;
             }
@@ -94,16 +100,12 @@ public class GenericFormulaReader
         
         if(count == 1)
         {
-            int b = ++n;
-            int c = ++n;
-            
             formula.add(new SimpleTriplet(elements[0], b, c));
             formula.add(new SimpleTriplet(elements[0], b, -c));
             formula.add(new SimpleTriplet(elements[0], -b, c));
             formula.add(new SimpleTriplet(elements[0], -b, -c));
         } else if(count == 2)
         {
-            int b = ++n;
             formula.add(new SimpleTriplet(elements[0], elements[1], b));
             formula.add(new SimpleTriplet(elements[0], elements[1], -b));
         } else if(count == 3)
@@ -111,7 +113,6 @@ public class GenericFormulaReader
             formula.add(new SimpleTriplet(elements[0], elements[1], elements[2]));
         } else
         {
-            
             int last = ++n;
             formula.add(new SimpleTriplet(elements[0], elements[1], last));
             for(int v=2; v < count - 2; v++)
@@ -121,6 +122,6 @@ public class GenericFormulaReader
             formula.add(new SimpleTriplet(-last, elements[count - 2], elements[count -1]));
         }
         
-        //System.out.println(formula.getVarCount());
+        //System.out.println(formula.getVarCount() + ";" + x);
     }
 }
