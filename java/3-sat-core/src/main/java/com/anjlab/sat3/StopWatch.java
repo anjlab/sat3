@@ -11,6 +11,8 @@ public class StopWatch
 
     public void start(String comment)
     {
+        Helper.printLine('*', 70);
+        System.out.println(comment + "...");
         this.comment = comment;
         start = System.currentTimeMillis();
     }

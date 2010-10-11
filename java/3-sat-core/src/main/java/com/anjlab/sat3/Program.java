@@ -15,6 +15,8 @@ public class Program
         String verbose = System.getProperty("verbose");
         
         Helper.UsePrettyPrint = verbose != null && verbose.equalsIgnoreCase("true");
+        Helper.EnableAssertions = false;
+        Helper.UseUniversalVarNames = false;
 
         StopWatch stopWatch = new StopWatch();
         
@@ -25,8 +27,6 @@ public class Program
         Helper.prettyPrint(formula);
 
         stopWatch.printElapsed();
-
-        Helper.printLine('*', 70);
 
         stopWatch.start("Create CTF");
         GenericArrayList<ITabularFormula> ctf = Helper.createCTF(formula);
@@ -45,8 +45,6 @@ public class Program
         
         stopWatch.printElapsed();
 
-        Helper.printLine('*', 70);
-
         stopWatch.start("Create CTS");
         GenericArrayList<ICompactTripletsStructure> cts = Helper.createCTS(formula, ctf);
         stopWatch.stop();
@@ -64,6 +62,8 @@ public class Program
         stopWatch.start("Unify all CTS");
         Helper.unify(cts);
         stopWatch.stop();
+        
+        printFormulas(cts);
         
         stopWatch.printElapsed();
         
