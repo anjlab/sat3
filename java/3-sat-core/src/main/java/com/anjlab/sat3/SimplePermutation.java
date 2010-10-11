@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cern.colt.list.IntArrayList;
 import cern.colt.map.OpenIntIntHashMap;
 
-public class SimplePermutation implements IPermutation
+public final class SimplePermutation implements IPermutation
 {
     private final IntArrayList permutation;
     private final OpenIntIntHashMap permutationHash;
@@ -33,13 +33,13 @@ public class SimplePermutation implements IPermutation
         }
     }
 
-    public boolean contains(int varName)
+    public final boolean contains(int varName)
     {
         //    O(1)
         return permutationHash.containsKey(varName);
     }
 
-    public int indexOf(int varName)
+    public final int indexOf(int varName)
     {
         //  TODO Replacing zero-based indexing with the 1-based
         //  allow remove invocation of containsKey method here
@@ -50,9 +50,12 @@ public class SimplePermutation implements IPermutation
              : -1;
     }
 
-    public void add(int varName)
+    public final void add(int varName)
     {
-        assertNotContains(varName);
+        if (Helper.EnableAssertions)
+        {
+            assertNotContains(varName);
+        }
         
         permutation.add(varName);
         
@@ -68,9 +71,12 @@ public class SimplePermutation implements IPermutation
      * Note: This implementation can be slow. To avoid usage of this method remove 
      * the <code>JoinBetweenTiers2</code> implementation of {@link IJoinMethod} from {@link JoinMethods#getMethods()}.
      */
-    public void add(int index, int varName)
+    public final void add(int index, int varName)
     {
-        assertNotContains(varName);
+        if (Helper.EnableAssertions)
+        {
+            assertNotContains(varName);
+        }
         
         permutation.beforeInsert(index, varName);
         permutationHash.put(varName, index);
@@ -86,7 +92,7 @@ public class SimplePermutation implements IPermutation
         positionHash.put(index, varName);
     }
 
-    private void assertNotContains(int varName)
+    private final void assertNotContains(int varName)
     {
         if (contains(varName))
         {
@@ -94,22 +100,27 @@ public class SimplePermutation implements IPermutation
         }
     }
 
-    public int size()
+    public final int size()
     {
         return permutation.size();
     }
 
-    public int get(int index)
+    public final int[] elements()
+    {
+        return permutation.elements();
+    }
+    
+    public final int get(int index)
     {
         return permutation.get(index);
     }
 
-    public String toString()
+    public final String toString()
     {
         return permutation.toString();
     }
     
-    public boolean same(IPermutation permutation)
+    public final boolean same(IPermutation permutation)
     {
         return Arrays.equals(
                 this.permutation.elements(),

@@ -1,6 +1,6 @@
 package com.anjlab.sat3;
 
-import java.io.IOException;
+import static com.anjlab.sat3.Helper.printFormulas;
 
 public class Program
 {
@@ -58,6 +58,8 @@ public class Program
         System.out.println("CTF: " + ctf.size());
 
 //        saveCTS(args[0], cts);
+
+        stopWatch.printElapsed();
         
         stopWatch.start("Unify all CTS");
         Helper.unify(cts);
@@ -68,26 +70,4 @@ public class Program
         System.out.println("Program completed");
     }
 
-    @SuppressWarnings("unused")
-    private static void saveCTS(String filenamePrefix, GenericArrayList<ITabularFormula> cts) throws IOException
-    {
-        System.out.println("Saving CTS to file system...");
-        
-        for (int i = 0; i < cts.size(); i++)
-        {
-            ITabularFormula f = cts.get(i);
-            String filename = filenamePrefix + "-cts-" + i + ".cnf";
-            System.out.print("Saving " + filename + "...");
-            Helper.saveToDIMACSFileFormat(f, filename);
-            System.out.println(" done");
-        }
-    }
-
-    private static void printFormulas(GenericArrayList<?> formulas)
-    {
-        for (int i = 0; i < formulas.size(); i++)
-        {
-            Helper.prettyPrint((ITabularFormula) formulas.get(i));
-        }
-    }
 }

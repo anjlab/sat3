@@ -11,6 +11,7 @@ public class TestSimpleTriplet
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
         System.out.println(TestSimpleTriplet.class.getName());
     }
     

@@ -10,6 +10,8 @@ public interface ITripletPermutation
     int getBName();
     int getCName();
     
+    int[] getABC();
+    
     int[] getCanonicalName();
 
     long canonicalHashCode();
@@ -19,6 +21,7 @@ public interface ITripletPermutation
     
     void transposeTo(ITripletPermutation targetPermutation);
     void transposeTo(int targetA, int targetB, int targetC);
+    void transposeTo(int[] abc);
 
     void swapAB();
     void swapAC();

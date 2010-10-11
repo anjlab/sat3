@@ -10,13 +10,14 @@ public class TestSimplePermutation
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
         System.out.println(TestSimplePermutation.class.getName());
     }
     
     @Test
     public void testIndexOf()
     {
-        SimplePermutation sp = new SimplePermutation();
+        IPermutation sp = new SimplePermutation();
         
         sp.add(4);
         sp.add(6);

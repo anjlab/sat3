@@ -17,15 +17,14 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.anjlab.sat3.Helper;
-import com.anjlab.sat3.ITabularFormula;
-
 public class TestHelper
 {
     @BeforeClass
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
+        Helper.UseUniversalVarNames = true;
         System.out.println(TestHelper.class.getName());
     }
     
@@ -113,9 +112,11 @@ public class TestHelper
         
         Helper.prettyPrint(s2);
         
-        Helper.unify(
-                new GenericArrayList<ICompactTripletsStructure>(
-                        new ICompactTripletsStructure[] {s1, s2}));
+        GenericArrayList<ICompactTripletsStructure> cts = 
+            new GenericArrayList<ICompactTripletsStructure>(
+                new ICompactTripletsStructure[] {s1, s2});
+        
+        Helper.unify(cts);
         
         assertEquals(13, s1.getClausesCount());
         assertEquals(15, s2.getClausesCount());

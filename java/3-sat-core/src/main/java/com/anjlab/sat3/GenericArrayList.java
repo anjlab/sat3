@@ -4,41 +4,45 @@ import java.util.Comparator;
 
 import cern.colt.list.ObjectArrayList;
 
-public class GenericArrayList<T>
+public final class GenericArrayList<T>
 {
-    private ObjectArrayList tiers;
+    private final ObjectArrayList list;
     
     public GenericArrayList()
     {
-        tiers = new ObjectArrayList();
+        list = new ObjectArrayList();
     }
     public GenericArrayList(int initialCapacity)
     {
-        tiers = new ObjectArrayList(initialCapacity);
+        list = new ObjectArrayList(initialCapacity);
     }
     public GenericArrayList(T[] elements)
     {
-        tiers = new ObjectArrayList(elements);
+        list = new ObjectArrayList(elements);
     }
-    public void add(T element)
+    public final void add(T element)
     {
-        tiers.add(element);
+        list.add(element);
     }
-    public int size()
+    public final int size()
     {
-        return tiers.size();
+        return list.size();
     }
     @SuppressWarnings("unchecked")
-    public T get(int index)
+    public final T get(int index)
     {
-        return (T) tiers.get(index);
+        return (T) list.get(index);
     }
-    public void sort(Comparator<ITier> comparator)
+    public final void sort(Comparator<ITier> comparator)
     {
-        tiers.quickSortFromTo(0, tiers.size() - 1, comparator);
+        list.quickSortFromTo(0, list.size() - 1, comparator);
     }
-    public void clear()
+    public final void clear()
     {
-        tiers.clear();
+        list.clear();
+    }
+    public Object[] elements()
+    {
+        return list.elements();
     }
 }

@@ -1,7 +1,7 @@
 package com.anjlab.sat3;
 
 
-public class SimpleTriplet extends SimpleTier implements ITriplet
+public final class SimpleTriplet extends SimpleTier implements ITriplet
 {
     public SimpleTriplet(int a, int b, int c)
     {

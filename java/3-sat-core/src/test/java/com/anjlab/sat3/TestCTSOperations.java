@@ -15,6 +15,7 @@ public class TestCTSOperations
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
         System.out.println(TestCTSOperations.class.getName());
     }
     

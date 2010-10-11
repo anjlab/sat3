@@ -14,11 +14,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import cern.colt.function.LongObjectProcedure;
 import cern.colt.map.OpenIntObjectHashMap;
+import cern.colt.map.OpenLongObjectHashMap;
 
 public class Helper
 {
     public static boolean UsePrettyPrint = false;
+
+    public static boolean EnableAssertions = false;
+    
+    public static boolean UseUniversalVarNames = false;
     
     private static class InternalJoinInfo extends JoinInfo
     {
@@ -76,11 +82,15 @@ public class Helper
     {
         SimpleFormula formula = new SimpleFormula(permutation);
 
-        for (int i = 0; i < permutation.size() - 2; i++)
+        int tierCount = permutation.size() - 2;
+        
+        int[] permutationElements = ((SimplePermutation)permutation).elements();
+        
+        for (int i = 0; i < tierCount; i++)
         {
-            int a = permutation.get(i);
-            int b = permutation.get(i + 1);
-            int c = permutation.get(i + 2);
+            int a = permutationElements[i];
+            int b = permutationElements[i + 1];
+            int c = permutationElements[i + 2];
 
             ITier tier = SimpleTier.createCompleteTier(a, b, c);
 
@@ -92,15 +102,18 @@ public class Helper
 
     public static IPermutation completePermutation(IPermutation permutationHead, IPermutation variables)
     {
-        IPermutation result = new SimplePermutation(permutationHead, variables.size());
-        if (permutationHead.size() == variables.size())
+        int varCount = variables.size();
+        
+        IPermutation result = new SimplePermutation(permutationHead, varCount);
+        if (permutationHead.size() == varCount)
         {
             //    Nothing to complete (permutationHead is already completed permutation)
             return result;
         }
-        for (int i = 0; i < variables.size(); i++)
+        int[] variablesElements = ((SimplePermutation)variables).elements();
+        for (int i = 0; i < varCount; i++)
         {
-            int varName = variables.get(i);
+            int varName = variablesElements[i];
             if (!permutationHead.contains(varName))
             {
                 result.add(varName);
@@ -115,9 +128,12 @@ public class Helper
 
         OpenIntObjectHashMap joinCandidates = new OpenIntObjectHashMap(methods.length);
 
-        for (int j = 0; j < ctf.size(); j++)
+        int ctfCount = ctf.size();
+        Object[] ctfElements = ctf.elements();
+        
+        for (int j = 0; j < ctfCount; j++)
         {
-            ITabularFormula f = ctf.get(j);
+            ITabularFormula f = (ITabularFormula)ctfElements[j];
             for (int i = 0; i < methods.length; i++)
             {
                 IJoinMethod method = methods[i];
@@ -314,8 +330,12 @@ public class Helper
 
     private static String getLegendName(int varName)
     {
-//        return "x" + varName;
-
+        if (UseUniversalVarNames)
+        {
+            return "x" + varName;
+        }
+        else
+        {
             int count = 0;
 
             while (varName > ABC)
@@ -333,6 +353,7 @@ public class Helper
             }
 
             return new String(LEGEND_BUFFER, 0, count);
+        }
     }
 
     public static void saveToDIMACSFileFormat(ITabularFormula formula, String filename) throws IOException
@@ -402,18 +423,21 @@ public class Helper
         {
             ITabularFormula f = ctf.get(i);
             
-            if (!f.tiersSorted())
+            if (Helper.EnableAssertions)
             {
-                throw new IllegalArgumentException("Tiers should be sorted");
+                if (!f.tiersSorted())
+                {
+                    throw new IllegalArgumentException("Tiers should be sorted");
+                }
             }
 
             IPermutation targetPermutation = completePermutation(f.getPermutation(), formula.getPermutation());
 
-            ICompactTripletsStructure template = createCompleteCTS(targetPermutation);
+            ICompactTripletsStructure completeCTS = createCompleteCTS(targetPermutation);
 
-            template.subtract(f);
+            completeCTS.subtract(f);
 
-            cts.add(template);
+            cts.add(completeCTS);
         }
         return cts;
     }
@@ -565,16 +589,24 @@ public class Helper
             throw new IllegalArgumentException("Unification is a q-ary operation where q should be > 1");
         }
 
+        OpenLongObjectHashMap index = buildVarNamePairsIndex(cts);
+        unify(index, cts);
+    }
+    
+    private static void unify(OpenLongObjectHashMap index, GenericArrayList<ICompactTripletsStructure> cts) throws EmptyStructureException
+    {
         boolean someClausesRemoved = false;
 
         int varCount = cts.get(0).getPermutation().size();
+        int ctsCount = cts.size();
+        
+        Object[] ctsElements = cts.elements();
         
         for (int varName = 1; varName <= varCount; varName++)
         {
-            System.out.println(System.currentTimeMillis() + ": var #" + varName + " of " + varCount);
-            for (int i = 0; i < cts.size(); i++)
+            for (int i = 0; i < ctsCount; i++)
             {
-                ICompactTripletsStructure s = cts.get(i);
+                ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
                 if (s.isEmpty())
                 {
                     throw new EmptyStructureException(s);
@@ -583,11 +615,11 @@ public class Helper
                 if (value != Value.Mixed)
                 {
                     //  Concretize all other CTS with (varName -> value)
-                    for (int j = 0; j < cts.size(); j++)
+                    for (int j = 0; j < ctsCount; j++)
                     {
                         if (i == j) continue;
                         
-                        ICompactTripletsStructure sj = cts.get(j);
+                        ICompactTripletsStructure sj = (ICompactTripletsStructure) ctsElements[j];
                         someClausesRemoved |= sj.concretize(varName, value);
                         
                         if (sj.isEmpty())
@@ -596,87 +628,82 @@ public class Helper
                         }
                     }
                 }
-                
-                for (int j = 0; j < s.getTiers().size(); j++)
-                {
-                    ITier tj = s.getTiers().get(j);
-                    int size = tj.size();
-                    for (int k = 0; k < cts.size(); k++)
-                    {
-                        if (k == i) continue;
-                        
-                        ICompactTripletsStructure sk = cts.get(k);
-                        
-                        someClausesRemoved |= unify(sk, tj, tj.getAName(), tj.getBName());
-                        someClausesRemoved |= unify(sk, tj, tj.getBName(), tj.getCName());
-                        someClausesRemoved |= unify(sk, tj, tj.getCName(), tj.getAName());
-                    }
-                    if (size != tj.size())
-                    {
-                        someClausesRemoved = true;
-                        s.cleanup();
-                        if (s.isEmpty())
-                        {
-                            throw new EmptyStructureException(s);
-                        }
-                    }
-                }
             }
         }
-        if (someClausesRemoved)
+        
+        index.forEachPair(new LongObjectProcedure()
         {
-            unify(cts);
-        }
-    }
-
-    /**
-     * 
-     * @param sk
-     * @param tj
-     * @param varName1
-     * @param varName2
-     * @return True if some clauses were removed from <code>sk</code>.
-     * @throws EmptyStructureException
-     */
-    private static boolean unify(ICompactTripletsStructure sk, ITier tj, int varName1, int varName2) throws EmptyStructureException
-    {
-        ITier tk = sk.findTierWithVarNames(varName1, varName2);
-        if (tk != null)
-        {
-            int aj = tj.getAName();
-            int bj = tj.getBName();
-            int cj = tj.getCName();
-            
-            int ak = tk.getAName();
-            int bk = tk.getBName();
-            int ck = tk.getCName();
-            
-            int a = getCanonicalVarName3(varName1, varName2, tj.getCanonicalName());
-            int c = getCanonicalVarName3(varName1, varName2, tk.getCanonicalName());
-            
-            tj.transposeTo(a, varName1, varName2);
-            tk.transposeTo(varName1, varName2, c);
-            
-            int size = tk.size();
-            
-            tj.adjoinRight(tk);
-            tk.adjoinLeft(tj);
-            
-            tj.transposeTo(aj, bj, cj);
-            tk.transposeTo(ak, bk, ck);
-            
-            if (size != tk.size())
+            @SuppressWarnings("unchecked")
+            public boolean apply(long key, Object value)
             {
-                sk.cleanup();
-                if (sk.isEmpty())
+                //  See Helper#addTier() for details of key construction
+                int varName1 = (int) (key >> 21);
+                int varName2 = (int) (key & 0x1FFFFF);
+                
+                GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) value;
+                Object[] tiersElements = tiers.elements();
+                int tierCount = tiers.size();
+                
+                int[] abci = new int[3];
+                int[] abcj = new int[3];
+                
+                for (int i = 0; i < tierCount - 1; i++)
                 {
-                    throw new EmptyStructureException(sk);
+                    ITier ti = (ITier) tiersElements[i];
+                    
+                    //  Remember tiers permutations
+                    System.arraycopy(ti.getABC(), 0, abci, 0, 3);
+                    
+                    for (int j = i + 1; j < tierCount; j++)
+                    {
+                        ITier tj = (ITier) tiersElements[j];
+                        
+                        if (ti.getFormula() == tj.getFormula())
+                        {
+                            continue;
+                        }
+                        
+                        //  Remember tiers permutations
+                        System.arraycopy(tj.getABC(), 0, abcj, 0, 3);
+
+                        //  Transpose tiers for adjoin
+                        int a = getCanonicalVarName3(varName1, varName2, ti.getCanonicalName());
+                        int c = getCanonicalVarName3(varName1, varName2, tj.getCanonicalName());
+
+                        ti.transposeTo(a, varName1, varName2);
+                        tj.transposeTo(varName1, varName2, c);
+                        
+                        //  Ensure values of varName1 and varName2 are the same in both tiers
+                        ti.adjoinRight(tj);
+                        tj.adjoinLeft(ti);
+                        
+                        //  Return tiers permutations back
+                        tj.transposeTo(abcj);
+                    }
+                    //  Return tiers permutations back
+                    ti.transposeTo(abci);
                 }
                 return true;
             }
+        });
+        
+        for (int i = 0; i < ctsCount; i++)
+        {
+            ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
+            someClausesRemoved |= s.cleanup();
+
+            if (s.isEmpty())
+            {
+                throw new EmptyStructureException(s);
+            }
         }
-        return false;
+        
+        if (someClausesRemoved)
+        {
+            unify(index, cts);
+        }
     }
+
     
     /**
      * @param varName1
@@ -718,5 +745,72 @@ public class Helper
             }
         }
         return varName3;
+    }
+    
+    private static OpenLongObjectHashMap buildVarNamePairsIndex(GenericArrayList<ICompactTripletsStructure> cts)
+    {
+        int varCount = cts.get(0).getPermutation().size();
+        int tierCount = varCount - 2;
+        int ctsCount = cts.size();
+        
+        int initialCapacity = (2 * varCount + 1) * ctsCount * 2;
+        
+        OpenLongObjectHashMap result = new OpenLongObjectHashMap(initialCapacity);
+        
+        for(int i = 0; i < ctsCount; i++)
+        {
+            ICompactTripletsStructure s = cts.get(i);
+            for (int j = 0; j < tierCount; j++)
+            {
+                ITier tier = s.getTiers().get(j);
+                
+                ((SimpleTier)tier).setFormula(s);
+                
+                addTier(result, tier.getAName(), tier.getBName(), tier);
+                addTier(result, tier.getAName(), tier.getCName(), tier);
+                addTier(result, tier.getBName(), tier.getCName(), tier);
+            }
+        }
+        
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void addTier(OpenLongObjectHashMap hash, int varName1, int varName2, ITier tier)
+    {
+        long key = varName1 < varName2 ? varName1 << 21 | varName2 : varName2 << 21 | varName1;
+
+        GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) hash.get(key);
+        
+        if (tiers == null)
+        {
+            hash.put(key, new GenericArrayList<ITier>(new ITier[] {tier}));
+        }
+        else
+        {
+            tiers.add(tier);
+        }
+    }
+
+    public static void saveCTS(String filenamePrefix, GenericArrayList<ITabularFormula> cts) throws IOException
+    {
+        System.out.println("Saving CTS to file system...");
+        
+        for (int i = 0; i < cts.size(); i++)
+        {
+            ITabularFormula f = cts.get(i);
+            String filename = filenamePrefix + "-cts-" + i + ".cnf";
+            System.out.print("Saving " + filename + "...");
+            Helper.saveToDIMACSFileFormat(f, filename);
+            System.out.println(" done");
+        }
+    }
+
+    public static void printFormulas(GenericArrayList<?> formulas)
+    {
+        for (int i = 0; i < formulas.size(); i++)
+        {
+            Helper.prettyPrint((ITabularFormula) formulas.get(i));
+        }
     }
 }

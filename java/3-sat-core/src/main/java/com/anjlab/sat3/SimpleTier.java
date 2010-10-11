@@ -9,6 +9,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
     protected int keys_73516240;
     protected int size;
+    private ITabularFormula formula;
     
     public static SimpleTier createCompleteTier(int a, int b, int c)
     {
@@ -30,7 +31,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
              tripletPermutation.getCName());
     }
 
-    public ITier clone()
+    public final ITier clone()
     {
         SimpleTier tier = new SimpleTier(this);
         tier.keys_73516240 = keys_73516240;
@@ -38,7 +39,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         return tier;
     }
     
-    public void add(ITripletValue triplet)
+    public final void add(ITripletValue triplet)
     {
         if (!contains(triplet)) //    We need this check to keep value of size correct 
         {
@@ -47,18 +48,18 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         }
     }
 
-    public int size()
+    public final int size()
     {
         return size;
     }
 
-    public boolean contains(ITripletValue triplet)
+    public final boolean contains(ITripletValue triplet)
     {
         int key = triplet.getTierKey();
         return (keys_73516240 & key) == key;
     }
 
-    public void remove(ITripletValue triplet)
+    public final void remove(ITripletValue triplet)
     {
         if (contains(triplet))    //    We need this check to keep value of size correct
         {
@@ -66,7 +67,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         }
     }
 
-    private void removeKey(int key) {
+    private final void removeKey(int key) {
         keys_73516240 = keys_73516240 & (255 ^ key);
         size--;
     }
@@ -74,17 +75,17 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     /**
      * Use only if performance is not a goal.
      */
-    public Iterator<ITripletValue> iterator()
+    public final Iterator<ITripletValue> iterator()
     {
         return new Iterator<ITripletValue>()
         {
             private int key = 0;
             private byte counter = 0;
-            public boolean hasNext()
+            public final boolean hasNext()
             {
                 return counter < size;
             }
-            public ITripletValue next()
+            public final ITripletValue next()
             {
                 key = key == 0 ? 1 : key << 1;
                 boolean hasValue = (keys_73516240 & key) == key;
@@ -97,7 +98,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                 counter++;
                 return SimpleTripletValueFactory.getTripletValue(key);
             }
-            public void remove()
+            public final void remove()
             {
                 removeKey(key);
             }
@@ -157,16 +158,16 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     
     public String toString()
     {
-        SimplePermutation permutation = new SimplePermutation();
+        IPermutation permutation = new SimplePermutation();
         permutation.add(getAName());
         permutation.add(getBName());
         permutation.add(getCName());
         SimpleFormula formula = new SimpleFormula(permutation);
         formula.addTier(this);
-        return Helper.buildPrettyOutput(formula).toString();
+        return Helper.buildPrettyOutput(formula).insert(0, '\n').toString();
     }
 
-    public void subtract(ITier tier)
+    public final void subtract(ITier tier)
     {
         if (size != 8)
             throw new UnsupportedOperationException("Operation implemented only when subtracting from complete tier");
@@ -178,7 +179,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         keys_73516240 = keys_73516240 ^ ((SimpleTier) tier).keys_73516240;
     }
 
-    public void adjoinRight(ITier tier)
+    public final void adjoinRight(ITier tier)
     {
         int tier_keys_73516240 = ((SimpleTier) tier).keys_73516240;
         
@@ -192,7 +193,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         updateSize();
     }
 
-    public void adjoinLeft(ITier tier)
+    public final void adjoinLeft(ITier tier)
     {
         int tier_keys_76325410 = ((SimpleTier) tier).get_keys_76325410();
         
@@ -255,7 +256,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         return keys_7351oooo | (keys_6240oooo >> 4);
     }
 
-    public boolean isEmpty()
+    public final boolean isEmpty()
     {
         return size == 0;
     }
@@ -307,25 +308,28 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 //        System.out.println();
 //    }
     
-    public void intersect(ITier tier)
+    public final void intersect(ITier tier)
     {
         keys_73516240 = keys_73516240 & ((SimpleTier)tier).keys_73516240;
         updateSize();
     }
     
-    public void union(ITier tier)
+    public final void union(ITier tier)
     {
         keys_73516240 = keys_73516240 | ((SimpleTier)tier).keys_73516240;
         updateSize();
     }
     
-    public void concretize(int varName, Value value)
+    public final void concretize(int varName, Value value)
     {
-        if (value != Value.AllPlain && value != Value.AllNegative)
+        if (Helper.EnableAssertions)
         {
-            throw new IllegalArgumentException(
-                    "Value should be one of (" + Value.AllPlain + ", " + Value.AllNegative 
-                    + ") but was " + value);
+            if (value != Value.AllPlain && value != Value.AllNegative)
+            {
+                throw new IllegalArgumentException(
+                        "Value should be one of (" + Value.AllPlain + ", " + Value.AllNegative 
+                        + ") but was " + value);
+            }
         }
         
         if (getAName() == varName)
@@ -350,7 +354,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         }
     }
     
-    public Value valueOfA()
+    public final Value valueOfA()
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
@@ -361,7 +365,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                      : Value.Mixed;
     }
     
-    public Value valueOfB()
+    public final Value valueOfB()
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
@@ -372,7 +376,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                      : Value.Mixed;
     }
     
-    public Value valueOfC()
+    public final Value valueOfC()
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
@@ -381,5 +385,19 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                  : (keys_73516240 & 0xAA) == keys_73516240 
                      ? Value.AllNegative
                      : Value.Mixed;
+    }
+
+    public ITabularFormula getFormula()
+    {
+        if (formula == null)
+        {
+            throw new IllegalStateException("Formula instance was not set to any value");
+        }
+        return formula;
+    }
+
+    public void setFormula(ITabularFormula formula)
+    {
+        this.formula = formula;
     }
 }

@@ -13,10 +13,9 @@ public interface ICompactTripletsStructure extends ITabularFormula
     boolean concretize(int varName, Value value);
     /**
      * Runs clearing procedure on this formula.
-     * @return True if some clauses were removed during concretization.
+     * @return True if some clauses were removed during cleanup.
      */
     boolean cleanup();
     void subtract(ITabularFormula formula);
     Value valueOf(int varName);
-    ITier findTierWithVarNames(int varName1, int varName2);
 }

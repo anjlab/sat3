@@ -18,6 +18,7 @@ public class TestLoadSave
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
         System.out.println(TestLoadSave.class.getName());
     }
     

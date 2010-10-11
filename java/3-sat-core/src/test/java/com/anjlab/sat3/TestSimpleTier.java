@@ -21,6 +21,7 @@ public class TestSimpleTier
     public static void setup()
     {
         Helper.UsePrettyPrint = true;
+        Helper.EnableAssertions = true;
         System.out.println(TestSimpleTier.class.getName());
     }
     

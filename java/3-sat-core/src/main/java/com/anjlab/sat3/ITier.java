@@ -30,4 +30,5 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
     Value valueOfB();
     Value valueOfC();
 
+    ITabularFormula getFormula();
 }
