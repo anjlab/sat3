@@ -12,6 +12,8 @@ public class SimpleTripletPermutation implements ITripletPermutation
     
     public SimpleTripletPermutation(int a, int b, int c)
     {
+        abc = new int[] {a, b, c};
+        
         if (a <= 0 || b <= 0 || c <= 0)
             throw new IllegalArgumentException("a <= 0 || b <= 0 || c <= 0 (" + this + ")");
         
@@ -40,8 +42,6 @@ public class SimpleTripletPermutation implements ITripletPermutation
         canonicalHashCode = (long)((long) canonicalName[2] << (21 * 2))
                           | (long)((long) canonicalName[1] << 21)
                           | (canonicalName[0]);
-        
-        abc = new int[] {a, b, c};
     }
 
     public final int getAName()

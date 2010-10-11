@@ -414,6 +414,24 @@ public class Helper
             }
         }
     }
+    
+    public static ITabularFormula loadFromGenericDIMACSFileFormat(String filename) throws IOException
+    {
+        BufferedReader reader = null;
+        try
+        {
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename)), "ascii"));
+            
+            return new GenericFormulaReader().readFormula(reader);
+        }
+        finally
+        {
+            if (reader != null)
+            {
+                reader.close();
+            }
+        }
+    }
 
     public static GenericArrayList<ICompactTripletsStructure> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
     {

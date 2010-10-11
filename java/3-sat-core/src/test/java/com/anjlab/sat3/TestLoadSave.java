@@ -2,6 +2,7 @@ package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.createRandomFormula;
 import static com.anjlab.sat3.Helper.loadFromDIMACSFileFormat;
+import static com.anjlab.sat3.Helper.loadFromGenericDIMACSFileFormat;
 import static com.anjlab.sat3.Helper.prettyPrint;
 import static com.anjlab.sat3.Helper.saveToDIMACSFileFormat;
 import static junit.framework.Assert.assertEquals;
@@ -60,4 +61,41 @@ public class TestLoadSave
                 + ", tiersCount=" + formula.getTiers().size()
                 + ", loadTime=" + (end - start));
     }
+    
+    @Test
+    public void testGenericLoad() throws IOException
+    {
+        ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/sat-example.cnf");
+        
+        assertEquals(8, formula.getVarCount());
+        assertEquals(9, formula.getClausesCount());
+    }
+    
+    @Test
+    public void testGenericLoadSpeed() throws IOException
+    {
+        long start = System.currentTimeMillis();
+        ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/unif-k3-r4.2-v18000-c75600-S420719158-080.cnf");
+        long end = System.currentTimeMillis();
+        
+        System.out.println("varCount=" + formula.getVarCount() 
+                + ", clausesCount=" + formula.getClausesCount()
+                + ", tiersCount=" + formula.getTiers().size()
+                + ", loadTime=" + (end - start));
+    }
+    
+    @Test
+    public void testGenericLoadSpeed2() throws IOException
+    {
+        long start = System.currentTimeMillis();
+//        ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/gss-31-s100.cnf");
+        ITabularFormula formula = loadFromGenericDIMACSFileFormat("C:\\Temp\\SAT-Race-2010-CNF\\hardware-verification\\velev\\16pipe_16_ooo.cnf");
+        long end = System.currentTimeMillis();
+        
+        System.out.println("varCount=" + formula.getVarCount() 
+                + ", clausesCount=" + formula.getClausesCount()
+                + ", tiersCount=" + formula.getTiers().size()
+                + ", loadTime=" + (end - start));
+    }
+    
 }

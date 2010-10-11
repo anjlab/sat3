@@ -165,4 +165,6 @@ public class TestHelper
         assertEquals(2, Helper.getCanonicalVarName3(1, 3, new int[] {1, 2, 3}));
         assertEquals(2, Helper.getCanonicalVarName3(3, 1, new int[] {1, 2, 3}));
     }
+    
+   
 }
