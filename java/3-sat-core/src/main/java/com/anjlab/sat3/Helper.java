@@ -831,4 +831,22 @@ public class Helper
             Helper.prettyPrint((ITabularFormula) formulas.get(i));
         }
     }
+
+    public static void printBits(byte keys)
+    {
+        int mask = 0x80;
+        while (mask > 0)
+        {
+            if ((keys & mask) == mask)
+            {
+                System.out.print("1");
+            }
+            else
+            {
+                System.out.print("0");
+            }
+            mask >>= 1;
+        }
+        System.out.println();
+    }
 }

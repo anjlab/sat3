@@ -21,7 +21,7 @@ public class Program
         StopWatch stopWatch = new StopWatch();
         
         stopWatch.start("Load formula");
-        ITabularFormula formula = Helper.loadFromDIMACSFileFormat(args[0]);
+        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(args[0]);
         stopWatch.stop();
         
         Helper.prettyPrint(formula);
@@ -42,7 +42,9 @@ public class Program
         stopWatch.stop();
 
         printFormulas(ctf);
-        
+
+        System.out.println("CTF: " + ctf.size());
+
         stopWatch.printElapsed();
 
         stopWatch.start("Create CTS");
@@ -53,11 +55,7 @@ public class Program
 
         stopWatch.printElapsed();
 
-        System.out.println("CTF: " + ctf.size());
-
 //        saveCTS(args[0], cts);
-
-        stopWatch.printElapsed();
         
         stopWatch.start("Unify all CTS");
         Helper.unify(cts);

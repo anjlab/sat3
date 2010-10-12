@@ -15,7 +15,7 @@ public final class SimpleTriplet extends SimpleTier implements ITriplet
         if (c < 0) keys_73516240 <<= 1;
     }
 
-    public final boolean isNotA() { return (keys_73516240 >= 0x10); }
+    public final boolean isNotA() { return (keys_73516240 & 0xF0) != 0; }
     public final boolean isNotB() { return (keys_73516240 & 0xCC) != 0; }
     public final boolean isNotC() { return (keys_73516240 & 0xAA) != 0; }
 
