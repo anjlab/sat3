@@ -21,7 +21,7 @@ public class Program
         StopWatch stopWatch = new StopWatch();
         
         stopWatch.start("Load formula");
-        ITabularFormula formula = Helper.loadFromDIMACSFileFormat(args[0]);
+        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(args[0]);
         stopWatch.stop();
         
         Helper.prettyPrint(formula);

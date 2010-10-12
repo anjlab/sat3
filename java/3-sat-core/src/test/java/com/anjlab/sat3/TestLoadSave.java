@@ -67,7 +67,7 @@ public class TestLoadSave
     {
         ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/sat-example.cnf");
         
-        assertEquals(7, formula.getVarCount());
+        assertEquals(8, formula.getVarCount());
         assertEquals(9, formula.getClausesCount());
     }
     

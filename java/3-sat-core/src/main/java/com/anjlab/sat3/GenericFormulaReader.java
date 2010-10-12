@@ -83,10 +83,6 @@ public class GenericFormulaReader
                 
                 n = Integer.parseInt(pLine[2]);
                 m = Integer.parseInt(pLine[3]);
-                //b is first additional variable
-                b = ++n;
-                //c is second additional variable
-                c = ++n;
                 
                 break;
             }
@@ -100,12 +96,15 @@ public class GenericFormulaReader
         
         if(count == 1)
         {
+            b = ++n;
+            c = ++n;
             formula.add(new SimpleTriplet(elements[0], b, c));
             formula.add(new SimpleTriplet(elements[0], b, -c));
             formula.add(new SimpleTriplet(elements[0], -b, c));
             formula.add(new SimpleTriplet(elements[0], -b, -c));
         } else if(count == 2)
         {
+            b = ++n;
             formula.add(new SimpleTriplet(elements[0], elements[1], b));
             formula.add(new SimpleTriplet(elements[0], elements[1], -b));
         } else if(count == 3)
