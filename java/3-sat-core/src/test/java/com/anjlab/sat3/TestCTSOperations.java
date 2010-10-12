@@ -2,7 +2,9 @@ package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.prettyPrint;
 import static com.anjlab.sat3.SimpleTripletValueFactory._000_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._010_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._100_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -210,5 +212,39 @@ public class TestCTSOperations
         ITier _345 = s3.getTiers().get(2);
         assertEquals(1, _345.size());
         assertTrue(_345.contains(_000_instance));
+    }
+    
+    @Test
+    public void testCompleteCTF2CTS()
+    {
+        ITabularFormula formula = Helper.createFormula(
+                new int[] {
+                        1, 2, 3,
+                        1, -2, 3,
+                        -1, 2, 3,
+                        2, 3, 4,
+                        2, -3, 4,
+                        -2, -3, -4
+                });
+        
+        Helper.prettyPrint(formula);
+        
+        formula.complete(SimplePermutation.create(
+                new int[] {1, 2, 3, 4, 5, 6}));
+        
+        assertEquals(6, formula.getVarCount());
+        
+        assertTrue(!formula.getTiers().get(0).contains(_000_instance));
+        assertTrue(!formula.getTiers().get(0).contains(_010_instance));
+        assertTrue(!formula.getTiers().get(0).contains(_100_instance));
+        assertEquals(5, formula.getTiers().get(0).size());
+        assertTrue(!formula.getTiers().get(1).contains(_000_instance));
+        assertTrue(!formula.getTiers().get(1).contains(_010_instance));
+        assertTrue(!formula.getTiers().get(1).contains(_111_instance));
+        assertEquals(5, formula.getTiers().get(1).size());
+        assertEquals(8, formula.getTiers().get(2).size());
+        assertEquals(8, formula.getTiers().get(2).size());
+        
+        Helper.prettyPrint(formula);
     }
 }

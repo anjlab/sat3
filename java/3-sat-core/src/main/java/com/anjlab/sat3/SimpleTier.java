@@ -385,4 +385,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         this.formula = formula;
     }
+    
+    public void inverse()
+    {
+        keys_73516240 = (byte)(~keys_73516240);
+        size = 8 - size;
+    }
 }

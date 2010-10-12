@@ -302,27 +302,25 @@ public class TestSimpleTier
     }
 
     @Test
-    public void testSubtract()
+    public void testInverse()
     {
-        ITier t1 = SimpleTier.createCompleteTier(1, 2, 3);
-        
         ITier t2 = new SimpleTier(1, 2, 3);
         t2.add(_001_instance);
         t2.add(_101_instance);
         
-        t1.subtract(t2);
+        t2.inverse();
         
-        assertEquals(6, t1.size());
+        assertEquals(6, t2.size());
         
-        assertTrue(t1.contains(_000_instance));
-        assertTrue(t1.contains(_010_instance));
-        assertTrue(t1.contains(_011_instance));
-        assertTrue(t1.contains(_100_instance));
-        assertTrue(t1.contains(_110_instance));
-        assertTrue(t1.contains(_111_instance));
+        assertTrue(t2.contains(_000_instance));
+        assertTrue(t2.contains(_010_instance));
+        assertTrue(t2.contains(_011_instance));
+        assertTrue(t2.contains(_100_instance));
+        assertTrue(t2.contains(_110_instance));
+        assertTrue(t2.contains(_111_instance));
         
-        assertTrue(!t1.contains(_001_instance));
-        assertTrue(!t1.contains(_101_instance));
+        assertTrue(!t2.contains(_001_instance));
+        assertTrue(!t2.contains(_101_instance));
     }
 
     @Test

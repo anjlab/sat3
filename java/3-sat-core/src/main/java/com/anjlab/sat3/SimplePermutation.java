@@ -17,21 +17,6 @@ public final class SimplePermutation implements IPermutation
         permutationHash = new OpenIntIntHashMap();
         positionHash = new OpenIntIntHashMap();
     }
-    
-    public SimplePermutation(IPermutation permutationHead, int size)
-    {
-        permutation = new IntArrayList(size);
-        permutation.addAllOf(((SimplePermutation) permutationHead).permutation);
-        
-        permutationHash = new OpenIntIntHashMap(size);
-        positionHash = new OpenIntIntHashMap(size);
-        
-        for (int i = 0; i < permutation.size(); i++)
-        {
-            permutationHash.put(permutation.get(i), i);
-            positionHash.put(i, permutation.get(i));
-        }
-    }
 
     public final boolean contains(int varName)
     {
@@ -125,5 +110,22 @@ public final class SimplePermutation implements IPermutation
         return Arrays.equals(
                 this.permutation.elements(),
                 ((SimplePermutation) permutation).permutation.elements());
+    }
+    
+    public void ensureCapacity(int varCount)
+    {
+        permutation.ensureCapacity(varCount);
+    }
+
+    public static IPermutation create(int[] variables)
+    {
+        IPermutation permutation = new SimplePermutation();
+        
+        for (int varName : variables)
+        {
+            permutation.add(varName);
+        }
+        
+        return permutation;
     }
 }

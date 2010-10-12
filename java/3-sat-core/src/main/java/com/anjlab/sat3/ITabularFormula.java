@@ -9,9 +9,9 @@ public interface ITabularFormula
     int getClausesCount();
     GenericArrayList<ITier> getTiers();
     boolean tiersSorted();
-    void sortTiers();
     void add(ITriplet triplet);
     IPermutation getPermutation();
     void applyJoin(JoinInfo joinInfo, ITier tier);
     boolean isEmpty();
+    void complete(IPermutation variables);
 }
