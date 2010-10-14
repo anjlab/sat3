@@ -77,6 +77,65 @@ public final class SimplePermutation implements IPermutation
         positionHash.put(index, varName);
     }
 
+    public final void shiftToStart(int from, int to)
+    {
+        if (to <= from)
+        {
+            throw new IllegalArgumentException("to <= from");
+        }
+        int[] buffer = new int[from];   //  Allocate single static buffer somewhere outside?
+        
+        int[] elements = permutation.elements();
+        
+        System.arraycopy(elements, 0, buffer, 0, from);
+        System.arraycopy(elements, from, elements, 0, to - from + 1);
+        System.arraycopy(buffer, 0, elements, to - from + 1, from);
+        
+        for (int i = 0; i <= to; i++)
+        {
+            int varName = elements[i];
+            permutationHash.put(varName, i);
+            positionHash.put(i, varName);
+        }
+    }
+    
+    public final void shiftToEnd(int from, int to)
+    {
+        if (to <= from)
+        {
+            throw new IllegalArgumentException("to <= from");
+        }
+        int[] buffer = new int[permutation.size() - to - 1];   //  Allocate single static buffer somewhere outside?
+        
+        int[] elements = permutation.elements();
+        
+        System.arraycopy(elements, to + 1, buffer, 0, permutation.size() - to - 1);
+        System.arraycopy(elements, from, elements, permutation.size() - (to - from) - 1, to - from + 1);
+        System.arraycopy(buffer, 0, elements, from, permutation.size() - to - 1);
+        
+        for (int i = from; i < permutation.size(); i++)
+        {
+            int varName = elements[i];
+            permutationHash.put(varName, i);
+            positionHash.put(i, varName);
+        }
+    }
+    
+    public void swap(int varName1, int varName2)
+    {
+        int index1 = permutation.indexOf(varName1);
+        int index2 = permutation.indexOf(varName2);
+        
+        positionHash.put(index1, varName2);
+        positionHash.put(index2, varName1);
+        
+        permutationHash.put(varName1, index2);
+        permutationHash.put(varName2, index1);
+        
+        permutation.setQuick(index1, varName2);
+        permutation.setQuick(index2, varName1);
+    }
+    
     private final void assertNotContains(int varName)
     {
         if (contains(varName))
@@ -105,19 +164,14 @@ public final class SimplePermutation implements IPermutation
         return permutation.toString();
     }
     
-    public final boolean same(IPermutation permutation)
+    public final boolean sameAs(IPermutation permutation)
     {
         return Arrays.equals(
                 this.permutation.elements(),
                 ((SimplePermutation) permutation).permutation.elements());
     }
-    
-    public void ensureCapacity(int varCount)
-    {
-        permutation.ensureCapacity(varCount);
-    }
 
-    public static IPermutation create(int[] variables)
+    public static IPermutation createPermutation(int... variables)
     {
         IPermutation permutation = new SimplePermutation();
         

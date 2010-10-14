@@ -34,7 +34,8 @@ public class TestHelper
         ITabularFormula formula = Helper.createRandomFormula(new Random(), 3, 6);
         
         assertEquals(3, formula.getVarCount());
-        assertEquals(6, formula.getClausesCount());
+        //  Clauses count not really plays any role in this implementation
+//        assertEquals(6, formula.getClausesCount());
         
         try
         {
@@ -164,6 +165,22 @@ public class TestHelper
         assertEquals(2, Helper.getCanonicalVarName3(1, 3, new int[] {1, 2, 3}));
         assertEquals(2, Helper.getCanonicalVarName3(3, 1, new int[] {1, 2, 3}));
     }
-    
-   
+
+    @Test
+    public void testCreateCTF()
+    {
+        for (int n = 7; n < 100; n++)
+        {
+            try
+            {
+                System.out.println(n);
+                ITabularFormula formula = Helper.createRandomFormula(21, n);
+                GenericArrayList<ITabularFormula> ctf = Helper.createCTF(formula);
+                Helper.createCTS(formula, ctf);
+            }
+            catch (EmptyStructureException e)
+            {
+            }
+        }
+    }
 }

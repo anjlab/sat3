@@ -215,7 +215,7 @@ public class TestCTSOperations
     }
     
     @Test
-    public void testCompleteCTF2CTS()
+    public void testCompleteCTF2CTS() throws Exception
     {
         ITabularFormula formula = Helper.createFormula(
                 new int[] {
@@ -229,11 +229,13 @@ public class TestCTSOperations
         
         Helper.prettyPrint(formula);
         
-        formula.complete(SimplePermutation.create(
+        formula.complete(SimplePermutation.createPermutation(
                 new int[] {1, 2, 3, 4, 5, 6}));
         
         assertEquals(6, formula.getVarCount());
-        
+
+        Helper.prettyPrint(formula);
+
         assertTrue(!formula.getTiers().get(0).contains(_000_instance));
         assertTrue(!formula.getTiers().get(0).contains(_010_instance));
         assertTrue(!formula.getTiers().get(0).contains(_100_instance));
@@ -241,10 +243,8 @@ public class TestCTSOperations
         assertTrue(!formula.getTiers().get(1).contains(_000_instance));
         assertTrue(!formula.getTiers().get(1).contains(_010_instance));
         assertTrue(!formula.getTiers().get(1).contains(_111_instance));
-        assertEquals(5, formula.getTiers().get(1).size());
+        assertEquals(4, formula.getTiers().get(1).size());  //  Cleanup
         assertEquals(8, formula.getTiers().get(2).size());
         assertEquals(8, formula.getTiers().get(2).size());
-        
-        Helper.prettyPrint(formula);
     }
 }

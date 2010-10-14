@@ -8,10 +8,13 @@ public interface ITabularFormula
      */
     int getClausesCount();
     GenericArrayList<ITier> getTiers();
-    boolean tiersSorted();
+    ITier findTierFor(ITripletPermutation tripletPermutation);
     void add(ITriplet triplet);
+    void unionOrAdd(ITier tier);
     IPermutation getPermutation();
-    void applyJoin(JoinInfo joinInfo, ITier tier);
     boolean isEmpty();
-    void complete(IPermutation variables);
+    void complete(IPermutation variables) throws EmptyStructureException;
+    GenericArrayList<ITier> findTiersFor(int varName);
+    GenericArrayList<ITier> findTiersFor(int varName1, int varName2);
+    void sortTiers();
 }

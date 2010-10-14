@@ -372,11 +372,14 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                      : Value.Mixed;
     }
 
-    public ITabularFormula getFormula()
+    public final ITabularFormula getFormula()
     {
-        if (formula == null)
+        if (Helper.EnableAssertions)
         {
-            throw new IllegalStateException("Formula instance was not set to any value");
+            if (formula == null)
+            {
+                throw new IllegalStateException("Formula instance was not set to any value");
+            }
         }
         return formula;
     }

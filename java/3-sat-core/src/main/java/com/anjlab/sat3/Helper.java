@@ -9,13 +9,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 import cern.colt.function.LongObjectProcedure;
-import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
 
 public class Helper
@@ -25,52 +22,26 @@ public class Helper
     public static boolean EnableAssertions = false;
     
     public static boolean UseUniversalVarNames = false;
-    
-    private static class InternalJoinInfo extends JoinInfo
-    {
-        public ITabularFormula formula;
-
-        public InternalJoinInfo(JoinInfo joinInfo, ITabularFormula formula)
-        {
-            super(joinInfo.joinMethod);
-            concatenationPower = joinInfo.concatenationPower;
-            targetPermutation = joinInfo.targetPermutation;
-            rule = joinInfo.rule;
-            this.formula = formula;
-        }
-        
-        public String toString()
-        {
-            return joinMethod.getClass().getSimpleName() 
-                 + " rule " + rule 
-                 + " (pow=" + concatenationPower 
-                 + ", perm=" + targetPermutation
-                 + ", f=" + formula + ")";
-        }
-    }
 
     public static GenericArrayList<ITabularFormula> createCTF(ITabularFormula formula)
     {
         GenericArrayList<ITabularFormula> ctf = new GenericArrayList<ITabularFormula>();
 
         GenericArrayList<ITier> tiers = formula.getTiers();
-        for (int i = 0; i < tiers.size(); i++)
+
+        ITabularFormula f = new SimpleFormula();
+        f.unionOrAdd(tiers.get(0));
+        ctf.add(f);
+
+        for (int i = 1; i < tiers.size(); i++)
         {
             ITier tier = tiers.get(i);
             //  Search possible CTFs to which the tier may join
-            OpenIntObjectHashMap joinCandidates = getJoinCandidates(ctf, tier);
 
-            if (joinCandidates.size() != 0)
+            if (!joinTier(ctf, tier))
             {
-                InternalJoinInfo join = pickAJoin(joinCandidates);
-                join.formula.applyJoin(join, tier);
-            }
-            else
-            {
-                ITabularFormula f = new SimpleFormula();
-                JoinInfo joinInfo = new JoinInfo(null);
-                joinInfo.targetPermutation = tier;
-                f.applyJoin(joinInfo, tier);
+                f = new SimpleFormula();
+                f.unionOrAdd(tier);
                 ctf.add(f);
             }
         }
@@ -100,11 +71,12 @@ public class Helper
         return formula;
     }
 
-    private static OpenIntObjectHashMap getJoinCandidates(GenericArrayList<ITabularFormula> ctf, ITier tier)
+    /**
+     * @return True if tier was joined to some <code>ctf</code>
+     */
+    private static boolean joinTier(GenericArrayList<ITabularFormula> ctf, ITier tier)
     {
         IJoinMethod[] methods = JoinMethods.getMethods();
-
-        OpenIntObjectHashMap joinCandidates = new OpenIntObjectHashMap(methods.length);
 
         int ctfCount = ctf.size();
         Object[] ctfElements = ctf.elements();
@@ -116,64 +88,13 @@ public class Helper
             {
                 IJoinMethod method = methods[i];
                 
-                JoinInfo joinInfo = method.getJoinInfo(f, tier);
-
-                if (joinInfo.concatenationPower >= 0)
+                if (method.tryJoin(f, tier))
                 {
-                    InternalJoinInfo internalJoinInfo = new InternalJoinInfo(joinInfo, f);
-
-                    if (!joinCandidates.containsKey(joinInfo.concatenationPower))
-                    {
-                        List<InternalJoinInfo> list = new ArrayList<InternalJoinInfo>();
-                        list.add(internalJoinInfo);
-                        joinCandidates.put(joinInfo.concatenationPower, list);
-                        
-                        //    According to current implementation of
-                        //    #pickAJoin() we always pick join with greatest
-                        //    concatenationPower.
-                        //    Now JoinMethods.getMethods() returns all
-                        //    joinMethods ordered by concatenation power (descending) 
-                        //    of possible joins they will find.
-                        //    Since in #pickAJoin() we always pick a join that was 
-                        //    founded by first joinMethod we may simply return 
-                        //    first join candidate.
-                        
-                        //    Note: Comment the following line if you want to change implementation of #pickAJoin()
-                        
-                        return joinCandidates;
-                    }
-                    else
-                    {
-                        @SuppressWarnings("unchecked")
-                        List<InternalJoinInfo> candidates = 
-                            (List<InternalJoinInfo>) joinCandidates.get(joinInfo.concatenationPower);
-                        candidates.add(internalJoinInfo);
-                    }
+                    return true;
                 }
             }
         }
-        return joinCandidates;
-    }
-
-    private static InternalJoinInfo pickAJoin(OpenIntObjectHashMap dictionary)
-    {
-        //  We don't know what is the best join to pick
-        //  This implementation is a greedy algorithm 
-        //    which returns first founded join with maximum concatenation power
-
-        //    If one want to change this algorithm, make sure you also changed
-        //    #getJoinCandidates() (see comments in method body)
-        
-        for (int i = 3; i >= 0; i--)
-        {
-            if (dictionary.containsKey(i))
-            {
-                @SuppressWarnings("unchecked")
-                List<InternalJoinInfo> candidates = (List<InternalJoinInfo>) dictionary.get(i);
-                return candidates.get(0);
-            }
-        }
-        throw new RuntimeException();
+        return false;
     }
 
     public static ITabularFormula createRandomFormula(Random random, int varCount, int clausesCount)
@@ -185,12 +106,13 @@ public class Helper
                 .format("3-SAT formula of {0} variables may have at most {1} valuable clauses, but requested to create formula with " + clausesCount + " clauses",
                         varCount, mMax));
         }
-        
+
         ITabularFormula formula = new SimpleFormula();
-        while (formula.getClausesCount() < clausesCount)
+        for (int i = 0; i < clausesCount && formula.getPermutation().size() < varCount; i++)
         {
             formula.add(createRandomTriplet(random, varCount));
         }
+        
         return formula;
     }
 
@@ -207,7 +129,7 @@ public class Helper
         int c = random.nextInt(2 * varCount + 1) - varCount;
         while (c == 0 || Math.abs(c) == Math.abs(b) || Math.abs(c) == Math.abs(a))
             c = random.nextInt(2 * varCount + 1) - varCount;
-
+        
         return new SimpleTriplet(a, b, c);
     }
 
@@ -224,7 +146,8 @@ public class Helper
     {
         StringBuilder builder = new StringBuilder();
 
-        if (UsePrettyPrint)
+        boolean smallFormula = false; //    formula.getVarCount() < 100;
+        if (UsePrettyPrint || smallFormula)
         {
             int longestVarName = 0;
             IPermutation permutation = formula.getPermutation();
@@ -411,17 +334,17 @@ public class Helper
         }
     }
 
-    public static ITabularFormula createFormula(int[] values)
+    public static ITabularFormula createFormula(int... values)
     {
         if (values.length%3 != 0)
         {
             throw new IllegalArgumentException("Number of values must be a multiple of 3");
         }
-        SimpleFormula formula = new SimpleFormula();
+        ITabularFormula formula = new SimpleFormula();
         for (int i = 0; i < values.length; i +=3)
         {
-            ITriplet triplet = new SimpleTriplet(values[i], values[i + 1], values[i + 2]);
-            formula.add(triplet);
+            SimpleTriplet triplet = new SimpleTriplet(values[i], values[i + 1], values[i + 2]);
+            formula.unionOrAdd(triplet);
         }
         return formula;
     }
@@ -558,7 +481,8 @@ public class Helper
             throw new IllegalArgumentException("Unification is a q-ary operation where q should be > 1");
         }
 
-        OpenLongObjectHashMap index = buildVarNamePairsIndex(cts);
+        OpenLongObjectHashMap index = buildVarPairsIndex(cts);
+        
         unify(index, cts);
     }
     
@@ -566,6 +490,8 @@ public class Helper
     {
         boolean someClausesRemoved = false;
 
+        System.out.println("Running unify routine...");
+        
         int varCount = cts.get(0).getPermutation().size();
         int ctsCount = cts.size();
         
@@ -573,6 +499,8 @@ public class Helper
         
         for (int varName = 1; varName <= varCount; varName++)
         {
+//            System.out.println(System.currentTimeMillis() + ": " + varName + " of " + varCount);
+            
             for (int i = 0; i < ctsCount; i++)
             {
                 ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
@@ -716,22 +644,24 @@ public class Helper
         return varName3;
     }
     
-    private static OpenLongObjectHashMap buildVarNamePairsIndex(GenericArrayList<ITabularFormula> cts)
+    private static OpenLongObjectHashMap buildVarPairsIndex(GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
     {
+        System.out.println("Building pairs index...");
+        
         int varCount = cts.get(0).getPermutation().size();
         int tierCount = varCount - 2;
         int ctsCount = cts.size();
         
-        int initialCapacity = (2 * varCount + 1) * ctsCount * 2;
-        
-        OpenLongObjectHashMap result = new OpenLongObjectHashMap(initialCapacity);
+        final OpenLongObjectHashMap result = new OpenLongObjectHashMap();
         
         for(int i = 0; i < ctsCount; i++)
         {
             ITabularFormula s = cts.get(i);
+            Object[] tierElements = s.getTiers().elements();
+            
             for (int j = 0; j < tierCount; j++)
             {
-                ITier tier = s.getTiers().get(j);
+                ITier tier = (ITier) tierElements[j];
                 
                 ((SimpleTier)tier).setFormula(s);
                 
@@ -741,13 +671,37 @@ public class Helper
             }
         }
         
+        result.forEachPair(new LongObjectProcedure()
+        {
+            public boolean apply(long key, Object value)
+            {
+                if (((GenericArrayList<?>)value).size() < 2)
+                {
+                    result.removeKey(key);
+                }
+                return true;
+            }
+        });
+        
         return result;
     }
 
     @SuppressWarnings("unchecked")
     private static void addTier(OpenLongObjectHashMap hash, int varName1, int varName2, ITier tier)
     {
-        long key = varName1 < varName2 ? varName1 << 21 | varName2 : varName2 << 21 | varName1;
+        long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
+
+        if (EnableAssertions)
+        {
+            int varName1_ = (int) (key >> 21);
+            int varName2_ = (int) (key & 0x1FFFFF);
+    
+            if ((varName1 != varName1_) && (varName1 != varName2_)
+                    || (varName2 != varName1_) && (varName2 != varName2_))
+            {
+                throw new RuntimeException("Bad hash");
+            }
+        }
 
         GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) hash.get(key);
         
@@ -757,6 +711,10 @@ public class Helper
         }
         else
         {
+            if (!tier.hasVariable(varName1) || !tier.hasVariable(varName2))
+            {
+                throw new IllegalStateException();
+            }
             tiers.add(tier);
         }
     }
@@ -799,5 +757,30 @@ public class Helper
             mask >>= 1;
         }
         System.out.println();
+    }
+
+    public static void debugPrettyPrintToFile(ITabularFormula formula)
+    {
+        try
+        {
+            UsePrettyPrint = true;
+            StringBuilder builder = buildPrettyOutput(formula);
+            FileOutputStream fos = new FileOutputStream(new File("debug.txt"));
+            fos.write(builder.toString().getBytes());
+            fos.close();
+        } 
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
+            throws EmptyStructureException
+    {
+        for (int i = 0; i < ctf.size(); i++)
+        {
+            ctf.get(i).complete(formula.getPermutation());
+        }
     }
 }

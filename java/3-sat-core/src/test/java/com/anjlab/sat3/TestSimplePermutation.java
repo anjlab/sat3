@@ -1,5 +1,8 @@
 package com.anjlab.sat3;
 
+import static com.anjlab.sat3.SimplePermutation.createPermutation;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -122,5 +125,41 @@ public class TestSimplePermutation
         
         stp = new SimpleTripletPermutation(3, 2, 1);
         Assert.assertArrayEquals(new int[] {1, 2, 3}, stp.getCanonicalName());
+    }
+    
+    @Test
+    public void testShiftToStart()
+    {
+        IPermutation permutation = createPermutation(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        permutation.shiftToStart(4, 6);
+        Assert.assertTrue(permutation.sameAs(createPermutation(5, 6, 7, 1, 2, 3, 4, 8, 9)));
+        
+        assertEquals(0, permutation.indexOf(5));
+        assertEquals(1, permutation.indexOf(6));
+        assertEquals(2, permutation.indexOf(7));
+        assertEquals(3, permutation.indexOf(1));
+        assertEquals(4, permutation.indexOf(2));
+        assertEquals(5, permutation.indexOf(3));
+        assertEquals(6, permutation.indexOf(4));
+        assertEquals(7, permutation.indexOf(8));
+        assertEquals(8, permutation.indexOf(9));
+    }
+
+    @Test
+    public void testShiftToEnd()
+    {
+        IPermutation permutation = createPermutation(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        permutation.shiftToEnd(4, 6);
+        Assert.assertTrue(permutation.sameAs(createPermutation(1, 2, 3, 4, 8, 9, 5, 6, 7)));
+        
+        assertEquals(0, permutation.indexOf(1));
+        assertEquals(1, permutation.indexOf(2));
+        assertEquals(2, permutation.indexOf(3));
+        assertEquals(3, permutation.indexOf(4));
+        assertEquals(4, permutation.indexOf(8));
+        assertEquals(5, permutation.indexOf(9));
+        assertEquals(6, permutation.indexOf(5));
+        assertEquals(7, permutation.indexOf(6));
+        assertEquals(8, permutation.indexOf(7));
     }
 }

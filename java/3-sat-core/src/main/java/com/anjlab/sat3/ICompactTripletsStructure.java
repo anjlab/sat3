@@ -2,6 +2,7 @@ package com.anjlab.sat3;
 
 public interface ICompactTripletsStructure extends ITabularFormula
 {
+    boolean tiersSorted();
     ICompactTripletsStructure union(ICompactTripletsStructure cts);
     ICompactTripletsStructure intersect(ICompactTripletsStructure cts);
     /**

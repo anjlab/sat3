@@ -45,4 +45,8 @@ public final class GenericArrayList<T>
     {
         return list.elements();
     }
+    public String toString()
+    {
+        return list.toString();
+    }
 }

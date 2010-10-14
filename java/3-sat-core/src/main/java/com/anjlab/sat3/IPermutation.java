@@ -23,6 +23,9 @@ public interface IPermutation
      * @return
      */
     int get(int index);
-    boolean same(IPermutation permutation);
-    void ensureCapacity(int varCount);
+    boolean sameAs(IPermutation permutation);
+    void swap(int varName1, int varName2);
+    int[] elements();
+    void shiftToStart(int from, int to);
+    void shiftToEnd(int from, int to);
 }

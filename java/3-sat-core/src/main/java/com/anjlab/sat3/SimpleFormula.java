@@ -4,19 +4,20 @@ import static com.anjlab.sat3.SimpleTier.createCompleteTier;
 
 import java.util.Comparator;
 
+import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
 
 public final class SimpleFormula implements ICompactTripletsStructure
 {
     private final GenericArrayList<ITier> tiers;
-    private final OpenLongObjectHashMap tiersHash;
+    private final OpenLongObjectHashMap tiersHash3;
     private final IPermutation permutation;
 
     public SimpleFormula()
     {
         permutation = new SimplePermutation();
         tiers = new GenericArrayList<ITier>();
-        tiersHash = new OpenLongObjectHashMap();
+        tiersHash3 = new OpenLongObjectHashMap();
     }
 
     /**
@@ -31,7 +32,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
     {
         this.permutation = formula.permutation;
         this.tiers = new GenericArrayList<ITier>(formula.tiers.size());
-        this.tiersHash = new OpenLongObjectHashMap(formula.tiers.size());
+        this.tiersHash3 = new OpenLongObjectHashMap(formula.tiers.size());
         for (int i = 0; i < formula.tiers.size(); i++)
         {
             ITier tier = formula.tiers.get(i);
@@ -43,7 +44,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
     {
         this.permutation = permutation;
         tiers = new GenericArrayList<ITier>();
-        tiersHash = new OpenLongObjectHashMap(); 
+        tiersHash3 = new OpenLongObjectHashMap(); 
     }
 
     public int getClausesCount() {
@@ -68,13 +69,26 @@ public final class SimpleFormula implements ICompactTripletsStructure
     public boolean tiersSorted()
     {
         boolean sorted = true;
+        int[] permutationElements = permutation.elements();
+        Object[] tiersElements = tiers.elements(); 
         for (int i = 0; i < tiers.size() - 1; i++)
         {
-            if (permutation.indexOf(tiers.get(i).getAName()) > 
-                permutation.indexOf(tiers.get(i + 1).getAName()))
+            ITier tier = (ITier) tiersElements[i];
+            if (permutation.indexOf(tier.getAName()) > 
+                permutation.indexOf(((ITier)tiersElements[i + 1]).getAName()))
             {
                 sorted = false;
                 break;
+            }
+            else
+            {
+                if (!(permutationElements[i] == tier.getAName() 
+                        && permutationElements[i + 1] == tier.getBName()
+                        && permutationElements[i + 2] == tier.getCName()))
+                {
+                    sorted = false;
+                    break;
+                }
             }
         }
         return sorted;
@@ -88,15 +102,20 @@ public final class SimpleFormula implements ICompactTripletsStructure
         }
     };
     
-    private void sortTiers()
+    public final void sortTiers()
     {
         tiers.sort(tierComparator);
     }
 
-    public void complete(IPermutation variables)
+    public final void complete(IPermutation variables) throws EmptyStructureException
     {
         try
         {
+            tiersHash1.clear();
+            tiersHash2.clear();
+            tiersHash1 = null;
+            tiersHash2 = null;
+            
             int varCount = variables.size();
             int tiersCount = varCount - 2;
             if (permutation.size() == varCount && tiers.size() == tiersCount)
@@ -128,7 +147,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
                 
                 buffer.setCanonicalAttributes(a, b, c);
                 
-                if (!tiersHash.containsKey(buffer.canonicalHashCode()))
+                if (!tiersHash3.containsKey(buffer.canonicalHashCode()))
                 {
                     addTier(createCompleteTier(a, b, c));
                 }
@@ -137,7 +156,15 @@ public final class SimpleFormula implements ICompactTripletsStructure
         finally
         {
             sortTiers();
+            if (Helper.EnableAssertions)
+            {
+                assertTiersSorted();
+            }
             cleanup();
+            if (isEmpty())
+            {
+                throw new EmptyStructureException(this);
+            }
         }
     }
 
@@ -150,19 +177,86 @@ public final class SimpleFormula implements ICompactTripletsStructure
         targetTier.add(triplet);
     }
 
-    private void add(ITier tier)
+    //  tiersHash1 and tiersHash2 only needed during CTF creation
+    private OpenIntObjectHashMap tiersHash1 = new OpenIntObjectHashMap();
+    private OpenLongObjectHashMap tiersHash2 = new OpenLongObjectHashMap();
+    
+    @SuppressWarnings("unchecked")
+    public GenericArrayList<ITier> findTiersFor(int varName)
     {
-        ITier targetTier = findOrCreateTargetTierFor(tier);
+        return (GenericArrayList<ITier>) tiersHash1.get(varName);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public GenericArrayList<ITier> findTiersFor(int varName1, int varName2)
+    {
+        long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
         
-        tier.transposeTo(targetTier);
-
-        targetTier.union(tier);
+        return (GenericArrayList<ITier>) tiersHash2.get(key);
     }
 
+    public void unionOrAdd(ITier tier)
+    {
+        ITier targetTier = findTierFor(tier);
+        
+        if (targetTier == null)
+        {
+            ensurePermutationContains(tier);
+            addTier(tier);
+            
+            addTiersHash1(tier, tier.getAName());
+            addTiersHash1(tier, tier.getBName());
+            addTiersHash1(tier, tier.getCName());
+            
+            addTiersHash2(tier, tier.getAName(), tier.getBName());
+            addTiersHash2(tier, tier.getAName(), tier.getCName());
+            addTiersHash2(tier, tier.getBName(), tier.getCName());
+        }
+        else
+        {
+            tier.transposeTo(targetTier);
+            targetTier.union(tier);
+        }
+    }
+
+    private void addTiersHash1(ITier tier, int varName)
+    {
+        int key = varName;
+        
+        @SuppressWarnings("unchecked")
+        GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) tiersHash1.get(key);
+        
+        if (tiers == null)
+        {
+            tiersHash1.put(key, new GenericArrayList<ITier>(new ITier[] {tier}));
+        }
+        else
+        {
+            tiers.add(tier);
+        }
+    }
+    
+    private void addTiersHash2(ITier tier, int varName1, int varName2)
+    {
+        long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
+        
+        @SuppressWarnings("unchecked")
+        GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) tiersHash2.get(key);
+        
+        if (tiers == null)
+        {
+            tiersHash2.put(key, new GenericArrayList<ITier>(new ITier[] {tier}));
+        }
+        else
+        {
+            tiers.add(tier);
+        }
+    }
+    
     void addTier(ITier tier)
     {
         tiers.add(tier);
-        tiersHash.put(tier.canonicalHashCode(), tier);
+        tiersHash3.put(tier.canonicalHashCode(), tier);
     }
 
     private ITier findOrCreateTargetTierFor(ITripletPermutation triplet) {
@@ -183,9 +277,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
     private ITripletPermutation createTierFor(ITripletPermutation variables) {
         ITripletPermutation tierPermutation;
         
-        if (!permutation.contains(variables.getAName())) { permutation.add(variables.getAName()); }
-        if (!permutation.contains(variables.getBName())) { permutation.add(variables.getBName()); }
-        if (!permutation.contains(variables.getCName())) { permutation.add(variables.getCName()); }
+        ensurePermutationContains(variables);
 
         int aIndex = permutation.indexOf(variables.getAName());
         int bIndex = permutation.indexOf(variables.getBName());
@@ -200,12 +292,18 @@ public final class SimpleFormula implements ICompactTripletsStructure
         return tierPermutation;
     }
 
-    private ITier findTierFor(ITripletPermutation tripletPermutation) {
+    private void ensurePermutationContains(ITripletPermutation variables)
+    {
+        if (!permutation.contains(variables.getAName())) { permutation.add(variables.getAName()); }
+        if (!permutation.contains(variables.getBName())) { permutation.add(variables.getBName()); }
+        if (!permutation.contains(variables.getCName())) { permutation.add(variables.getCName()); }
+    }
+
+    public ITier findTierFor(ITripletPermutation tripletPermutation) {
         long key = tripletPermutation.canonicalHashCode();
         //    O(1)
-        ITier targetTier = tiersHash.containsKey(key)
-                         ? (ITier) tiersHash.get(key)
-                         : null;
+        ITier targetTier = (ITier) tiersHash3.get(key);
+        
         return targetTier;
     }
 
@@ -217,80 +315,6 @@ public final class SimpleFormula implements ICompactTripletsStructure
     public IPermutation getPermutation()
     {
         return permutation;
-    }
-
-    public void applyJoin(JoinInfo joinInfo, ITier tier)
-    {
-        int varIndex;
-        if ((varIndex = permutation.indexOf(joinInfo.targetPermutation.getAName())) >= 0)
-        {
-            if (varIndex + 1 > permutation.size() - 1 || permutation.get(varIndex + 1) != joinInfo.targetPermutation.getBName())
-            {
-                if (varIndex + 1 > permutation.size() - 1)
-                {
-                    permutation.add(joinInfo.targetPermutation.getBName());
-                }
-                else
-                {
-                    permutation.add(varIndex + 1, joinInfo.targetPermutation.getBName());
-                }
-            }
-            if (varIndex + 2 > permutation.size() - 1 || permutation.get(varIndex + 2) != joinInfo.targetPermutation.getCName())
-            {
-                if (varIndex + 2 > permutation.size() - 1)
-                {
-                    permutation.add(joinInfo.targetPermutation.getCName());
-                }
-                else
-                {
-                    permutation.add(varIndex + 2, joinInfo.targetPermutation.getCName());
-                }
-            }
-        }
-        else if ((varIndex = permutation.indexOf(joinInfo.targetPermutation.getBName())) >= 0)
-        {
-            int offset = 0;
-            if (varIndex - 1 < 0 || permutation.get(varIndex - 1) != joinInfo.targetPermutation.getAName())
-            {
-                if (varIndex - 1 < 0) offset++;
-                permutation.add(varIndex - 1 + offset, joinInfo.targetPermutation.getAName());
-            }
-            if (varIndex + 1 + offset > permutation.size() - 1 || permutation.get(varIndex + 1 + offset) != joinInfo.targetPermutation.getCName())
-            {
-                if (varIndex + 1 + offset > permutation.size() - 1)
-                {
-                    permutation.add(joinInfo.targetPermutation.getCName());
-                }
-                else
-                {
-                    permutation.add(varIndex + 1 + offset, joinInfo.targetPermutation.getCName());
-                }
-            }
-        }
-        else if ((varIndex = permutation.indexOf(joinInfo.targetPermutation.getCName())) >= 0)
-        {
-            int offset = 0;
-            if (varIndex - 1 < 0 || permutation.get(varIndex - 1) != joinInfo.targetPermutation.getBName())
-            {
-                if (varIndex - 1 < 0) offset++;
-
-                permutation.add(varIndex - 1 + offset, joinInfo.targetPermutation.getBName());
-            }
-            if (varIndex - 2 + offset < 0 || permutation.get(varIndex - 2 + offset) != joinInfo.targetPermutation.getAName())
-            {
-                if (varIndex - 2 + offset < 0) offset++;
-
-                permutation.add(varIndex - 2 + offset, joinInfo.targetPermutation.getAName());
-            }
-        }
-        else
-        {
-            permutation.add(joinInfo.targetPermutation.getAName());
-            permutation.add(joinInfo.targetPermutation.getBName());
-            permutation.add(joinInfo.targetPermutation.getCName());
-        }
-        
-        add(tier);
     }
 
     public boolean cleanup()
@@ -382,7 +406,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
 
     private void assertSamePermutation(SimpleFormula operand)
     {
-        if (!permutation.same(operand.permutation))
+        if (!permutation.sameAs(operand.permutation))
         {
             throw new IllegalArgumentException("Operand permutation should be the same as the formula permutation");
         }
@@ -476,7 +500,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
     private void clear()
     {
         tiers.clear();
-        tiersHash.clear();
+        tiersHash3.clear();
     }
     
     public String toString()
