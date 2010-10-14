@@ -66,7 +66,8 @@ public class TestLoadSave
     public void testGenericLoad() throws IOException
     {
         ITabularFormula formula = loadFromGenericDIMACSFileFormat("target/test-classes/sat-example.cnf");
-        
+     
+        prettyPrint(formula); 
         assertEquals(8, formula.getVarCount());
         assertEquals(9, formula.getClausesCount());
     }

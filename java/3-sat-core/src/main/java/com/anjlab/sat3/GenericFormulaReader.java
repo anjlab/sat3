@@ -89,6 +89,7 @@ public class GenericFormulaReader
         }
     }
 
+    private boolean createNewVars = true;
     private void addTriplets()
     {
         int count = values.size();
@@ -96,15 +97,25 @@ public class GenericFormulaReader
         
         if(count == 1)
         {
-            b = ++n;
-            c = ++n;
+            if(createNewVars)
+            {
+                b = ++n;
+                c = ++n;
+            }
+            createNewVars = !createNewVars;
+            
             formula.add(new SimpleTriplet(elements[0], b, c));
             formula.add(new SimpleTriplet(elements[0], b, -c));
             formula.add(new SimpleTriplet(elements[0], -b, c));
             formula.add(new SimpleTriplet(elements[0], -b, -c));
         } else if(count == 2)
         {
-            b = ++n;
+            if(createNewVars)
+            {
+                b = ++n;
+            }
+            createNewVars = !createNewVars;
+            
             formula.add(new SimpleTriplet(elements[0], elements[1], b));
             formula.add(new SimpleTriplet(elements[0], elements[1], -b));
         } else if(count == 3)
@@ -119,6 +130,8 @@ public class GenericFormulaReader
                 formula.add(new SimpleTriplet(-last, elements[v], last = ++n));
             }
             formula.add(new SimpleTriplet(-last, elements[count - 2], elements[count -1]));
+            
+            createNewVars = true;
         }
         
         //System.out.println(formula.getVarCount() + ";" + x);
