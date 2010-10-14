@@ -29,41 +29,33 @@ public class Program
         stopWatch.printElapsed();
 
         stopWatch.start("Create CTF");
-        GenericArrayList<ITabularFormula> ctf = Helper.createCTF(formula);
+        GenericArrayList<ITabularFormula> ct = Helper.createCTF(formula);
         stopWatch.stop();
 
-        stopWatch.printElapsed();
-        
-        stopWatch.start("Sort CTF tiers");
-        for (int i = 0; i < ctf.size(); i++)
-        {
-            ctf.get(i).sortTiers();
-        }
-        stopWatch.stop();
+        printFormulas(ct);
 
-        printFormulas(ctf);
-        
+        System.out.println("CTF: " + ct.size());
+
         stopWatch.printElapsed();
 
         stopWatch.start("Create CTS");
-        GenericArrayList<ICompactTripletsStructure> cts = Helper.createCTS(formula, ctf);
+        for (int i = 0; i < ct.size(); i++)
+        {
+            ct.get(i).complete(formula.getPermutation());
+        }
         stopWatch.stop();
 
-        printFormulas(cts);
+        printFormulas(ct);
 
         stopWatch.printElapsed();
 
-        System.out.println("CTF: " + ctf.size());
-
-//        saveCTS(args[0], cts);
-
-        stopWatch.printElapsed();
+//        saveCTS(args[0], ct);
         
         stopWatch.start("Unify all CTS");
-        Helper.unify(cts);
+        Helper.unify(ct);
         stopWatch.stop();
         
-        printFormulas(cts);
+        printFormulas(ct);
         
         stopWatch.printElapsed();
         

@@ -16,6 +16,5 @@ public interface ICompactTripletsStructure extends ITabularFormula
      * @return True if some clauses were removed during cleanup.
      */
     boolean cleanup();
-    void subtract(ITabularFormula formula);
     Value valueOf(int varName);
 }

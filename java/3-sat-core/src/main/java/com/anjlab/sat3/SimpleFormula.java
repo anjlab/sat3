@@ -1,5 +1,7 @@
 package com.anjlab.sat3;
 
+import static com.anjlab.sat3.SimpleTier.createCompleteTier;
+
 import java.util.Comparator;
 
 import cern.colt.map.OpenLongObjectHashMap;
@@ -86,9 +88,57 @@ public final class SimpleFormula implements ICompactTripletsStructure
         }
     };
     
-    public void sortTiers()
+    private void sortTiers()
     {
         tiers.sort(tierComparator);
+    }
+
+    public void complete(IPermutation variables)
+    {
+        try
+        {
+            int varCount = variables.size();
+            int tiersCount = varCount - 2;
+            if (permutation.size() == varCount && tiers.size() == tiersCount)
+            {
+                //  Nothing to complete (the formula is already have completed permutation)
+                return;
+            }
+            
+            int[] variablesElements = ((SimplePermutation)variables).elements();
+            for (int i = 0; i < varCount; i++)
+            {
+                int varName = variablesElements[i];
+                if (!permutation.contains(varName))
+                {
+                    permutation.add(varName);
+                }
+            }
+            for (int i = 0; i < tiers.size(); i++)
+            {
+                tiers.get(i).inverse();
+            }
+            int[] permutationElements = ((SimplePermutation)permutation).elements();
+            SimpleTripletPermutation buffer = new SimpleTripletPermutation(1, 2, 3);
+            for (int i = 0; i < tiersCount; i++)
+            {
+                int a = permutationElements[i];
+                int b = permutationElements[i + 1];
+                int c = permutationElements[i + 2];
+                
+                buffer.setCanonicalAttributes(a, b, c);
+                
+                if (!tiersHash.containsKey(buffer.canonicalHashCode()))
+                {
+                    addTier(createCompleteTier(a, b, c));
+                }
+            }
+        }
+        finally
+        {
+            sortTiers();
+            cleanup();
+        }
     }
 
     public void add(ITriplet triplet)
@@ -241,24 +291,6 @@ public final class SimpleFormula implements ICompactTripletsStructure
         }
         
         add(tier);
-    }
-
-    public void subtract(ITabularFormula formula)
-    {
-        SimpleFormula f = (SimpleFormula) formula;
-        for (int i = 0; i < tiers.size(); i++)
-        {
-            ITier tier = tiers.get(i);
-            long key = tier.canonicalHashCode();
-            if (!f.tiersHash.containsKey(key))
-            {
-                continue;
-            }
-            ITier t = (ITier) f.tiersHash.get(key);
-            tier.subtract(t);
-        }
-
-        cleanup();
     }
 
     public boolean cleanup()

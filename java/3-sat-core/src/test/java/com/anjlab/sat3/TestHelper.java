@@ -112,9 +112,8 @@ public class TestHelper
         
         Helper.prettyPrint(s2);
         
-        GenericArrayList<ICompactTripletsStructure> cts = 
-            new GenericArrayList<ICompactTripletsStructure>(
-                new ICompactTripletsStructure[] {s1, s2});
+        GenericArrayList<ITabularFormula> cts = 
+            new GenericArrayList<ITabularFormula>(new ITabularFormula[] {s1, s2});
         
         Helper.unify(cts);
         

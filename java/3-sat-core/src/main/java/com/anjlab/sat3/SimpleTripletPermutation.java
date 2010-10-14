@@ -7,8 +7,8 @@ public class SimpleTripletPermutation implements ITripletPermutation
     
     private int[] abc;
 
-    private final int[] canonicalName;
-    private final long canonicalHashCode;
+    private int[] canonicalName;
+    private long canonicalHashCode;
     
     public SimpleTripletPermutation(int a, int b, int c)
     {
@@ -20,6 +20,11 @@ public class SimpleTripletPermutation implements ITripletPermutation
         if (a == b || b == c || a == c)
             throw new IllegalArgumentException("a == b || b == c || a == c (" + this + ")");
 
+        setCanonicalAttributes(a, b, c);
+    }
+
+    public void setCanonicalAttributes(int a, int b, int c)
+    {
         if (a < b)
         {
             if (b < c) canonicalName = new int[] {a, b, c}; else

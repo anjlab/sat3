@@ -100,28 +100,6 @@ public class Helper
         return formula;
     }
 
-    public static IPermutation completePermutation(IPermutation permutationHead, IPermutation variables)
-    {
-        int varCount = variables.size();
-        
-        IPermutation result = new SimplePermutation(permutationHead, varCount);
-        if (permutationHead.size() == varCount)
-        {
-            //    Nothing to complete (permutationHead is already completed permutation)
-            return result;
-        }
-        int[] variablesElements = ((SimplePermutation)variables).elements();
-        for (int i = 0; i < varCount; i++)
-        {
-            int varName = variablesElements[i];
-            if (!permutationHead.contains(varName))
-            {
-                result.add(varName);
-            }
-        }
-        return result;
-    }
-
     private static OpenIntObjectHashMap getJoinCandidates(GenericArrayList<ITabularFormula> ctf, ITier tier)
     {
         IJoinMethod[] methods = JoinMethods.getMethods();
@@ -433,33 +411,6 @@ public class Helper
         }
     }
 
-    public static GenericArrayList<ICompactTripletsStructure> createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
-    {
-        GenericArrayList<ICompactTripletsStructure> cts = new GenericArrayList<ICompactTripletsStructure>(ctf.size());
-
-        for (int i = 0; i < ctf.size(); i++)
-        {
-            ITabularFormula f = ctf.get(i);
-            
-            if (Helper.EnableAssertions)
-            {
-                if (!f.tiersSorted())
-                {
-                    throw new IllegalArgumentException("Tiers should be sorted");
-                }
-            }
-
-            IPermutation targetPermutation = completePermutation(f.getPermutation(), formula.getPermutation());
-
-            ICompactTripletsStructure completeCTS = createCompleteCTS(targetPermutation);
-
-            completeCTS.subtract(f);
-
-            cts.add(completeCTS);
-        }
-        return cts;
-    }
-    
     public static ITabularFormula createFormula(int[] values)
     {
         if (values.length%3 != 0)
@@ -600,7 +551,7 @@ public class Helper
         }
     }
 
-    public static void unify(GenericArrayList<ICompactTripletsStructure> cts) throws EmptyStructureException
+    public static void unify(GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
     {
         if (cts.size() < 2)
         {
@@ -611,7 +562,7 @@ public class Helper
         unify(index, cts);
     }
     
-    private static void unify(OpenLongObjectHashMap index, GenericArrayList<ICompactTripletsStructure> cts) throws EmptyStructureException
+    private static void unify(OpenLongObjectHashMap index, GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
     {
         boolean someClausesRemoved = false;
 
@@ -765,7 +716,7 @@ public class Helper
         return varName3;
     }
     
-    private static OpenLongObjectHashMap buildVarNamePairsIndex(GenericArrayList<ICompactTripletsStructure> cts)
+    private static OpenLongObjectHashMap buildVarNamePairsIndex(GenericArrayList<ITabularFormula> cts)
     {
         int varCount = cts.get(0).getPermutation().size();
         int tierCount = varCount - 2;
@@ -777,7 +728,7 @@ public class Helper
         
         for(int i = 0; i < ctsCount; i++)
         {
-            ICompactTripletsStructure s = cts.get(i);
+            ITabularFormula s = cts.get(i);
             for (int j = 0; j < tierCount; j++)
             {
                 ITier tier = s.getTiers().get(j);
@@ -830,5 +781,23 @@ public class Helper
         {
             Helper.prettyPrint((ITabularFormula) formulas.get(i));
         }
+    }
+
+    public static void printBits(byte keys)
+    {
+        int mask = 0x80;
+        while (mask > 0)
+        {
+            if ((keys & mask) == mask)
+            {
+                System.out.print("1");
+            }
+            else
+            {
+                System.out.print("0");
+            }
+            mask >>= 1;
+        }
+        System.out.println();
     }
 }

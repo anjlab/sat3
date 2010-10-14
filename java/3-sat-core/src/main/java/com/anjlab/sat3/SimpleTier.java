@@ -7,14 +7,14 @@ import java.util.Iterator;
 //  created as a result of clone method)
 public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
-    protected int keys_73516240;
+    protected byte keys_73516240;
     protected int size;
     private ITabularFormula formula;
     
     public static SimpleTier createCompleteTier(int a, int b, int c)
     {
         SimpleTier result = new SimpleTier(a, b, c);
-        result.keys_73516240 = 255;
+        result.keys_73516240 = -1;  //  Complete tier
         result.size = 8;
         return result;
     }
@@ -43,7 +43,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         if (!contains(triplet)) //    We need this check to keep value of size correct 
         {
-            keys_73516240 = keys_73516240 | triplet.getTierKey();
+            keys_73516240 = (byte)(keys_73516240 | triplet.getTierKey());
             size++;
         }
     }
@@ -68,7 +68,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     }
 
     private final void removeKey(int key) {
-        keys_73516240 = keys_73516240 & (255 ^ key);
+        keys_73516240 = (byte)(keys_73516240 & (255 ^ key));
         size--;
     }
 
@@ -117,9 +117,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         int keys_oo51oooo = keys_73516240 & 0x30;
         int keys_oooo62oo = keys_73516240 & 0x0C;
         
-        keys_73516240 = (keys_73516240 & 0xC3)
-                      | (keys_oo51oooo >> 2)
-                      | (keys_oooo62oo << 2);
+        keys_73516240 = (byte)
+                       ((keys_73516240 & 0xC3)
+                      | ((keys_oo51oooo >> 2) & 0x3F)
+                      | (keys_oooo62oo << 2));
     }
     
     public final void swapAC()
@@ -134,9 +135,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         int keys_o3o1oooo = keys_73516240 & 0x50;
         int keys_oooo6o4o = keys_73516240 & 0x0A;
         
-        keys_73516240 = (keys_73516240 & 0xA5)
-                      | (keys_o3o1oooo >> 3)
-                      | (keys_oooo6o4o << 3);
+        keys_73516240 = (byte)
+                       ((keys_73516240 & 0xA5)
+                      | ((keys_o3o1oooo >> 3) & 0x1F)
+                      | (keys_oooo6o4o << 3));
     }
 
     public final void swapBC()
@@ -151,9 +153,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         int keys_o3ooo2oo = keys_73516240 & 0x44;
         int keys_oo5ooo4o = keys_73516240 & 0x22;
         
-        keys_73516240 = (keys_73516240 & 0x99)
-                      | (keys_o3ooo2oo >> 1)
-                      | (keys_oo5ooo4o << 1);
+        keys_73516240 = (byte)
+                       ((keys_73516240 & 0x99)
+                      | ((keys_o3ooo2oo >> 1) & 0x7F)
+                      | (keys_oo5ooo4o << 1));
     }
     
     public String toString()
@@ -176,14 +179,14 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
             throw new IllegalArgumentException("Cannot subtract tiers with different set of variables: " + this + " and " + tier);
         
         size -= tier.size();
-        keys_73516240 = keys_73516240 ^ ((SimpleTier) tier).keys_73516240;
+        keys_73516240 = (byte)(keys_73516240 ^ ((SimpleTier) tier).keys_73516240);
     }
 
     public final void adjoinRight(ITier tier)
     {
         int tier_keys_73516240 = ((SimpleTier) tier).keys_73516240;
         
-        int this_keys_o6o2o4o0 = ((tier_keys_73516240 >> 1) | tier_keys_73516240) & 0x55;
+        int this_keys_o6o2o4o0 = (((tier_keys_73516240 >> 1) & 0x7F) | tier_keys_73516240) & 0x55;
         int this_keys_7o3o5o1o = ((this_keys_o6o2o4o0 << 1));
         
         int this_keys_76325410 = (this_keys_o6o2o4o0 | this_keys_7o3o5o1o) & get_keys_76325410();
@@ -200,7 +203,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 //        printBits(((SimpleTier) tier).keys_73516240);
 //        printBits(tier_keys_76325410);
         
-        int this_keys_o3o1o2o0 = ((tier_keys_76325410 >> 1) | tier_keys_76325410) & 0x55;
+        int this_keys_o3o1o2o0 = (((tier_keys_76325410 >> 1) & 0x7F) | tier_keys_76325410) & 0x55;
         int this_keys_7o5o6o4o = ((this_keys_o3o1o2o0 << 1));
         
 //        printBits(this_keys_o3o1o2o0);
@@ -208,7 +211,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         
 //        printBits(keys_73516240);
         
-        keys_73516240 = (this_keys_7o5o6o4o | this_keys_o3o1o2o0) & keys_73516240;
+        keys_73516240 = (byte)((this_keys_7o5o6o4o | this_keys_o3o1o2o0) & keys_73516240);
         
 //        printBits(keys_73516240);
         
@@ -230,7 +233,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         }
     }
 
-    private int get_keys_73516240_from(int keys_76325410)
+    private byte get_keys_73516240_from(int keys_76325410)
     {
         int keys_7o3o5o1o = keys_76325410;
         int keys_6o2o4o0o = keys_76325410 << 1;
@@ -253,7 +256,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
             mask          >>= 1;
         }
         
-        return keys_7351oooo | (keys_6240oooo >> 4);
+        return (byte)(keys_7351oooo | ((keys_6240oooo >> 4) & 0x0F));
     }
 
     public final boolean isEmpty()
@@ -282,41 +285,23 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 
 //            printBits(keys_76325410);
 
-            keys_7351oooo >>= 1;
-            keys_o6420ooo >>= 1;
+            keys_7351oooo = (keys_7351oooo >> 1) & 0x7F;
+            keys_o6420ooo = (keys_o6420ooo >> 1) & 0x7F;
             mask          >>= 1;
         }
         
         return keys_76325410;
     }
 
-//    private void printBits(int keys)
-//    {
-//        int mask = 0x80;
-//        while (mask > 0)
-//        {
-//            if ((keys & mask) == mask)
-//            {
-//                System.out.print("1");
-//            }
-//            else
-//            {
-//                System.out.print("0");
-//            }
-//            mask >>= 1;
-//        }
-//        System.out.println();
-//    }
-    
     public final void intersect(ITier tier)
     {
-        keys_73516240 = keys_73516240 & ((SimpleTier)tier).keys_73516240;
+        keys_73516240 = (byte)(keys_73516240 & ((SimpleTier)tier).keys_73516240);
         updateSize();
     }
     
     public final void union(ITier tier)
     {
-        keys_73516240 = keys_73516240 | ((SimpleTier)tier).keys_73516240;
+        keys_73516240 = (byte)(keys_73516240 | ((SimpleTier)tier).keys_73516240);
         updateSize();
     }
     
@@ -334,17 +319,17 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         
         if (getAName() == varName)
         {
-            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x0F : keys_73516240 & 0xF0; 
+            keys_73516240 = (byte)(value == Value.AllPlain ? keys_73516240 & 0x0F : keys_73516240 & 0xF0); 
             updateSize();
         }
         else if (getBName() == varName)
         {
-            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x33 : keys_73516240 & 0xCC; 
+            keys_73516240 = (byte)(value == Value.AllPlain ? keys_73516240 & 0x33 : keys_73516240 & 0xCC); 
             updateSize();
         }
         else if (getCName() == varName)
         {
-            keys_73516240 = value == Value.AllPlain ? keys_73516240 & 0x55 : keys_73516240 & 0xAA; 
+            keys_73516240 = (byte)(value == Value.AllPlain ? keys_73516240 & 0x55 : keys_73516240 & 0xAA); 
             updateSize();
         }
         else
@@ -358,9 +343,9 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
-             : keys_73516240 <= 0x0F 
+             : (byte)(keys_73516240 & 0x0F) == keys_73516240 
                  ? Value.AllPlain 
-                 : (keys_73516240 & 0xF0) == keys_73516240 
+                 : (byte)(keys_73516240 & 0xF0) == keys_73516240 
                      ? Value.AllNegative
                      : Value.Mixed;
     }
@@ -369,9 +354,9 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
-             : (keys_73516240 & 0x33) == keys_73516240 
+             : (byte)(keys_73516240 & 0x33) == keys_73516240 
                  ? Value.AllPlain 
-                 : (keys_73516240 & 0xCC) == keys_73516240 
+                 : (byte)(keys_73516240 & 0xCC) == keys_73516240 
                      ? Value.AllNegative
                      : Value.Mixed;
     }
@@ -380,9 +365,9 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         return size == 0 
              ? Value.Mixed  //  empty tier 
-             : (keys_73516240 & 0x55) == keys_73516240 
+             : (byte)(keys_73516240 & 0x55) == keys_73516240 
                  ? Value.AllPlain 
-                 : (keys_73516240 & 0xAA) == keys_73516240 
+                 : (byte)(keys_73516240 & 0xAA) == keys_73516240 
                      ? Value.AllNegative
                      : Value.Mixed;
     }
@@ -399,5 +384,11 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     public void setFormula(ITabularFormula formula)
     {
         this.formula = formula;
+    }
+    
+    public void inverse()
+    {
+        keys_73516240 = (byte)(~keys_73516240);
+        size = 8 - size;
     }
 }

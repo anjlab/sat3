@@ -10,8 +10,6 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
 
     void remove(ITripletValue triplet);
 
-    void subtract(ITier tier);
-
     void adjoinLeft(ITier tier);
 
     void adjoinRight(ITier tier);
@@ -31,4 +29,6 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
     Value valueOfC();
 
     ITabularFormula getFormula();
+
+    void inverse();
 }

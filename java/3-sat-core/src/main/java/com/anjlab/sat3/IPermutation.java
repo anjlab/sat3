@@ -24,4 +24,5 @@ public interface IPermutation
      */
     int get(int index);
     boolean same(IPermutation permutation);
+    void ensureCapacity(int varCount);
 }
