@@ -49,28 +49,6 @@ public class Helper
         return ctf;
     }
 
-    public static ICompactTripletsStructure createCompleteCTS(IPermutation permutation)
-    {
-        SimpleFormula formula = new SimpleFormula(permutation);
-
-        int tierCount = permutation.size() - 2;
-        
-        int[] permutationElements = ((SimplePermutation)permutation).elements();
-        
-        for (int i = 0; i < tierCount; i++)
-        {
-            int a = permutationElements[i];
-            int b = permutationElements[i + 1];
-            int c = permutationElements[i + 2];
-
-            ITier tier = SimpleTier.createCompleteTier(a, b, c);
-
-            formula.addTier(tier);
-        }
-
-        return formula;
-    }
-
     /**
      * @return True if tier was joined to some <code>ctf</code>
      */
@@ -497,37 +475,6 @@ public class Helper
         
         Object[] ctsElements = cts.elements();
         
-        for (int varName = 1; varName <= varCount; varName++)
-        {
-//            System.out.println(System.currentTimeMillis() + ": " + varName + " of " + varCount);
-            
-            for (int i = 0; i < ctsCount; i++)
-            {
-                ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
-                if (s.isEmpty())
-                {
-                    throw new EmptyStructureException(s);
-                }
-                Value value = s.valueOf(varName);
-                if (value != Value.Mixed)
-                {
-                    //  Concretize all other CTS with (varName -> value)
-                    for (int j = 0; j < ctsCount; j++)
-                    {
-                        if (i == j) continue;
-                        
-                        ICompactTripletsStructure sj = (ICompactTripletsStructure) ctsElements[j];
-                        someClausesRemoved |= sj.concretize(varName, value);
-                        
-                        if (sj.isEmpty())
-                        {
-                            throw new EmptyStructureException(sj);
-                        }
-                    }
-                }
-            }
-        }
-        
         index.forEachPair(new LongObjectProcedure()
         {
             @SuppressWarnings("unchecked")
@@ -583,7 +530,7 @@ public class Helper
                 return true;
             }
         });
-        
+
         for (int i = 0; i < ctsCount; i++)
         {
             ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
@@ -592,6 +539,31 @@ public class Helper
             if (s.isEmpty())
             {
                 throw new EmptyStructureException(s);
+            }
+        }
+
+        for (int varName = 1; varName <= varCount; varName++)
+        {
+            for (int i = 0; i < ctsCount; i++)
+            {
+                ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
+                Value value = s.valueOf(varName);
+                if (value != Value.Mixed)
+                {
+                    //  Concretize all other CTS with (varName -> value)
+                    for (int j = 0; j < ctsCount; j++)
+                    {
+                        if (i == j) continue;
+                        
+                        ICompactTripletsStructure sj = (ICompactTripletsStructure) ctsElements[j];
+                        someClausesRemoved |= sj.concretize(varName, value);
+                        
+                        if (sj.isEmpty())
+                        {
+                            throw new EmptyStructureException(sj);
+                        }
+                    }
+                }
             }
         }
         

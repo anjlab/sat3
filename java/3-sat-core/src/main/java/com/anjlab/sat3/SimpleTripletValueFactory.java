@@ -48,6 +48,8 @@ public class SimpleTripletValueFactory {
 //                + ((b > 0 ? 0 : 1) << 1)    //    which coincide with the tier numbering 1 2 4 8 16 32 64 128
 //                + ((c > 0 ? 0 : 1) << 2);
         
+        //  Note: This should be the same as in constructor of SimpleTriplet
+        
         int key = 1;
         
         if (a < 0) key <<= 4;
@@ -67,7 +69,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return false; }
         public boolean isNotB() { return false; }
         public boolean isNotC() { return false; }
-        public int getTierKey() { return 1; }
+        public byte getTierKey() { return 1; }
     }
 
     private static class _001 implements ITripletValue
@@ -75,7 +77,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return false; }
         public boolean isNotB() { return false; }
         public boolean isNotC() { return true; }
-        public int getTierKey() { return 2; }
+        public byte getTierKey() { return 2; }
     }
 
     private static class _010 implements ITripletValue
@@ -83,7 +85,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return false; }
         public boolean isNotB() { return true; }
         public boolean isNotC() { return false; }
-        public int getTierKey() { return 4; }
+        public byte getTierKey() { return 4; }
     }
 
     private static class _011 implements ITripletValue
@@ -91,7 +93,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return false; }
         public boolean isNotB() { return true; }
         public boolean isNotC() { return true; }
-        public int getTierKey() { return 8; }
+        public byte getTierKey() { return 8; }
     }
 
     private static class _100 implements ITripletValue
@@ -99,7 +101,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return true; }
         public boolean isNotB() { return false; }
         public boolean isNotC() { return false; }
-        public int getTierKey() { return 16; }
+        public byte getTierKey() { return 16; }
     }
 
     private static class _101 implements ITripletValue
@@ -107,7 +109,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return true; }
         public boolean isNotB() { return false; }
         public boolean isNotC() { return true; }
-        public int getTierKey() { return 32; }
+        public byte getTierKey() { return 32; }
     }
 
     private static class _110 implements ITripletValue
@@ -115,7 +117,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return true; }
         public boolean isNotB() { return true; }
         public boolean isNotC() { return false; }
-        public int getTierKey() { return 64; }
+        public byte getTierKey() { return 64; }
     }
 
     private static class _111 implements ITripletValue
@@ -123,7 +125,7 @@ public class SimpleTripletValueFactory {
         public boolean isNotA() { return true; }
         public boolean isNotB() { return true; }
         public boolean isNotC() { return true; }
-        public int getTierKey() { return 128; }
+        public byte getTierKey() { return -128; }
     }
 
 }

@@ -6,5 +6,11 @@ public interface ITripletValue
     boolean isNotB();
     boolean isNotC();
     
-    int getTierKey();
+    /**
+     * There are exist 8 different triplet values: 000, 001, 010, 011, 100, 101, 110 and 111. 
+     * It is possible to associate these values with 8 different numbers (byte should be enough for this).
+     * 
+     * @return Unique number associated with this triplet value.
+     */
+    byte getTierKey();
 }

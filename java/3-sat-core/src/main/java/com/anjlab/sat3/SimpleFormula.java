@@ -10,13 +10,18 @@ import cern.colt.map.OpenLongObjectHashMap;
 public final class SimpleFormula implements ICompactTripletsStructure
 {
     private final GenericArrayList<ITier> tiers;
-    private final OpenLongObjectHashMap tiersHash3;
+    //  tiersHash1 and tiersHash2 only needed during CTF creation
+    private OpenIntObjectHashMap tiersHash1;
+    private OpenLongObjectHashMap tiersHash2;
+    private OpenLongObjectHashMap tiersHash3;
     private final IPermutation permutation;
 
     public SimpleFormula()
     {
         permutation = new SimplePermutation();
         tiers = new GenericArrayList<ITier>();
+        tiersHash1 = new OpenIntObjectHashMap();
+        tiersHash2 = new OpenLongObjectHashMap();
         tiersHash3 = new OpenLongObjectHashMap();
     }
 
@@ -28,15 +33,22 @@ public final class SimpleFormula implements ICompactTripletsStructure
      * 
      * @param formula
      */
-    private SimpleFormula(SimpleFormula formula)
+    private SimpleFormula(SimpleFormula formula, final boolean fillTiersHash3)
     {
         this.permutation = formula.permutation;
         this.tiers = new GenericArrayList<ITier>(formula.tiers.size());
-        this.tiersHash3 = new OpenLongObjectHashMap(formula.tiers.size());
+        this.tiersHash3 = fillTiersHash3 
+                        ? new OpenLongObjectHashMap(formula.tiers.size())
+                        : null;
         for (int i = 0; i < formula.tiers.size(); i++)
         {
             ITier tier = formula.tiers.get(i);
-            addTier(tier.clone());
+            ITier clone = tier.clone();
+            tiers.add(clone);
+            if (fillTiersHash3)
+            {
+                tiersHash3.put(tier.canonicalHashCode(), clone);
+            }
         }
     }
 
@@ -44,9 +56,20 @@ public final class SimpleFormula implements ICompactTripletsStructure
     {
         this.permutation = permutation;
         tiers = new GenericArrayList<ITier>();
-        tiersHash3 = new OpenLongObjectHashMap(); 
     }
 
+    /**
+     * Creates copy of this formula. 
+     * 
+     * New formula uses the same instance of <code>permutation</code> and cloned instances of tiers.
+     * Be careful about modifying permutation of new formula, because these changes will also affect initial formula.
+     * TiersHashX will not be initialized.
+     */
+    public SimpleFormula clone()
+    {
+        return new SimpleFormula(this, false);
+    }
+    
     public int getClausesCount() {
         int clausesCount = 0;
         for (int i = 0; i < tiers.size(); i++)
@@ -111,8 +134,6 @@ public final class SimpleFormula implements ICompactTripletsStructure
     {
         try
         {
-            tiersHash1.clear();
-            tiersHash2.clear();
             tiersHash1 = null;
             tiersHash2 = null;
             
@@ -176,10 +197,6 @@ public final class SimpleFormula implements ICompactTripletsStructure
         
         targetTier.add(triplet);
     }
-
-    //  tiersHash1 and tiersHash2 only needed during CTF creation
-    private OpenIntObjectHashMap tiersHash1 = new OpenIntObjectHashMap();
-    private OpenLongObjectHashMap tiersHash2 = new OpenLongObjectHashMap();
     
     @SuppressWarnings("unchecked")
     public GenericArrayList<ITier> findTiersFor(int varName)
@@ -378,7 +395,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
         return someClausesRemoved;
     }
 
-    public ICompactTripletsStructure union(ICompactTripletsStructure cts)
+    public void union(ICompactTripletsStructure cts)
     {
         SimpleFormula other = (SimpleFormula) cts;
 
@@ -387,21 +404,16 @@ public final class SimpleFormula implements ICompactTripletsStructure
             assertSamePermutation(other);
         }
         
-        //  Union will return CTS with the same permutation
-        SimpleFormula result = new SimpleFormula(this);
-
         for (int i = 0; i < tiers.size(); i++)
         {
-            ITier tier = result.tiers.get(i);
+            ITier tier = tiers.get(i);
             
             ITier otherTier = other.tiers.get(i);
             
             tier.union(otherTier);
         }
 
-        //  No need in running clearing procedure on result
-        
-        return result;
+        //  No need in running clearing procedure
     }
 
     private void assertSamePermutation(SimpleFormula operand)
@@ -412,7 +424,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
         }
     }
 
-    public ICompactTripletsStructure intersect(ICompactTripletsStructure cts)
+    public void intersect(ICompactTripletsStructure cts)
     {
         SimpleFormula other = (SimpleFormula) cts;
         
@@ -421,24 +433,31 @@ public final class SimpleFormula implements ICompactTripletsStructure
             assertSamePermutation(other);
         }
         
-        //  Intersect will return CTS with the same permutation
-        SimpleFormula result = new SimpleFormula(this);
-
         for (int i = 0; i < tiers.size(); i++)
         {
-            ITier tier = result.tiers.get(i);
+            ITier tier = tiers.get(i);
             
             ITier otherTier = other.tiers.get(i);
             
             tier.intersect(otherTier);
         }
 
-        result.cleanup();
-        
-        return result;
+        cleanup();
     }
 
     public boolean concretize(int varName, Value value)
+    {
+        boolean someClausesRemoved = internalConcretize(varName, value);
+        
+        if (someClausesRemoved)
+        {
+            return cleanup();
+        }
+        
+        return false;
+    }
+    
+    private boolean internalConcretize(int varName, Value value)
     {
         int indexOf = permutation.indexOf(varName);
 
@@ -484,12 +503,7 @@ public final class SimpleFormula implements ICompactTripletsStructure
             }
         }
         
-        if (someClausesRemoved)
-        {
-            return cleanup();
-        }
-        
-        return false;
+        return someClausesRemoved;
     }
 
     public boolean isEmpty()

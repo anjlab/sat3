@@ -64,7 +64,7 @@ public class TestJoinMethods
     }
 
     @Test
-    public void testJoin2BetweenTiers_BitsOnTheirPlaces() throws Throwable
+    public void testJoin2BetweenTiers_BitsAreOnTheSamePlaces() throws Throwable
     {
         for (int a1 = -3; a1 <= 3; a1 = a1 == -1 ? 1 : a1+1)
         for (int b1 = -3; b1 <= 3; b1 = b1 == -1 ? 1 : b1+1)
@@ -292,7 +292,7 @@ public class TestJoinMethods
     }
 
     @Test
-    public void tryJoin3BetweenTiers_2Left1Right_BitsOnTheirPlaces() throws Throwable
+    public void tryJoin3BetweenTiers_2Left1Right_BitsAreOnTheSamePlaces() throws Throwable
     {
         for (int a1 = -3; a1 <= 3; a1 = a1 == -1 ? 1 : a1+1)
         for (int b1 = -3; b1 <= 3; b1 = b1 == -1 ? 1 : b1+1)
@@ -447,7 +447,7 @@ public class TestJoinMethods
     }
 
     @Test
-    public void tryJoin3BetweenTiers_1Left2Right_BitsOnTheirPlaces() throws EmptyStructureException
+    public void tryJoin3BetweenTiers_1Left2Right_BitsAreOnTheSamePlaces() throws EmptyStructureException
     {
         for (int a1 = -3; a1 <= 3; a1 = a1 == -1 ? 1 : a1+1)
         for (int b1 = -3; b1 <= 3; b1 = b1 == -1 ? 1 : b1+1)
@@ -617,7 +617,7 @@ public class TestJoinMethods
     }
 
     @Test
-    public void tryJoin1Left_BitsOnTheirPlaces() throws EmptyStructureException
+    public void tryJoin1Left_BitsAreOnTheSamePlaces() throws EmptyStructureException
     {
         for (int a1 = -3; a1 <= 3; a1 = a1 == -1 ? 1 : a1+1)
         for (int b1 = -3; b1 <= 3; b1 = b1 == -1 ? 1 : b1+1)
@@ -697,7 +697,7 @@ public class TestJoinMethods
     }
 
     @Test
-    public void tryJoin1Right_BitsOnTheirPlaces() throws EmptyStructureException
+    public void tryJoin1Right_BitsAreOnTheSamePlaces() throws EmptyStructureException
     {
         for (int a1 = -3; a1 <= 3; a1 = a1 == -1 ? 1 : a1+1)
         for (int b1 = -3; b1 <= 3; b1 = b1 == -1 ? 1 : b1+1)

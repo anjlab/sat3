@@ -95,8 +95,11 @@ public class TestCTSOperations
                              2, 3, 4,    //          0 0 0
                              -2, -3, 4   //          1 1 0
                          });             //       VarCount: 4; ClausesCount: 4; TiersCount: 2
-        
-        ICompactTripletsStructure s3 = s1.union(s2);
+
+        Helper.prettyPrint(s1);
+        Helper.prettyPrint(s2);
+
+        s1.union(s2);
         
                                          //      a b c d
                                          //      0 0 0  
@@ -109,10 +112,8 @@ public class TestCTSOperations
                                          //     VarCount: 4; ClausesCount: 7; TiersCount: 2
 
         Helper.prettyPrint(s1);
-        Helper.prettyPrint(s2);
-        Helper.prettyPrint(s3);
 
-        assertEquals(7, s3.getClausesCount());
+        assertEquals(7, s1.getClausesCount());
     }
     
     @Test
@@ -189,7 +190,7 @@ public class TestCTSOperations
        
         prettyPrint(s2);
         
-        ICompactTripletsStructure s3 = s1.intersect(s2);
+        s1.intersect(s2);
         
                                      //        a b c d e
                                      //        1 0 0    
@@ -197,19 +198,19 @@ public class TestCTSOperations
                                      //            0 0 0
                                      //       VarCount: 5; ClausesCount: 3; TiersCount: 3
        
-        prettyPrint(s3);
+        prettyPrint(s1);
         
-        assertEquals(3, s3.getClausesCount());
+        assertEquals(3, s1.getClausesCount());
         
-        ITier _123 = s3.getTiers().get(0);
+        ITier _123 = s1.getTiers().get(0);
         assertEquals(1, _123.size());
         assertTrue(_123.contains(_100_instance));
 
-        ITier _234 = s3.getTiers().get(1);
+        ITier _234 = s1.getTiers().get(1);
         assertEquals(1, _234.size());
         assertTrue(_234.contains(_000_instance));
         
-        ITier _345 = s3.getTiers().get(2);
+        ITier _345 = s1.getTiers().get(2);
         assertEquals(1, _345.size());
         assertTrue(_345.contains(_000_instance));
     }

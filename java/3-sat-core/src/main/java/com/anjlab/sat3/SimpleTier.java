@@ -79,7 +79,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         return new Iterator<ITripletValue>()
         {
-            private int key = 0;
+            private byte key = 0;
             private byte counter = 0;
             public final boolean hasNext()
             {
@@ -87,7 +87,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
             }
             public final ITripletValue next()
             {
-                key = key == 0 ? 1 : key << 1;
+                key = (byte) (key == 0 ? 1 : key << 1);
                 boolean hasValue = (keys_73516240 & key) == key;
                 while (!hasValue)
                 {
@@ -168,18 +168,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         SimpleFormula formula = new SimpleFormula(permutation);
         formula.addTier(this);
         return Helper.buildPrettyOutput(formula).insert(0, '\n').toString();
-    }
-
-    public final void subtract(ITier tier)
-    {
-        if (size != 8)
-            throw new UnsupportedOperationException("Operation implemented only when subtracting from complete tier");
-        
-        if (canonicalHashCode() != tier.canonicalHashCode())
-            throw new IllegalArgumentException("Cannot subtract tiers with different set of variables: " + this + " and " + tier);
-        
-        size -= tier.size();
-        keys_73516240 = (byte)(keys_73516240 ^ ((SimpleTier) tier).keys_73516240);
     }
 
     public final void adjoinRight(ITier tier)
