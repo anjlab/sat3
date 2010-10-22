@@ -368,7 +368,7 @@ public class Helper
     }
 
     private static int getMaxNumberOfUniqueTriplets(int varCount) {
-        return varCount*(varCount - 1)*(varCount - 2)*(varCount - 3 + 1)/6*8;
+        return 8*varCount*(varCount - 1)*(varCount - 2)*(varCount - 3 + 1)/6;
     }
 
     public static void printLine(char c, int length) {
@@ -886,14 +886,14 @@ public class Helper
             
             hss.add(hs);
             
-            tryAddFirstTierEdge(hs, firstBasicTier, _000_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _001_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _010_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _011_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _100_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _101_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _110_instance, sOther);
-            tryAddFirstTierEdge(hs, firstBasicTier, _111_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _000_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _001_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _010_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _011_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _100_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _101_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _110_instance, sOther);
+            tryAddFirstTierVertex(hs, firstBasicTier, _111_instance, sOther);
         }
         
         unifyCoincidentSubstructuresOfATier(hss, 0);
@@ -907,9 +907,9 @@ public class Helper
             final int tierIndex = j;
             final ITier basicTier = (ITier) basicTiers.get(tierIndex);
             
-            OpenIntObjectHashMap basicPrevTierEdges = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex - 1);
+            OpenIntObjectHashMap basicPrevTierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex - 1);
             
-            basicPrevTierEdges.forEachKey(new IntProcedure()
+            basicPrevTierVertices.forEachKey(new IntProcedure()
             {
                 //  Shift each vertex of the tier along the edges to the next tier
                 public boolean apply(int vertexTierKey)
@@ -918,56 +918,56 @@ public class Helper
                     for (int i = 0; i < hss.size(); i++)
                     {
                         final IHyperStructure hs = (IHyperStructure) hss.get(i);
-                        IEdge prevTierEdge = (IEdge) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex - 1)).get(vertexTierKey);
+                        IVertex prevTierVertex = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex - 1)).get(vertexTierKey);
 
-                        ITripletValue tripletValue = prevTierEdge.getSource().getTripletValue();
+                        ITripletValue tripletValue = prevTierVertex.getTripletValue();
 
                         ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
                         if (basicTier.contains(adjoinTarget))
                         {
                             //  calculating substructure-edge for target edge 1
-                            createOrUpdateNextEdge(tierIndex, basicTier, hs, prevTierEdge, adjoinTarget);
+                            createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
                         }
                         adjoinTarget = tripletValue.getAdjoinRightTarget2();
                         if (basicTier.contains(adjoinTarget))
                         {
                             //  calculating substructure-edge for target edge 2
-                            createOrUpdateNextEdge(tierIndex, basicTier, hs, prevTierEdge, adjoinTarget);
+                            createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
                         }
                     }
                     
                     return true;
                 }
 
-                private void createOrUpdateNextEdge(final int tierIndex,
+                private void createOrUpdateNextTierVertex(final int tierIndex,
                         final ITier basicTier, final IHyperStructure hs,
-                        IEdge prevTierEdge, ITripletValue adjoinTarget)
+                        IVertex prevTierVertex, ITripletValue adjoinTarget)
                 {
                     ICompactTripletsStructure substructureEdge = shiftVertexAlongTheEdge(
-                            hs, prevTierEdge.getSource(), basicTier.getCName(),
+                            hs, prevTierVertex, basicTier.getCName(),
                             adjoinTarget.isNotC() ? Value.AllNegative : Value.AllPlain);
                     
-                    OpenIntObjectHashMap tierEdges = null;
-                    IEdge existingEdge = null;;
+                    OpenIntObjectHashMap tierVertices = null;
+                    IVertex existingVertex = null;
                     
                     if (tierIndex < hs.getTiers().size()) 
                     {
-                        tierEdges = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
-                        existingEdge = (IEdge) tierEdges.get(adjoinTarget.getTierKey());
+                        tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+                        existingVertex = (IVertex) tierVertices.get(adjoinTarget.getTierKey());
                     }
                     
                     //  If the vertex is already on the next tier...
-                    if (existingEdge != null)
+                    if (existingVertex != null)
                     {
                         //  ... unite substructure-edge width substructure-vertex 
                         //  and replace target substructure-vertex with resulting substructure
                         
-                        existingEdge.getSource().getCTS().union(substructureEdge);
+                        existingVertex.getCTS().union(substructureEdge);
                     }
                     else
                     {
                         //  put substructure-edge to substructure-vertex as is
-                        hs.addNextEdge(prevTierEdge, basicTier.size(), 
+                        hs.addNextVertex(prevTierVertex, basicTier.size(), 
                                 new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
                     }
                 }
@@ -983,13 +983,13 @@ public class Helper
                     //  Filtration
                     for (int s = 0; s < vertex.getTierIndex(); s++)
                     {
-                        OpenIntObjectHashMap sTierEdges = (OpenIntObjectHashMap) hs.getTiers().get(s);
+                        OpenIntObjectHashMap sTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(s);
                         ObjectArrayList intersections = new ObjectArrayList();
-                        for (int v = 0; v < sTierEdges.size(); v++)
+                        for (int v = 0; v < sTierVertices.size(); v++)
                         {
-                            IEdge edge = (IEdge) sTierEdges.values().get(v); 
+                            IVertex sVertex = (IVertex) sTierVertices.values().get(v); 
                             ICompactTripletsStructure clone = (ICompactTripletsStructure) substructureEdge.clone();
-                            clone.intersect(edge.getSource().getCTS());
+                            clone.intersect(sVertex.getCTS());
                             intersections.add(clone);
                         };
                         substructureEdge = (ICompactTripletsStructure) intersections.get(0);
@@ -1033,11 +1033,11 @@ public class Helper
                 {
                     IHyperStructure hs = (IHyperStructure) hss.get(i);
                     
-                    OpenIntObjectHashMap edges = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+                    OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
                     
-                    IEdge edge = (IEdge) edges.get(vertexTierKey);
+                    IVertex vertex = (IVertex) tierVertices.get(vertexTierKey);
                     
-                    vertices.add(edge.getSource());
+                    vertices.add(vertex);
                 }
 
                 try
@@ -1094,7 +1094,7 @@ public class Helper
         return sBasic;
     }
     
-    private static void tryAddFirstTierEdge(IHyperStructure hs, ITier firstBasicTier, ITripletValue tripletValue, ICompactTripletsStructure sOther) 
+    private static void tryAddFirstTierVertex(IHyperStructure hs, ITier firstBasicTier, ITripletValue tripletValue, ICompactTripletsStructure sOther) 
         throws EmptyStructureException
     {
         if (firstBasicTier.contains(tripletValue))
@@ -1103,7 +1103,7 @@ public class Helper
             
             clone.concretize(firstBasicTier, tripletValue);
             
-            hs.addFirstTierEdge(firstBasicTier.size(), new SimpleVertex(firstBasicTier, 0, tripletValue, clone));
+            hs.addFirstTierVertex(firstBasicTier.size(), new SimpleVertex(firstBasicTier, 0, tripletValue, clone));
         }
     }
     
@@ -1168,16 +1168,14 @@ public class Helper
             {
                 public boolean apply(int tierKey, Object value)
                 {
-                    IEdge edge = (IEdge) value;
+                    IVertex vertex = (IVertex) value;
                     
-                    IVertex source = edge.getSource();
+                    int tripletOffset = getTripletOffset(vertex, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
                     
-                    int tripletOffset = getTripletOffset(source, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+                    graphics.drawString(vertex.getTripletValue().toString(), tripletOffset, y);
                     
-                    graphics.drawString(source.getTripletValue().toString(), tripletOffset, y);
-                    
-                    if (edge.getNext1() != null) drawLine(source, edge.getNext1().getSource(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
-                    if (edge.getNext2() != null) drawLine(source, edge.getNext2().getSource(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+                    if (vertex.getBottomVertex1() != null) drawLine(vertex, vertex.getBottomVertex1(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+                    if (vertex.getBottomVertex2() != null) drawLine(vertex, vertex.getBottomVertex2(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
 
                     return true;
                 }

@@ -7,4 +7,9 @@ public interface IVertex extends ICompactTripletsStructureHolder
     ITripletPermutation getPermutation();
 
     int getTierIndex();
+    
+    IVertex getBottomVertex1();
+    IVertex getBottomVertex2();
+    IVertex getTopVertex1();
+    IVertex getTopVertex2();
 }

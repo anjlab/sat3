@@ -7,7 +7,7 @@ public class SimpleHyperStructure implements IHyperStructure
 {
     private ICompactTripletsStructure basicCTS;
     private ICompactTripletsStructure otherCTS;
-    //  List of OpenIntObjectHashMap
+    //  List of OpenIntObjectHashMap where Object is IVertex
     private ObjectArrayList tiers; 
     
     public SimpleHyperStructure(ICompactTripletsStructure basicCTS, ICompactTripletsStructure otherCTS)
@@ -29,9 +29,9 @@ public class SimpleHyperStructure implements IHyperStructure
     {
         return tiers;
     }
-    public IEdge addFirstTierEdge(int tierSize, IVertex source)
+    public void addFirstTierVertex(int tierSize, IVertex vertex)
     {
-        int tierIndex = source.getTierIndex();
+        int tierIndex = vertex.getTierIndex();
         OpenIntObjectHashMap edges;
         if (tierIndex == tiers.size())
         {
@@ -42,24 +42,12 @@ public class SimpleHyperStructure implements IHyperStructure
         {
             edges = (OpenIntObjectHashMap) tiers.get(tierIndex);
         }
-        SimpleEdge edge = new SimpleEdge(source);
-        edges.put(source.getTripletValue().getTierKey(), edge);
-        return edge;
-    }
-    public IEdge addNextEdge(IEdge prevEdge, int targetTierSize, IVertex prevEdgeTarget)
-    {
-        IEdge nextEdge = addFirstTierEdge(targetTierSize, prevEdgeTarget);
+        edges.put(vertex.getTripletValue().getTierKey(), vertex);
         
-        if (prevEdge.getSource().getTripletValue().getAdjoinRightTarget1() == prevEdgeTarget.getTripletValue())
-        {
-            prevEdge.setNext1(nextEdge);
-        }
-        else
-        {
-            prevEdge.setNext2(nextEdge);
-        }
-        //  TODO Set previous2
-        nextEdge.setPrevious1(prevEdge);
-        return nextEdge;
+        ((SimpleVertex)vertex).setHyperStructure(this);
+    }
+    public void addNextVertex(IVertex prevVertex, int tierSize, IVertex vertex)
+    {
+        addFirstTierVertex(tierSize, vertex);
     }
 }

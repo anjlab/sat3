@@ -1,11 +1,14 @@
 package com.anjlab.sat3;
 
+import cern.colt.map.OpenIntObjectHashMap;
+
 public class SimpleVertex implements IVertex
 {
     private ITripletPermutation permutation;
     private ITripletValue tripletValue;
     private ICompactTripletsStructure structure;
     private int tierIndex;
+    private IHyperStructure hyperStructure;
     
     /**
      * 
@@ -23,8 +26,10 @@ public class SimpleVertex implements IVertex
         this.structure = structure;
         this.tierIndex = tierIndex;
     }
-
-    @Override
+    void setHyperStructure(IHyperStructure hyperStructure)
+    {
+        this.hyperStructure = hyperStructure;
+    }
     public ICompactTripletsStructure getCTS()
     {
         return structure;
@@ -45,5 +50,29 @@ public class SimpleVertex implements IVertex
     public String toString()
     {
         return structure.toString();
+    }
+    public IVertex getBottomVertex1()
+    {
+        return tierIndex < hyperStructure.getTiers().size() - 1 
+             ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex + 1)).get(tripletValue.getAdjoinRightTarget1().getTierKey())
+             : null; 
+    }
+    public IVertex getBottomVertex2()
+    {
+        return tierIndex < hyperStructure.getTiers().size() - 1 
+             ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex + 1)).get(tripletValue.getAdjoinRightTarget2().getTierKey())
+             : null; 
+    }
+    public IVertex getTopVertex1()
+    {
+        return tierIndex > 0 
+            ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource1().getTierKey())
+            : null;
+    }
+    public IVertex getTopVertex2()
+    {
+        return tierIndex > 0 
+        ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource2().getTierKey())
+        : null;
     }
 }

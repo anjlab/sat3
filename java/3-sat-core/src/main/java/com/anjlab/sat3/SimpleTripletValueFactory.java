@@ -58,6 +58,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "000"; }
         public ITripletValue getAdjoinRightTarget1() { return _000_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _001_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _000_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _100_instance; }
     }
 
     private static class _001 implements ITripletValue
@@ -69,6 +71,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "001"; }
         public ITripletValue getAdjoinRightTarget1() { return _010_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _011_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _000_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _100_instance; }
     }
 
     private static class _010 implements ITripletValue
@@ -80,6 +84,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "010"; }
         public ITripletValue getAdjoinRightTarget1() { return _100_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _101_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _001_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _101_instance; }
     }
 
     private static class _011 implements ITripletValue
@@ -91,6 +97,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "011"; }
         public ITripletValue getAdjoinRightTarget1() { return _110_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _111_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _001_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _101_instance; }
     }
 
     private static class _100 implements ITripletValue
@@ -102,6 +110,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "100"; }
         public ITripletValue getAdjoinRightTarget1() { return _000_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _001_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _010_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _110_instance; }
     }
 
     private static class _101 implements ITripletValue
@@ -113,6 +123,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "101"; }
         public ITripletValue getAdjoinRightTarget1() { return _010_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _011_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _010_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _110_instance; }
     }
 
     private static class _110 implements ITripletValue
@@ -124,6 +136,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "110"; }
         public ITripletValue getAdjoinRightTarget1() { return _100_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _101_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _011_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _111_instance; }
     }
 
     private static class _111 implements ITripletValue
@@ -135,6 +149,8 @@ public class SimpleTripletValueFactory {
         public String toString() { return "111"; }
         public ITripletValue getAdjoinRightTarget1() { return _110_instance; }
         public ITripletValue getAdjoinRightTarget2() { return _111_instance; }
+        public ITripletValue getAdjoinLeftSource1() { return _011_instance; }
+        public ITripletValue getAdjoinLeftSource2() { return _111_instance; }
     }
 
 }

@@ -65,6 +65,15 @@ public final class SimpleTriplet extends SimpleTier implements ITriplet
     {
         return getTripletValue(keys_73516240).getAdjoinRightTarget2();
     }
-    
-    
+
+    public ITripletValue getAdjoinLeftSource1()
+    {
+        return getTripletValue(keys_73516240).getAdjoinLeftSource1();
+    }
+
+    public ITripletValue getAdjoinLeftSource2()
+    {
+        return getTripletValue(keys_73516240).getAdjoinLeftSource2();
+    }
+
 }

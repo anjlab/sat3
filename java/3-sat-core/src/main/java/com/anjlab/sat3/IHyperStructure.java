@@ -13,6 +13,6 @@ public interface IHyperStructure
      */
     ObjectArrayList getTiers();
     
-    IEdge addFirstTierEdge(int tierSize, IVertex source);
-    IEdge addNextEdge(IEdge prevEdge, int targetTierSize, IVertex prevEdgeTarget);
+    void addFirstTierVertex(int tierSize, IVertex vertex);
+    void addNextVertex(IVertex prevVertex, int tierSize, IVertex vertex);
 }

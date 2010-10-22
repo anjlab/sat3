@@ -16,4 +16,6 @@ public interface ITripletValue
     
     ITripletValue getAdjoinRightTarget1();
     ITripletValue getAdjoinRightTarget2();
+    ITripletValue getAdjoinLeftSource1();
+    ITripletValue getAdjoinLeftSource2();
 }
