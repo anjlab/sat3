@@ -1,0 +1,5 @@
+c Example for simple sat
+p cnf 5 3
+1 2 3 0
+2 3 4 0
+3 4 5 0
