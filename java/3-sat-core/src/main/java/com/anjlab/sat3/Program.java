@@ -55,12 +55,23 @@ public class Program
             System.out.println("CTF: " + ct.size());
             
             stopWatch.start("Create HSS");
-            ObjectArrayList hss = Helper.createHyperStructures(ct);
+            ObjectArrayList hss = Helper.createHyperStructuresSystem(ct);
+            stopWatch.stop();
+            stopWatch.printElapsed();
+
+            stopWatch.start("Find HS route");
+            ObjectArrayList route = Helper.findHyperStructureRoute((IHyperStructure) hss.get(0));
             stopWatch.stop();
             stopWatch.printElapsed();
             
+//            stopWatch.start("Calculate CTS from the route");
+//            ICompactTripletsStructure s = Helper.intersectAll(route);
+//            stopWatch.stop();
+//            Helper.prettyPrint(s);
+//            stopWatch.printElapsed();
+            
             stopWatch.start("Write HSS(0) to image file");
-            Helper.writeToImage((IHyperStructure) hss.get(0), "target/hss.png");
+            Helper.writeToImage((IHyperStructure) hss.get(0), route, "target/hss.png");
             stopWatch.stop();
             stopWatch.printElapsed();
         }

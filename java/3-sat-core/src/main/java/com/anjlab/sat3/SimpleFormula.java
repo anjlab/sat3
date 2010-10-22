@@ -440,7 +440,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             clone.cleanup();
             if (this.getClausesCount() != clone.getClausesCount())
             {
-                throw new RuntimeException("Error in cleanup(from,to) implementation");
+                throw new AssertionError("Error in cleanup(from,to) implementation");
             }
         }
         
