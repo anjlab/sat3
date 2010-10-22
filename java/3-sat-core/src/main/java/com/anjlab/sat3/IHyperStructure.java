@@ -13,6 +13,5 @@ public interface IHyperStructure
      */
     ObjectArrayList getTiers();
     
-    void addFirstTierVertex(int tierSize, IVertex vertex);
-    void addNextVertex(IVertex prevVertex, int tierSize, IVertex vertex);
+    void addVertex(int tierSize, IVertex vertex);
 }

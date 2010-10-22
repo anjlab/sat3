@@ -911,7 +911,7 @@ public class Helper
             
             basicPrevTierVertices.forEachKey(new IntProcedure()
             {
-                //  Shift each vertex of the tier along the edges to the next tier
+                //  Shift each vertex of the tier along associated edges to the next tier
                 public boolean apply(int vertexTierKey)
                 {
                     //  For each hyperstructure in the HSS
@@ -967,8 +967,7 @@ public class Helper
                     else
                     {
                         //  put substructure-edge to substructure-vertex as is
-                        hs.addNextVertex(prevTierVertex, basicTier.size(), 
-                                new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
+                        hs.addVertex(basicTier.size(), new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
                     }
                 }
 
@@ -1165,7 +1164,7 @@ public class Helper
             
             clone.concretize(firstBasicTier, tripletValue);
             
-            hs.addFirstTierVertex(firstBasicTier.size(), new SimpleVertex(firstBasicTier, 0, tripletValue, clone));
+            hs.addVertex(firstBasicTier.size(), new SimpleVertex(firstBasicTier, 0, tripletValue, clone));
         }
     }
     

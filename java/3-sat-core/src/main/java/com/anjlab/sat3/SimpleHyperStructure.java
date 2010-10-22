@@ -29,7 +29,7 @@ public class SimpleHyperStructure implements IHyperStructure
     {
         return tiers;
     }
-    public void addFirstTierVertex(int tierSize, IVertex vertex)
+    public void addVertex(int tierSize, IVertex vertex)
     {
         int tierIndex = vertex.getTierIndex();
         OpenIntObjectHashMap edges;
@@ -45,9 +45,5 @@ public class SimpleHyperStructure implements IHyperStructure
         edges.put(vertex.getTripletValue().getTierKey(), vertex);
         
         ((SimpleVertex)vertex).setHyperStructure(this);
-    }
-    public void addNextVertex(IVertex prevVertex, int tierSize, IVertex vertex)
-    {
-        addFirstTierVertex(tierSize, vertex);
     }
 }
