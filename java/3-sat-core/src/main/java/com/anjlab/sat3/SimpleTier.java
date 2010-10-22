@@ -2,15 +2,12 @@ package com.anjlab.sat3;
 
 import java.util.Iterator;
 
-//  TODO Replace inheritance with adapter? (to have the ability to 
-//  share SimpleTripletPermutation instance across different tier instances
-//  created as a result of clone method)
 public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
     protected byte keys_73516240;
     protected int size;
     private ITabularFormula formula;
-    
+
     public static SimpleTier createCompleteTier(int a, int b, int c)
     {
         SimpleTier result = new SimpleTier(a, b, c);
@@ -23,14 +20,12 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         super(a, b, c);
     }
-
-    public SimpleTier(ITripletPermutation tripletPermutation)
+    
+    private SimpleTier(SimpleTier tier)
     {
-        this(tripletPermutation.getAName(), 
-             tripletPermutation.getBName(),
-             tripletPermutation.getCName());
+        super(tier.getABC(), tier.getCanonicalName(), tier.canonicalHashCode());
     }
-
+    
     public final ITier clone()
     {
         SimpleTier tier = new SimpleTier(this);

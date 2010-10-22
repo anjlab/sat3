@@ -1,18 +1,23 @@
 package com.anjlab.sat3;
 
-public class EmptyStructureException extends Exception
+public class EmptyStructureException extends RuntimeException
 {
     private static final long serialVersionUID = -1L;
     
-    private ICompactTripletsStructure cts;
+    private Object structure;
 
     public EmptyStructureException(ICompactTripletsStructure cts)
     {
-        this.cts = cts;
+        this.structure = cts;
     }
 
-    public ICompactTripletsStructure getCTS()
+    public EmptyStructureException(IHyperStructure hs)
     {
-        return cts;
+        this.structure = hs;
+    }
+    
+    public Object getStructure()
+    {
+        return structure;
     }
 }

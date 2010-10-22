@@ -1,5 +1,19 @@
 package com.anjlab.sat3;
 
+import static com.anjlab.sat3.SimpleTripletValueFactory._000_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._001_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._010_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._011_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._100_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._101_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._110_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
+import static java.text.MessageFormat.format;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,7 +26,14 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Random;
 
+import javax.imageio.ImageIO;
+
+import cern.colt.function.IntObjectProcedure;
+import cern.colt.function.IntProcedure;
 import cern.colt.function.LongObjectProcedure;
+import cern.colt.list.LongArrayList;
+import cern.colt.list.ObjectArrayList;
+import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
 
 public class Helper
@@ -23,19 +44,24 @@ public class Helper
     
     public static boolean UseUniversalVarNames = false;
 
-    public static GenericArrayList<ITabularFormula> createCTF(ITabularFormula formula)
+    /**
+     * 
+     * @param formula
+     * @return List of ITabularFormula
+     */
+    public static ObjectArrayList createCTF(ITabularFormula formula)
     {
-        GenericArrayList<ITabularFormula> ctf = new GenericArrayList<ITabularFormula>();
+        ObjectArrayList ctf = new ObjectArrayList();
 
-        GenericArrayList<ITier> tiers = formula.getTiers();
+        ObjectArrayList tiers = formula.getTiers();
 
         ITabularFormula f = new SimpleFormula();
-        f.unionOrAdd(tiers.get(0));
+        f.unionOrAdd(formula.getTier(0));
         ctf.add(f);
 
         for (int i = 1; i < tiers.size(); i++)
         {
-            ITier tier = tiers.get(i);
+            ITier tier = (ITier) tiers.get(i);
             //  Search possible CTFs to which the tier may join
 
             if (!joinTier(ctf, tier))
@@ -50,9 +76,10 @@ public class Helper
     }
 
     /**
+     * @param ctf List of ITabularFormula
      * @return True if tier was joined to some <code>ctf</code>
      */
-    private static boolean joinTier(GenericArrayList<ITabularFormula> ctf, ITier tier)
+    private static boolean joinTier(ObjectArrayList ctf, ITier tier)
     {
         IJoinMethod[] methods = JoinMethods.getMethods();
 
@@ -158,10 +185,10 @@ public class Helper
             }
             else
             {
-                GenericArrayList<ITier> tiers = formula.getTiers();
+                ObjectArrayList tiers = formula.getTiers();
                 for (int j = 0; j < tiers.size(); j++)
                 {
-                    ITier tier = tiers.get(j);
+                    ITier tier = (ITier) tiers.get(j);
                     for (ITripletValue tripletValue : tier)
                     {
                         for (int i = 0; i < formula.getVarCount(); i++)
@@ -247,10 +274,10 @@ public class Helper
             builder.append(" ");
             builder.append(formula.getClausesCount());
             builder.append('\n');
-            GenericArrayList<ITier> tiers = formula.getTiers();
+            ObjectArrayList tiers = formula.getTiers();
             for (int i = 0; i < tiers.size(); i++)
             {
-                ITier tier = tiers.get(i);
+                ITier tier = (ITier) tiers.get(i);
                 for (ITripletValue tripletValue : tier)
                 {
                     if (tripletValue.isNotA()) builder.append('-');
@@ -345,10 +372,16 @@ public class Helper
     }
 
     public static void printLine(char c, int length) {
+        String string = getString(c, length);
+        System.out.println(string);
+    }
+
+    private static String getString(char c, int length)
+    {
         char[] line = new char[length];
         Arrays.fill(line, c);
-        
-        System.out.println(new String(line));
+        String string = new String(line);
+        return string;
     }
 
     private static class FormulaReader
@@ -452,7 +485,12 @@ public class Helper
         }
     }
 
-    public static void unify(GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
+    /**
+     * 
+     * @param cts List of ICompactTripletsStructureHolder
+     * @throws EmptyStructureException
+     */
+    public static void unify(ObjectArrayList cts) throws EmptyStructureException
     {
         if (cts.size() < 2)
         {
@@ -463,28 +501,34 @@ public class Helper
         
         unify(index, cts);
     }
-    
-    private static void unify(OpenLongObjectHashMap index, GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
+
+    /**
+     * 
+     * @param index
+     * @param cts List of ICompactTripletsStructureHolder
+     * @throws EmptyStructureException
+     */
+    private static void unify(OpenLongObjectHashMap index, ObjectArrayList cts) throws EmptyStructureException
     {
         boolean someClausesRemoved = false;
 
-        System.out.println("Running unify routine...");
+        System.out.println(System.currentTimeMillis() + ": Running unify routine...");
         
-        int varCount = cts.get(0).getPermutation().size();
+        int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
         int ctsCount = cts.size();
         
         Object[] ctsElements = cts.elements();
         
         index.forEachPair(new LongObjectProcedure()
         {
-            @SuppressWarnings("unchecked")
             public boolean apply(long key, Object value)
             {
                 //  See Helper#addTier() for details of key construction
                 int varName1 = (int) (key >> 21);
                 int varName2 = (int) (key & 0x1FFFFF);
                 
-                GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) value;
+                //  List of ITier
+                ObjectArrayList tiers = (ObjectArrayList) value;
                 Object[] tiersElements = tiers.elements();
                 int tierCount = tiers.size();
                 
@@ -495,7 +539,7 @@ public class Helper
                 {
                     ITier ti = (ITier) tiersElements[i];
                     
-                    //  Remember tiers permutations
+                    //  Remember tier permutation
                     System.arraycopy(ti.getABC(), 0, abci, 0, 3);
                     
                     for (int j = i + 1; j < tierCount; j++)
@@ -507,13 +551,13 @@ public class Helper
                             continue;
                         }
                         
-                        //  Remember tiers permutations
+                        //  Remember tier permutation
                         System.arraycopy(tj.getABC(), 0, abcj, 0, 3);
-
+                        
                         //  Transpose tiers for adjoin
                         int a = getCanonicalVarName3(varName1, varName2, ti.getCanonicalName());
                         int c = getCanonicalVarName3(varName1, varName2, tj.getCanonicalName());
-
+                        
                         ti.transposeTo(a, varName1, varName2);
                         tj.transposeTo(varName1, varName2, c);
                         
@@ -521,10 +565,10 @@ public class Helper
                         ti.adjoinRight(tj);
                         tj.adjoinLeft(ti);
                         
-                        //  Return tiers permutations back
+                        //  Return tier permutation back
                         tj.transposeTo(abcj);
                     }
-                    //  Return tiers permutations back
+                    //  Return tier permutation back
                     ti.transposeTo(abci);
                 }
                 return true;
@@ -533,7 +577,7 @@ public class Helper
 
         for (int i = 0; i < ctsCount; i++)
         {
-            ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
+            ICompactTripletsStructure s = ((ICompactTripletsStructureHolder) ctsElements[i]).getCTS();
             someClausesRemoved |= s.cleanup();
 
             if (s.isEmpty())
@@ -546,7 +590,7 @@ public class Helper
         {
             for (int i = 0; i < ctsCount; i++)
             {
-                ICompactTripletsStructure s = (ICompactTripletsStructure) ctsElements[i];
+                ICompactTripletsStructure s = ((ICompactTripletsStructureHolder) ctsElements[i]).getCTS();
                 Value value = s.valueOf(varName);
                 if (value != Value.Mixed)
                 {
@@ -555,9 +599,9 @@ public class Helper
                     {
                         if (i == j) continue;
                         
-                        ICompactTripletsStructure sj = (ICompactTripletsStructure) ctsElements[j];
+                        ICompactTripletsStructure sj = ((ICompactTripletsStructureHolder) ctsElements[j]).getCTS();
                         someClausesRemoved |= sj.concretize(varName, value);
-                        
+
                         if (sj.isEmpty())
                         {
                             throw new EmptyStructureException(sj);
@@ -616,11 +660,17 @@ public class Helper
         return varName3;
     }
     
-    private static OpenLongObjectHashMap buildVarPairsIndex(GenericArrayList<ITabularFormula> cts) throws EmptyStructureException
+    /**
+     * 
+     * @param cts List of ICompactTripletsStructureHolder
+     * @return
+     * @throws EmptyStructureException
+     */
+    private static OpenLongObjectHashMap buildVarPairsIndex(ObjectArrayList cts) throws EmptyStructureException
     {
         System.out.println("Building pairs index...");
         
-        int varCount = cts.get(0).getPermutation().size();
+        int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
         int tierCount = varCount - 2;
         int ctsCount = cts.size();
         
@@ -628,7 +678,7 @@ public class Helper
         
         for(int i = 0; i < ctsCount; i++)
         {
-            ITabularFormula s = cts.get(i);
+            ITabularFormula s = ((ICompactTripletsStructureHolder) cts.get(i)).getCTS();
             Object[] tierElements = s.getTiers().elements();
             
             for (int j = 0; j < tierCount; j++)
@@ -643,22 +693,46 @@ public class Helper
             }
         }
         
+        final LongArrayList toBeRemoved = new LongArrayList();
+        
         result.forEachPair(new LongObjectProcedure()
         {
             public boolean apply(long key, Object value)
             {
-                if (((GenericArrayList<?>)value).size() < 2)
+                //  List of ITier
+                ObjectArrayList tiers = (ObjectArrayList) value;
+                if (tiers.size() < 2)
                 {
-                    result.removeKey(key);
+                    toBeRemoved.add(key);
+                }
+                else
+                {
+                    ITabularFormula formula = ((ITier)tiers.get(0)).getFormula();
+                    for (int i = 1; i < tiers.size(); i++)
+                    {
+                        if (formula != ((ITier)tiers.get(i)).getFormula())
+                        {
+                            //  Found distinct formulas
+                            return true;
+                        }
+                    }
+                    //  All triplets are from the same formula
+                    toBeRemoved.add(key);
                 }
                 return true;
             }
         });
         
+        int size = toBeRemoved.size();
+        System.out.println("Removing " + size + " triplet permutations from index");
+        for (int i = 0; i < size; i++)
+        {
+            result.removeKey(toBeRemoved.getQuick(i));
+        }
+        
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private static void addTier(OpenLongObjectHashMap hash, int varName1, int varName2, ITier tier)
     {
         long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
@@ -675,11 +749,12 @@ public class Helper
             }
         }
 
-        GenericArrayList<ITier> tiers = (GenericArrayList<ITier>) hash.get(key);
+        //  List of ITier
+        ObjectArrayList tiers = (ObjectArrayList) hash.get(key);
         
         if (tiers == null)
         {
-            hash.put(key, new GenericArrayList<ITier>(new ITier[] {tier}));
+            hash.put(key, new ObjectArrayList(new ITier[] {tier}));
         }
         else
         {
@@ -691,13 +766,19 @@ public class Helper
         }
     }
 
-    public static void saveCTS(String filenamePrefix, GenericArrayList<ITabularFormula> cts) throws IOException
+    /**
+     * 
+     * @param filenamePrefix
+     * @param cts List of ITabularFormula
+     * @throws IOException
+     */
+    public static void saveCTS(String filenamePrefix, ObjectArrayList cts) throws IOException
     {
         System.out.println("Saving CTS to file system...");
         
         for (int i = 0; i < cts.size(); i++)
         {
-            ITabularFormula f = cts.get(i);
+            ITabularFormula f = (ITabularFormula) cts.get(i);
             String filename = filenamePrefix + "-cts-" + i + ".cnf";
             System.out.print("Saving " + filename + "...");
             Helper.saveToDIMACSFileFormat(f, filename);
@@ -705,7 +786,10 @@ public class Helper
         }
     }
 
-    public static void printFormulas(GenericArrayList<?> formulas)
+    /**
+     * @param formulas List of ITabularFormula
+     */
+    public static void printFormulas(ObjectArrayList formulas)
     {
         for (int i = 0; i < formulas.size(); i++)
         {
@@ -733,6 +817,7 @@ public class Helper
 
     public static void debugPrettyPrintToFile(ITabularFormula formula)
     {
+        boolean oldPrettyPrint = UsePrettyPrint;
         try
         {
             UsePrettyPrint = true;
@@ -745,14 +830,394 @@ public class Helper
         {
             e.printStackTrace();
         }
+        finally
+        {
+            UsePrettyPrint = oldPrettyPrint;
+        }
     }
 
-    public static void createCTS(ITabularFormula formula, GenericArrayList<ITabularFormula> ctf)
+    /**
+     * 
+     * @param formula
+     * @param ctf List of ITabularFormula
+     * @throws EmptyStructureException
+     */
+    public static void createCTS(ITabularFormula formula, ObjectArrayList ctf)
             throws EmptyStructureException
     {
         for (int i = 0; i < ctf.size(); i++)
         {
-            ctf.get(i).complete(formula.getPermutation());
+            ((ITabularFormula) ctf.get(i)).complete(formula.getPermutation());
         }
+    }
+    
+    /**
+     * 
+     * @param cts
+     * @return List of IHyperStructure
+     * @throws EmptyStructureException
+     */
+    public static ObjectArrayList createHyperStructures(ObjectArrayList cts) throws EmptyStructureException
+    {
+        final ObjectArrayList hss = new ObjectArrayList();
+        
+        ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
+
+        //  List of ITier
+        ObjectArrayList basicTiers = sBasic.getTiers();
+        
+        ITier firstBasicTier = (ITier) basicTiers.get(0);
+
+        for (int i = 0; i < cts.size(); i++)
+        {
+            final ICompactTripletsStructure sOther = (ICompactTripletsStructure) cts.get(i);
+            
+            if (sOther == sBasic)
+            {
+                continue;
+            }
+            
+            IHyperStructure hs = new SimpleHyperStructure(sBasic, sOther);
+            
+            hss.add(hs);
+            
+            tryAddFirstTierEdge(hs, firstBasicTier, _000_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _001_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _010_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _011_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _100_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _101_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _110_instance, sOther);
+            tryAddFirstTierEdge(hs, firstBasicTier, _111_instance, sOther);
+        }
+        
+        unifyCoincidentSubstructuresOfATier(hss, 0);
+
+        IHyperStructure basicGraph = (IHyperStructure)hss.get(0);
+
+        for (int j = 1; j < basicTiers.size(); j++)
+        {
+            System.out.println(System.currentTimeMillis() + ": Building tier #" + j + " of " + basicTiers.size());
+            
+            final int tierIndex = j;
+            final ITier basicTier = (ITier) basicTiers.get(tierIndex);
+            
+            OpenIntObjectHashMap basicPrevTierEdges = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex - 1);
+            
+            basicPrevTierEdges.forEachKey(new IntProcedure()
+            {
+                //  Shift each vertex of the tier along the edges to the next tier
+                public boolean apply(int vertexTierKey)
+                {
+                    //  For each hyperstructure in the HSS
+                    for (int i = 0; i < hss.size(); i++)
+                    {
+                        final IHyperStructure hs = (IHyperStructure) hss.get(i);
+                        IEdge prevTierEdge = (IEdge) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex - 1)).get(vertexTierKey);
+
+                        ITripletValue tripletValue = prevTierEdge.getSource().getTripletValue();
+
+                        ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
+                        if (basicTier.contains(adjoinTarget))
+                        {
+                            //  calculating substructure-edge for target edge 1
+                            createOrUpdateNextEdge(tierIndex, basicTier, hs, prevTierEdge, adjoinTarget);
+                        }
+                        adjoinTarget = tripletValue.getAdjoinRightTarget2();
+                        if (basicTier.contains(adjoinTarget))
+                        {
+                            //  calculating substructure-edge for target edge 2
+                            createOrUpdateNextEdge(tierIndex, basicTier, hs, prevTierEdge, adjoinTarget);
+                        }
+                    }
+                    
+                    return true;
+                }
+
+                private void createOrUpdateNextEdge(final int tierIndex,
+                        final ITier basicTier, final IHyperStructure hs,
+                        IEdge prevTierEdge, ITripletValue adjoinTarget)
+                {
+                    ICompactTripletsStructure substructureEdge = shiftVertexAlongTheEdge(
+                            hs, prevTierEdge.getSource(), basicTier.getCName(),
+                            adjoinTarget.isNotC() ? Value.AllNegative : Value.AllPlain);
+                    
+                    OpenIntObjectHashMap tierEdges = null;
+                    IEdge existingEdge = null;;
+                    
+                    if (tierIndex < hs.getTiers().size()) 
+                    {
+                        tierEdges = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+                        existingEdge = (IEdge) tierEdges.get(adjoinTarget.getTierKey());
+                    }
+                    
+                    //  If the vertex is already on the next tier...
+                    if (existingEdge != null)
+                    {
+                        //  ... unite substructure-edge width substructure-vertex 
+                        //  and replace target substructure-vertex with resulting substructure
+                        
+                        existingEdge.getSource().getCTS().union(substructureEdge);
+                    }
+                    else
+                    {
+                        //  put substructure-edge to substructure-vertex as is
+                        hs.addNextEdge(prevTierEdge, basicTier.size(), 
+                                new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
+                    }
+                }
+
+                private ICompactTripletsStructure shiftVertexAlongTheEdge(
+                        final IHyperStructure hs, IVertex vertex, int cName, Value cValue)
+                {
+                    //  Work with copy of the substructure-vertex to keep original substructure the same
+                    ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) vertex.getCTS().clone();
+                    
+                    substructureEdge.concretize(cName, cValue);
+                    
+                    //  Filtration
+                    for (int s = 0; s < vertex.getTierIndex(); s++)
+                    {
+                        OpenIntObjectHashMap sTierEdges = (OpenIntObjectHashMap) hs.getTiers().get(s);
+                        ObjectArrayList intersections = new ObjectArrayList();
+                        for (int v = 0; v < sTierEdges.size(); v++)
+                        {
+                            IEdge edge = (IEdge) sTierEdges.values().get(v); 
+                            ICompactTripletsStructure clone = (ICompactTripletsStructure) substructureEdge.clone();
+                            clone.intersect(edge.getSource().getCTS());
+                            intersections.add(clone);
+                        };
+                        substructureEdge = (ICompactTripletsStructure) intersections.get(0);
+                        for (int ks = 1; ks < intersections.size(); ks++)
+                        {
+                            substructureEdge.union((ICompactTripletsStructure) intersections.get(ks));
+                        }
+                    }
+                    
+                    return substructureEdge;
+                }
+            });
+            
+            unifyCoincidentSubstructuresOfATier(hss, tierIndex);
+        }
+        
+        return hss;
+    }
+
+    /**
+     * 
+     * @param hss List of IHyperStructure
+     * @param tierIndex
+     */
+    private static void unifyCoincidentSubstructuresOfATier(final ObjectArrayList hss, final int tierIndex)
+    {
+        IHyperStructure firstHS = (IHyperStructure) hss.get(0);
+
+        final OpenIntObjectHashMap tierEdges = (OpenIntObjectHashMap) firstHS.getTiers().get(tierIndex);
+
+        //  Edges are the same in every HS of the same tier 
+        
+        tierEdges.forEachKey(new IntProcedure()
+        {
+            public boolean apply(int vertexTierKey)
+            {
+                //  List of ICompactTripletsStructureHolder
+                ObjectArrayList vertices = new ObjectArrayList(tierEdges.size());
+
+                for (int i = 0; i < hss.size(); i++)
+                {
+                    IHyperStructure hs = (IHyperStructure) hss.get(i);
+                    
+                    OpenIntObjectHashMap edges = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+                    
+                    IEdge edge = (IEdge) edges.get(vertexTierKey);
+                    
+                    vertices.add(edge.getSource());
+                }
+
+                try
+                {
+                    unify(vertices);
+                }
+                catch (EmptyStructureException e)
+                {
+                    //  Remove vertices with empty substructures from BG
+                    
+                    for (int i = 0; i < hss.size(); i++)
+                    {
+                        IHyperStructure hs = (IHyperStructure) hss.get(i);
+                        
+                        OpenIntObjectHashMap edges = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+                        
+                        edges.removeKey(vertexTierKey);
+                        
+                        //  If some tier of any HS is empty, then all HSS declared empty and the formula is not satisfiable
+                        
+                        if (edges.size() == 0)
+                        {
+                            throw new EmptyStructureException(hs);
+                        }
+                        else
+                        {
+                            //  TODO Remove incident edges
+                            throw new RuntimeException("TODO Remove incident edges");
+                        }
+                    }
+                }
+
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Choose CTS with minimum number of clauses as a basic structure
+     * @param cts List of ICompactTripletsStructure 
+     * @return
+     */
+    private static ICompactTripletsStructure chooseBasicStructure(ObjectArrayList cts)
+    {
+        ICompactTripletsStructure sBasic = (ICompactTripletsStructure) cts.get(0);
+        for (int i = 1; i < cts.size(); i++)
+        {
+            ICompactTripletsStructure s = (ICompactTripletsStructure) cts.get(i);
+            if (sBasic.getClausesCount() > s.getClausesCount())
+            {
+                sBasic = s;
+            }
+        }
+        return sBasic;
+    }
+    
+    private static void tryAddFirstTierEdge(IHyperStructure hs, ITier firstBasicTier, ITripletValue tripletValue, ICompactTripletsStructure sOther) 
+        throws EmptyStructureException
+    {
+        if (firstBasicTier.contains(tripletValue))
+        {
+            ICompactTripletsStructure clone = (ICompactTripletsStructure) sOther.clone();
+            
+            clone.concretize(firstBasicTier, tripletValue);
+            
+            hs.addFirstTierEdge(firstBasicTier.size(), new SimpleVertex(firstBasicTier, 0, tripletValue, clone));
+        }
+    }
+    
+    public static void writeToImage(IHyperStructure hs, String filename) throws IOException
+    {
+        int fontSize = 12;
+        
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D metrics = (Graphics2D) image.getGraphics();
+
+        Font font = new Font("Courier New", Font.PLAIN, fontSize);
+        
+        metrics.setFont(font);
+
+        final int widthOfZeroChar = metrics.getFontMetrics().stringWidth("0");
+        final int heightOfZeroChar = metrics.getFontMetrics().getHeight();
+        final int widthBetweenChars = 2;
+        final int widthBetweenTriplets = 5;
+        final int heightBetweenTriplets = 30;
+        final int offsetTop = 10;
+        final int offsetBottom = 10;
+        final int offsetLeft = 10;
+        final int offsetRight = 10;
+        final int varCount = hs.getBasicCTS().getVarCount();
+        final int widthOfTierHeader = ("(,,)".length() + 3 * getLegendName(varCount).length()) * widthOfZeroChar;
+        
+        //  List of ITier
+        ObjectArrayList ctsTiers = hs.getBasicCTS().getTiers();
+        final int tiersCount = ctsTiers.size();
+        
+        final int widthOfValuesArea = 8 * (widthOfZeroChar * 3 + widthBetweenChars * 2) + 8 * widthBetweenTriplets + offsetLeft;
+        
+        image = new BufferedImage(widthOfValuesArea + widthOfTierHeader + offsetRight, 
+                                  heightOfZeroChar * tiersCount + heightBetweenTriplets * (tiersCount - 1) + offsetTop + offsetBottom, 
+                                  BufferedImage.TYPE_3BYTE_BGR);
+        
+        final Graphics2D graphics = (Graphics2D) image.getGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+        
+        graphics.setFont(font);
+        graphics.setColor(Color.BLACK);
+        
+        //  List of OpenIntObjectHashMap
+        ObjectArrayList tiers = hs.getTiers();
+        for (int i = 0; i < tiers.size(); i++)
+        {
+            OpenIntObjectHashMap tier = (OpenIntObjectHashMap) tiers.get(i);
+            ITier ctsTier =  (ITier) ctsTiers.get(i);
+
+            int tierIndex = i;
+            
+            final int y = offsetTop + heightOfZeroChar + tierIndex * heightOfZeroChar + tierIndex * heightBetweenTriplets;
+
+            graphics.drawString((format("({0},{1},{2})", 
+                                    getLegendName(ctsTier.getAName()), 
+                                    getLegendName(ctsTier.getBName()),
+                                    getLegendName(ctsTier.getCName()))), 
+                                widthOfValuesArea, y);
+
+            tier.forEachPair(new IntObjectProcedure()
+            {
+                public boolean apply(int tierKey, Object value)
+                {
+                    IEdge edge = (IEdge) value;
+                    
+                    IVertex source = edge.getSource();
+                    
+                    int tripletOffset = getTripletOffset(source, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+                    
+                    graphics.drawString(source.getTripletValue().toString(), tripletOffset, y);
+                    
+                    if (edge.getNext1() != null) drawLine(source, edge.getNext1().getSource(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+                    if (edge.getNext2() != null) drawLine(source, edge.getNext2().getSource(), graphics, offsetTop, heightOfZeroChar, heightBetweenTriplets, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+
+                    return true;
+                }
+            });
+        }
+        
+        ImageIO.write(image, "png", new File(filename));
+    }
+
+    private static void drawLine(IVertex source, IVertex target, Graphics2D graphics, int offsetTop, int heightOfZeroChar, int heightBetweenTriplets, int offsetLeft, int widthBetweenTriplets, int widthBetweenChars, int widthOfZeroChar)
+    {
+        int sourceTierIndex = source.getTierIndex();
+        int x1 = getTripletOffset(source, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+        int y1 = offsetTop + heightOfZeroChar + sourceTierIndex * heightOfZeroChar + sourceTierIndex * heightBetweenTriplets;
+
+        int targetTierIndex = target.getTierIndex();
+        int x2 = getTripletOffset(target, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
+        int y2 = offsetTop + heightOfZeroChar + targetTierIndex * heightOfZeroChar + targetTierIndex * heightBetweenTriplets;
+
+        int offsetFromTier = 2;
+        
+        graphics.drawLine(x1 + 3 * widthOfZeroChar / 2, y1 + offsetFromTier, x2 + 3 * widthOfZeroChar / 2, y2 - heightOfZeroChar - offsetFromTier);
+    }
+
+    private static int getTripletOffset(IVertex vertex, int offsetLeft,
+            int widthBetweenTriplets, int widthBetweenChars, int widthOfZeroChar)
+    {
+        int tripletOffset = offsetLeft;
+        int tripletDeltaWidth = widthBetweenChars * 2 + widthOfZeroChar * 3 + widthBetweenTriplets;
+        
+        if (vertex.getTripletValue() == _000_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _001_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _010_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _011_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _100_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _101_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+        if (vertex.getTripletValue() == _110_instance) return tripletOffset;
+        tripletOffset += tripletDeltaWidth;
+//        if (vertex.getTripletValue() == _111_instance) 
+            return tripletOffset;
     }
 }

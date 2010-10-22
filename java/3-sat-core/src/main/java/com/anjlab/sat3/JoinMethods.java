@@ -5,6 +5,7 @@ import static com.anjlab.sat3.JoinMethods.endsWith;
 import static com.anjlab.sat3.JoinMethods.ensureTheOnlyTierWithVariableExistsAndGetTheTier;
 import static com.anjlab.sat3.JoinMethods.ensureTheOnlyTierWithVariablesExistsAndGetTheTier;
 import static com.anjlab.sat3.JoinMethods.startsWith;
+import cern.colt.list.ObjectArrayList;
 
 public class JoinMethods
 {
@@ -70,28 +71,28 @@ public class JoinMethods
 
     public static ITier ensureTheOnlyTierWithVariableExistsAndGetTheTier(ITabularFormula formula, int varName)
     {
-        GenericArrayList<ITier> tiers = formula.findTiersFor(varName);
+        ObjectArrayList tiers = formula.findTiersFor(varName);
         if (tiers == null)
         {
             return null;
         }
         if (tiers.size() == 1)
         {
-            return tiers.get(0);
+            return (ITier) tiers.get(0);
         }
         return null;
     }
 
     public static ITier ensureTheOnlyTierWithVariablesExistsAndGetTheTier(ITabularFormula formula, int varName1, int varName2)
     {
-        GenericArrayList<ITier> tiers = formula.findTiersFor(varName1, varName2);
+        ObjectArrayList tiers = formula.findTiersFor(varName1, varName2);
         if (tiers == null)
         {
             return null;
         }
         if (tiers.size() == 1)
         {
-            return tiers.get(0);
+            return (ITier) tiers.get(0);
         }
         return null;
     }

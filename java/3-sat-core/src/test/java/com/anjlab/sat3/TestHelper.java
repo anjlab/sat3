@@ -17,6 +17,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import cern.colt.list.ObjectArrayList;
+
 public class TestHelper
 {
     @BeforeClass
@@ -113,8 +115,8 @@ public class TestHelper
         
         Helper.prettyPrint(s2);
         
-        GenericArrayList<ITabularFormula> cts = 
-            new GenericArrayList<ITabularFormula>(new ITabularFormula[] {s1, s2});
+        //  List of ITabularFormula
+        ObjectArrayList cts = new ObjectArrayList(new ITabularFormula[] {s1, s2});
         
         Helper.unify(cts);
         
@@ -124,35 +126,35 @@ public class TestHelper
         Helper.prettyPrint(s1);
         Helper.prettyPrint(s2);
         
-        assertTrue(s1.getTiers().get(0).contains(_001_instance));
-        assertTrue(s1.getTiers().get(0).contains(_101_instance));
-        assertTrue(s1.getTiers().get(1).contains(_010_instance));
-        assertTrue(s1.getTiers().get(1).contains(_011_instance));
-        assertTrue(s1.getTiers().get(2).contains(_101_instance));
-        assertTrue(s1.getTiers().get(2).contains(_111_instance));
-        assertTrue(s1.getTiers().get(3).contains(_011_instance));
-        assertTrue(s1.getTiers().get(3).contains(_110_instance));
-        assertTrue(s1.getTiers().get(3).contains(_111_instance));
-        assertTrue(s1.getTiers().get(4).contains(_101_instance));
-        assertTrue(s1.getTiers().get(4).contains(_110_instance));
-        assertTrue(s1.getTiers().get(5).contains(_011_instance));
-        assertTrue(s1.getTiers().get(5).contains(_100_instance));
+        assertTrue(s1.getTier(0).contains(_001_instance));
+        assertTrue(s1.getTier(0).contains(_101_instance));
+        assertTrue(s1.getTier(1).contains(_010_instance));
+        assertTrue(s1.getTier(1).contains(_011_instance));
+        assertTrue(s1.getTier(2).contains(_101_instance));
+        assertTrue(s1.getTier(2).contains(_111_instance));
+        assertTrue(s1.getTier(3).contains(_011_instance));
+        assertTrue(s1.getTier(3).contains(_110_instance));
+        assertTrue(s1.getTier(3).contains(_111_instance));
+        assertTrue(s1.getTier(4).contains(_101_instance));
+        assertTrue(s1.getTier(4).contains(_110_instance));
+        assertTrue(s1.getTier(5).contains(_011_instance));
+        assertTrue(s1.getTier(5).contains(_100_instance));
         
-        assertTrue(s2.getTiers().get(0).contains(_000_instance));
-        assertTrue(s2.getTiers().get(0).contains(_110_instance));
-        assertTrue(s2.getTiers().get(1).contains(_001_instance));
-        assertTrue(s2.getTiers().get(1).contains(_101_instance));
-        assertTrue(s2.getTiers().get(2).contains(_010_instance));
-        assertTrue(s2.getTiers().get(2).contains(_011_instance));
-        assertTrue(s2.getTiers().get(3).contains(_100_instance));
-        assertTrue(s2.getTiers().get(3).contains(_101_instance));
-        assertTrue(s2.getTiers().get(3).contains(_111_instance));
-        assertTrue(s2.getTiers().get(4).contains(_001_instance));
-        assertTrue(s2.getTiers().get(4).contains(_011_instance));
-        assertTrue(s2.getTiers().get(4).contains(_111_instance));
-        assertTrue(s2.getTiers().get(5).contains(_011_instance));
-        assertTrue(s2.getTiers().get(5).contains(_110_instance));
-        assertTrue(s2.getTiers().get(5).contains(_111_instance));
+        assertTrue(s2.getTier(0).contains(_000_instance));
+        assertTrue(s2.getTier(0).contains(_110_instance));
+        assertTrue(s2.getTier(1).contains(_001_instance));
+        assertTrue(s2.getTier(1).contains(_101_instance));
+        assertTrue(s2.getTier(2).contains(_010_instance));
+        assertTrue(s2.getTier(2).contains(_011_instance));
+        assertTrue(s2.getTier(3).contains(_100_instance));
+        assertTrue(s2.getTier(3).contains(_101_instance));
+        assertTrue(s2.getTier(3).contains(_111_instance));
+        assertTrue(s2.getTier(4).contains(_001_instance));
+        assertTrue(s2.getTier(4).contains(_011_instance));
+        assertTrue(s2.getTier(4).contains(_111_instance));
+        assertTrue(s2.getTier(5).contains(_011_instance));
+        assertTrue(s2.getTier(5).contains(_110_instance));
+        assertTrue(s2.getTier(5).contains(_111_instance));
     }
     
     @Test
@@ -175,7 +177,7 @@ public class TestHelper
             {
                 System.out.println(n);
                 ITabularFormula formula = Helper.createRandomFormula(21, n);
-                GenericArrayList<ITabularFormula> ctf = Helper.createCTF(formula);
+                ObjectArrayList ctf = Helper.createCTF(formula);
                 Helper.createCTS(formula, ctf);
             }
             catch (EmptyStructureException e)

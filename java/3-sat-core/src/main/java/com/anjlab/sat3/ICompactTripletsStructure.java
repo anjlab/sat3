@@ -12,6 +12,7 @@ public interface ICompactTripletsStructure extends ITabularFormula
      * @return True if some clauses were removed during concretization.
      */
     boolean concretize(int varName, Value value);
+    boolean concretize(ITripletPermutation tripletPermutation, ITripletValue tripletValue);
     /**
      * Runs clearing procedure on this formula.
      * @return True if some clauses were removed during cleanup.

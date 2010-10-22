@@ -1,5 +1,7 @@
 package com.anjlab.sat3;
 
+import static com.anjlab.sat3.SimpleTripletValueFactory.getTripletValue;
+
 public final class SimpleTriplet extends SimpleTier implements ITriplet
 {
     public SimpleTriplet(int a, int b, int c)
@@ -54,4 +56,15 @@ public final class SimpleTriplet extends SimpleTier implements ITriplet
         return keys_73516240;
     }
 
+    public ITripletValue getAdjoinRightTarget1()
+    {
+        return getTripletValue(keys_73516240).getAdjoinRightTarget1();
+    }
+
+    public ITripletValue getAdjoinRightTarget2()
+    {
+        return getTripletValue(keys_73516240).getAdjoinRightTarget2();
+    }
+    
+    
 }

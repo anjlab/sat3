@@ -2,21 +2,6 @@ package com.anjlab.sat3;
 
 import cern.colt.map.OpenIntObjectHashMap;
 
-/**
- * This class and constants declared here are for convenience only, they used in tests.
- * 
- * One place this factory used is {@link ITier#iterator()}.
- * 
- * The iterator() method is also there only for convenience, 
- * it is used in {@link Helper#prettyPrint(ITabularFormula)} and 
- * {@link Helper#saveToDIMACSFileFormat(ITabularFormula, String)} only.
- * 
- * All other usages of {@link ITier#iterator()} is a subject to remove 
- * in ongoing improvements.
- * 
- * @author dmitrygusev
- *
- */
 public class SimpleTripletValueFactory {
 
     public static final ITripletValue _000_instance = new _000();
@@ -70,6 +55,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return false; }
         public boolean isNotC() { return false; }
         public byte getTierKey() { return 1; }
+        public String toString() { return "000"; }
+        public ITripletValue getAdjoinRightTarget1() { return _000_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _001_instance; }
     }
 
     private static class _001 implements ITripletValue
@@ -78,6 +66,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return false; }
         public boolean isNotC() { return true; }
         public byte getTierKey() { return 2; }
+        public String toString() { return "001"; }
+        public ITripletValue getAdjoinRightTarget1() { return _010_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _011_instance; }
     }
 
     private static class _010 implements ITripletValue
@@ -86,6 +77,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return true; }
         public boolean isNotC() { return false; }
         public byte getTierKey() { return 4; }
+        public String toString() { return "010"; }
+        public ITripletValue getAdjoinRightTarget1() { return _100_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _101_instance; }
     }
 
     private static class _011 implements ITripletValue
@@ -94,6 +88,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return true; }
         public boolean isNotC() { return true; }
         public byte getTierKey() { return 8; }
+        public String toString() { return "011"; }
+        public ITripletValue getAdjoinRightTarget1() { return _110_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _111_instance; }
     }
 
     private static class _100 implements ITripletValue
@@ -102,6 +99,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return false; }
         public boolean isNotC() { return false; }
         public byte getTierKey() { return 16; }
+        public String toString() { return "100"; }
+        public ITripletValue getAdjoinRightTarget1() { return _000_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _001_instance; }
     }
 
     private static class _101 implements ITripletValue
@@ -110,6 +110,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return false; }
         public boolean isNotC() { return true; }
         public byte getTierKey() { return 32; }
+        public String toString() { return "101"; }
+        public ITripletValue getAdjoinRightTarget1() { return _010_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _011_instance; }
     }
 
     private static class _110 implements ITripletValue
@@ -118,6 +121,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return true; }
         public boolean isNotC() { return false; }
         public byte getTierKey() { return 64; }
+        public String toString() { return "110"; }
+        public ITripletValue getAdjoinRightTarget1() { return _100_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _101_instance; }
     }
 
     private static class _111 implements ITripletValue
@@ -126,6 +132,9 @@ public class SimpleTripletValueFactory {
         public boolean isNotB() { return true; }
         public boolean isNotC() { return true; }
         public byte getTierKey() { return -128; }
+        public String toString() { return "111"; }
+        public ITripletValue getAdjoinRightTarget1() { return _110_instance; }
+        public ITripletValue getAdjoinRightTarget2() { return _111_instance; }
     }
 
 }

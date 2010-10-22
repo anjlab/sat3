@@ -13,4 +13,7 @@ public interface ITripletValue
      * @return Unique number associated with this triplet value.
      */
     byte getTierKey();
+    
+    ITripletValue getAdjoinRightTarget1();
+    ITripletValue getAdjoinRightTarget2();
 }

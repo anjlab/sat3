@@ -60,43 +60,43 @@ public class TestSimplePermutation
     {
         ITripletPermutation stp;
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(1, 2, 3));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(1, 2, 3));
         
         Assert.assertEquals(1, stp.getAName());
         Assert.assertEquals(2, stp.getBName());
         Assert.assertEquals(3, stp.getCName());
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(1, 3, 2));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(1, 3, 2));
         
         Assert.assertEquals(1, stp.getAName());
         Assert.assertEquals(3, stp.getBName());
         Assert.assertEquals(2, stp.getCName());
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(2, 1, 3));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(2, 1, 3));
         
         Assert.assertEquals(2, stp.getAName());
         Assert.assertEquals(1, stp.getBName());
         Assert.assertEquals(3, stp.getCName());
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(2, 3, 1));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(2, 3, 1));
         
         Assert.assertEquals(2, stp.getAName());
         Assert.assertEquals(3, stp.getBName());
         Assert.assertEquals(1, stp.getCName());
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(3, 1, 2));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(3, 1, 2));
         
         Assert.assertEquals(3, stp.getAName());
         Assert.assertEquals(1, stp.getBName());
         Assert.assertEquals(2, stp.getCName());
         
-        stp =           new SimpleTripletPermutation(1, 2, 3);
-        stp.transposeTo(new SimpleTripletPermutation(3, 2, 1));
+        stp =           new SimpleTier(1, 2, 3);
+        stp.transposeTo(new SimpleTier(3, 2, 1));
         
         Assert.assertEquals(3, stp.getAName());
         Assert.assertEquals(2, stp.getBName());

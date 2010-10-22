@@ -83,8 +83,8 @@ public class TestJoinMethods
                     Join2BetweenTiers method = new Join2BetweenTiers();
                     ITabularFormula formula = createFormula(a1, b1, c1, a3, b3, c3);
                     
-                    ITier tier0 = formula.getTiers().get(0);
-                    ITier tier1 = formula.getTiers().get(1);
+                    ITier tier0 = formula.getTier(0);
+                    ITier tier1 = formula.getTier(1);
                     
                     SimpleTier tier = new SimpleTier(Math.abs(a2), Math.abs(b2), Math.abs(c2));
                     tier.add(new SimpleTriplet(a2, b2, c2));
@@ -310,8 +310,8 @@ public class TestJoinMethods
                     
                     Join3BetweenTiers method = new Join3BetweenTiers();
                     ITabularFormula formula = createFormula(a1, b1, c1, a3, b3, c3);
-                    ITier tier0 = formula.getTiers().get(0);
-                    ITier tier1 = formula.getTiers().get(1);
+                    ITier tier0 = formula.getTier(0);
+                    ITier tier1 = formula.getTier(1);
                     
                     SimpleTier tier = new SimpleTier(Math.abs(a2), Math.abs(b2), Math.abs(c2));
                     tier.add(new SimpleTriplet(a2, b2, c2));
@@ -465,8 +465,8 @@ public class TestJoinMethods
                     
                     Join3BetweenTiers method = new Join3BetweenTiers();
                     ITabularFormula formula = createFormula(a1, b1, c1, a3, b3, c3);
-                    ITier tier0 = formula.getTiers().get(0);
-                    ITier tier1 = formula.getTiers().get(1);
+                    ITier tier0 = formula.getTier(0);
+                    ITier tier1 = formula.getTier(1);
                     
                     SimpleTier tier = new SimpleTier(Math.abs(a2), Math.abs(b2), Math.abs(c2));
                     tier.add(new SimpleTriplet(a2, b2, c2));
@@ -631,7 +631,7 @@ public class TestJoinMethods
                 
                 Join1Left method = new Join1Left();
                 ITabularFormula formula = createFormula(a2, b2, c2);
-                ITier tier0 = formula.getTiers().get(0);
+                ITier tier0 = formula.getTier(0);
                 
                 SimpleTier tier = new SimpleTier(Math.abs(a1), Math.abs(b1), Math.abs(c1));
                 tier.add(new SimpleTriplet(a1, b1, c1));
@@ -711,7 +711,7 @@ public class TestJoinMethods
                 
                 Join1Right method = new Join1Right();
                 ITabularFormula formula = createFormula(a2, b2, c2);
-                ITier tier0 = formula.getTiers().get(0);
+                ITier tier0 = formula.getTier(0);
                 
                 SimpleTier tier = new SimpleTier(Math.abs(a1), Math.abs(b1), Math.abs(c1));
                 tier.add(new SimpleTriplet(a1, b1, c1));
@@ -791,7 +791,7 @@ public class TestJoinMethods
                 
                 Join2Left method = new Join2Left();
                 ITabularFormula formula = createFormula(a2, b2, c2);
-                ITier tier0 = formula.getTiers().get(0);
+                ITier tier0 = formula.getTier(0);
                 
                 SimpleTier tier = new SimpleTier(Math.abs(a1), Math.abs(b1), Math.abs(c1));
                 tier.add(new SimpleTriplet(a1, b1, c1));
@@ -871,7 +871,7 @@ public class TestJoinMethods
                 
                 Join2Right method = new Join2Right();
                 ITabularFormula formula = createFormula(a2, b2, c2);
-                ITier tier0 = formula.getTiers().get(0);
+                ITier tier0 = formula.getTier(0);
                 
                 SimpleTier tier = new SimpleTier(Math.abs(a1), Math.abs(b1), Math.abs(c1));
                 tier.add(new SimpleTriplet(a1, b1, c1));

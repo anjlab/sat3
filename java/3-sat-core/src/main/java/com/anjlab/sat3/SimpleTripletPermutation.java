@@ -10,6 +10,13 @@ public class SimpleTripletPermutation implements ITripletPermutation
     private int[] canonicalName;
     private long canonicalHashCode;
     
+    SimpleTripletPermutation(int[] abc, int[] canonicalName, long canonicalHashCode)
+    {
+        this.abc = abc;
+        this.canonicalName = canonicalName;
+        this.canonicalHashCode = canonicalHashCode;
+    }
+    
     public SimpleTripletPermutation(int a, int b, int c)
     {
         abc = new int[] {a, b, c};
@@ -23,7 +30,7 @@ public class SimpleTripletPermutation implements ITripletPermutation
         setCanonicalAttributes(a, b, c);
     }
 
-    public void setCanonicalAttributes(int a, int b, int c)
+    void setCanonicalAttributes(int a, int b, int c)
     {
         if (a < b)
         {

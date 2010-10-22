@@ -2,11 +2,13 @@ package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.prettyPrint;
 import static com.anjlab.sat3.SimpleTripletValueFactory._000_instance;
+import static com.anjlab.sat3.SimpleTripletValueFactory._001_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._010_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._100_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import junit.framework.Assert;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,8 +48,8 @@ public class TestCTSOperations
         Helper.prettyPrint(s1);
 
         assertEquals(2, s1.getClausesCount());
-        assertEquals(SimpleTripletValueFactory._101_instance, s1.getTiers().get(0).iterator().next());
-        assertEquals(SimpleTripletValueFactory._010_instance, s1.getTiers().get(1).iterator().next());
+        assertEquals(SimpleTripletValueFactory._101_instance, s1.getTier(0).iterator().next());
+        assertEquals(SimpleTripletValueFactory._010_instance, s1.getTier(1).iterator().next());
     }
 
     @Test
@@ -117,6 +119,56 @@ public class TestCTSOperations
     }
     
     @Test
+    public void testUnionLeftOperandIsEmpty()
+    {
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+                                      Helper.createFormula(1, 2, 3,
+                                                             -2, 3, 4);
+        
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+        
+        ICompactTripletsStructure s2 = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                                2, 3, 4);
+        
+        s2.cleanup();
+        
+        assertTrue(!s2.isEmpty());
+        
+        s.union(s2);
+        
+        assertTrue("Should not be empty", !s.isEmpty());
+        assertEquals(s2.getClausesCount(), s.getClausesCount());
+    }
+    
+
+    @Test
+    public void testUnionRightOperandIsEmpty()
+    {
+        ICompactTripletsStructure s2 = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                                2, 3, 4);
+        
+        s2.cleanup();
+        
+        assertTrue(!s2.isEmpty());
+
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                               -2, 3, 4);
+
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+
+        s2.union(s);
+        
+        assertEquals(2, s2.getClausesCount());
+    }
+    
+    @Test
     public void testCleanupFormulaThatHasEmptyTier()
     {
         ICompactTripletsStructure s = (ICompactTripletsStructure)
@@ -128,7 +180,7 @@ public class TestCTSOperations
                         3, 4, 5   //       VarCount: 5; ClausesCount: 2; TiersCount: 3
                     });
         
-        s.getTiers().get(1).remove(SimpleTripletValueFactory._000_instance);
+        s.getTier(1).remove(SimpleTripletValueFactory._000_instance);
         
         prettyPrint(s);
         
@@ -202,17 +254,66 @@ public class TestCTSOperations
         
         assertEquals(3, s1.getClausesCount());
         
-        ITier _123 = s1.getTiers().get(0);
+        ITier _123 = s1.getTier(0);
         assertEquals(1, _123.size());
         assertTrue(_123.contains(_100_instance));
 
-        ITier _234 = s1.getTiers().get(1);
+        ITier _234 = s1.getTier(1);
         assertEquals(1, _234.size());
         assertTrue(_234.contains(_000_instance));
         
-        ITier _345 = s1.getTiers().get(2);
+        ITier _345 = s1.getTier(2);
         assertEquals(1, _345.size());
         assertTrue(_345.contains(_000_instance));
+    }
+    
+    @Test
+    public void testIntersectLeftOperandIsEmpty()
+    {
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+                                      Helper.createFormula(1, 2, 3,
+                                                             -2, 3, 4);
+        
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+        
+        ICompactTripletsStructure s2 = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                                2, 3, 4);
+        
+        s2.cleanup();
+        
+        assertTrue(!s2.isEmpty());
+        
+        s.intersect(s2);
+        
+        assertTrue(s.isEmpty());
+    }
+    
+
+    @Test
+    public void testIntersectRightOperandIsEmpty()
+    {
+        ICompactTripletsStructure s2 = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                                2, 3, 4);
+        
+        s2.cleanup();
+        
+        assertTrue(!s2.isEmpty());
+
+        ICompactTripletsStructure s = (ICompactTripletsStructure)
+                                        Helper.createFormula(1, 2, 3,
+                                                               -2, 3, 4);
+
+        s.cleanup();
+        
+        assertTrue(s.isEmpty());
+
+        s2.intersect(s);
+        
+        assertTrue(s2.isEmpty());
     }
     
     @Test
@@ -237,15 +338,40 @@ public class TestCTSOperations
 
         Helper.prettyPrint(formula);
 
-        assertTrue(!formula.getTiers().get(0).contains(_000_instance));
-        assertTrue(!formula.getTiers().get(0).contains(_010_instance));
-        assertTrue(!formula.getTiers().get(0).contains(_100_instance));
-        assertEquals(5, formula.getTiers().get(0).size());
-        assertTrue(!formula.getTiers().get(1).contains(_000_instance));
-        assertTrue(!formula.getTiers().get(1).contains(_010_instance));
-        assertTrue(!formula.getTiers().get(1).contains(_111_instance));
-        assertEquals(4, formula.getTiers().get(1).size());  //  Cleanup
-        assertEquals(8, formula.getTiers().get(2).size());
-        assertEquals(8, formula.getTiers().get(2).size());
+        assertTrue(!formula.getTier(0).contains(_000_instance));
+        assertTrue(!formula.getTier(0).contains(_010_instance));
+        assertTrue(!formula.getTier(0).contains(_100_instance));
+        assertEquals(5, formula.getTier(0).size());
+        assertTrue(!formula.getTier(1).contains(_000_instance));
+        assertTrue(!formula.getTier(1).contains(_010_instance));
+        assertTrue(!formula.getTier(1).contains(_111_instance));
+        assertEquals(4, formula.getTier(1).size());  //  Cleanup
+        assertEquals(8, formula.getTier(2).size());
+        assertEquals(8, formula.getTier(2).size());
+    }
+    
+    @Test
+    public void testCleanupFromTo()
+    {
+        SimpleFormula formula = (SimpleFormula)
+                                Helper.createFormula(1,  2,  3, 
+                                                     1,  2, -3,
+                                                     1, -2, -3,
+                                                         2, -3, -4,
+                                                        -2, -3,  4,
+                                                         2,  3, -4,
+                                                             3, -4,  5, 
+                                                            -3, -4, -5,
+                                                            -3,  4,  5);
+        
+        Helper.prettyPrint(formula);
+        
+        formula.getTier(1).remove(_001_instance);
+        
+        formula.cleanup(1, 1);
+        
+        Helper.prettyPrint(formula);
+        
+        Assert.assertEquals(6, formula.getClausesCount());
     }
 }

@@ -1,6 +1,7 @@
 package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.printFormulas;
+import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
@@ -25,29 +26,22 @@ public class Program
             stopWatch.start("Load formula");
             ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(args[0]);
             stopWatch.stop();
-            
             Helper.prettyPrint(formula);
-    
             stopWatch.printElapsed();
     
             stopWatch.start("Create CTF");
-            GenericArrayList<ITabularFormula> ct = Helper.createCTF(formula);
+            ObjectArrayList ct = Helper.createCTF(formula);
             stopWatch.stop();
-    
             printFormulas(ct);
-    
             System.out.println("CTF: " + ct.size());
-    
             stopWatch.printElapsed();
     
             stopWatch.start("Create CTS");
             Helper.createCTS(formula, ct);
             stopWatch.stop();
-    
+            //  formula may be garbage collected now
             formula = null;
-            
             printFormulas(ct);
-    
             stopWatch.printElapsed();
     
     //        saveCTS(args[0], ct);
@@ -55,12 +49,20 @@ public class Program
             stopWatch.start("Unify all CTS");
             Helper.unify(ct);
             stopWatch.stop();
-            
             printFormulas(ct);
-            
             stopWatch.printElapsed();
 
             System.out.println("CTF: " + ct.size());
+            
+            stopWatch.start("Create HSS");
+            ObjectArrayList hss = Helper.createHyperStructures(ct);
+            stopWatch.stop();
+            stopWatch.printElapsed();
+            
+            stopWatch.start("Write HSS(0) to image file");
+            Helper.writeToImage((IHyperStructure) hss.get(0), "target/hss.png");
+            stopWatch.stop();
+            stopWatch.printElapsed();
         }
         catch (EmptyStructureException e)
         {
@@ -75,5 +77,4 @@ public class Program
             System.out.println("Program completed");
         }
     }
-
 }
