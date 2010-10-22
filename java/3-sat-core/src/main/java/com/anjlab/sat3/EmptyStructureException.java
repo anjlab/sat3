@@ -16,6 +16,11 @@ public class EmptyStructureException extends RuntimeException
         this.structure = hs;
     }
     
+    public EmptyStructureException(ITabularFormula s)
+    {
+        this.structure = s;
+    }
+
     public Object getStructure()
     {
         return structure;

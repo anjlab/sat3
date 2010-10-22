@@ -679,6 +679,11 @@ public class Helper
         for(int i = 0; i < ctsCount; i++)
         {
             ITabularFormula s = ((ICompactTripletsStructureHolder) cts.get(i)).getCTS();
+            if(s.isEmpty())
+            {
+                throw new EmptyStructureException(s);
+            }
+            
             Object[] tierElements = s.getTiers().elements();
             
             for (int j = 0; j < tierCount; j++)
