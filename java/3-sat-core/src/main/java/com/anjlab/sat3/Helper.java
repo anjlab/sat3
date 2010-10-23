@@ -28,8 +28,12 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.anjlab.sat3.ICompactTripletsStructure.CleanupStatus;
+
 import cern.colt.function.IntObjectProcedure;
-import cern.colt.function.IntProcedure;
 import cern.colt.function.LongObjectProcedure;
 import cern.colt.list.IntArrayList;
 import cern.colt.list.LongArrayList;
@@ -39,6 +43,8 @@ import cern.colt.map.OpenLongObjectHashMap;
 
 public class Helper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Helper.class);
+    
     public static boolean UsePrettyPrint = false;
 
     public static boolean EnableAssertions = false;
@@ -513,7 +519,7 @@ public class Helper
     {
         boolean someClausesRemoved = false;
 
-        System.out.println(System.currentTimeMillis() + ": Running unify routine...");
+        LOGGER.debug("Running unify routine...");
         
         int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
         int ctsCount = cts.size();
@@ -669,7 +675,7 @@ public class Helper
      */
     private static OpenLongObjectHashMap buildVarPairsIndex(ObjectArrayList cts) throws EmptyStructureException
     {
-        System.out.println("Building pairs index...");
+        LOGGER.debug("Building pairs index...");
         
         int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
         int tierCount = varCount - 2;
@@ -730,11 +736,11 @@ public class Helper
         });
         
         int size = toBeRemoved.size();
-        System.out.println("Removing " + size + " triplet permutations from index");
         for (int i = 0; i < size; i++)
         {
             result.removeKey(toBeRemoved.getQuick(i));
         }
+        LOGGER.debug("Removed {} triplet permutations from index", size);
         
         return result;
     }
@@ -748,8 +754,8 @@ public class Helper
             int varName1_ = (int) (key >> 21);
             int varName2_ = (int) (key & 0x1FFFFF);
     
-            if ((varName1 != varName1_) && (varName1 != varName2_)
-                    || (varName2 != varName1_) && (varName2 != varName2_))
+            if (((varName1 != varName1_) && (varName1 != varName2_))
+                    || ((varName2 != varName1_) && (varName2 != varName2_)))
             {
                 throw new AssertionError("Bad hash");
             }
@@ -874,7 +880,7 @@ public class Helper
         
         ITier firstBasicTier = (ITier) basicTiers.get(0);
 
-        System.out.println(System.currentTimeMillis() + ": Building HSS tier #1 of " + basicTiers.size());
+        LOGGER.info("Building HSS tier #1 of {}", basicTiers.size());
 
         for (int i = 0; i < cts.size(); i++)
         {
@@ -905,117 +911,166 @@ public class Helper
 
         for (int j = 1; j < basicTiers.size(); j++)
         {
-            System.out.println(System.currentTimeMillis() + ": Building HSS tier #" + (j+1) + " of " + basicTiers.size());
+            LOGGER.info("Building HSS tier #{} of {}", j+1, basicTiers.size());
             
             final int tierIndex = j;
+            final ITier basicPrevTier = (ITier) basicTiers.get(tierIndex - 1);
             final ITier basicTier = (ITier) basicTiers.get(tierIndex);
             
             OpenIntObjectHashMap basicPrevTierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex - 1);
             
-            basicPrevTierVertices.forEachKey(new IntProcedure()
+            if (LOGGER.isDebugEnabled())
             {
-                //  Shift each vertex of the tier along associated edges to the next tier
-                public boolean apply(int vertexTierKey)
+                LOGGER.debug("HSS   tier #{} is: {}", tierIndex, verticesTripletsToString(basicPrevTierVertices));
+                LOGGER.debug("Basic tier #{} is: {}", tierIndex, tripletsToString(basicPrevTier));
+                LOGGER.debug("Basic tier #{} is: {}", tierIndex + 1, tripletsToString(basicTier));
+            }
+
+            if (basicPrevTier.size() != basicPrevTierVertices.size())
+            {
+                throw new AssertionError("BG and HSS should be isomorphic");
+            }
+            
+            //  Shift each vertex of the tier along associated edges to the next tier
+            
+            IntArrayList keys = basicPrevTierVertices.keys();
+            for (int k = 0; k < keys.size(); k++)
+            {
+                int vertexTierKey = keys.get(k);
+                //  For each hyperstructure in the HSS
+                for (int i = 0; i < hss.size(); i++)
                 {
-                    //  For each hyperstructure in the HSS
-                    for (int i = 0; i < hss.size(); i++)
-                    {
-                        IHyperStructure hs = (IHyperStructure) hss.get(i);
-                        
-                        IVertex prevTierVertex = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex - 1)).get(vertexTierKey);
+                    IHyperStructure hs = (IHyperStructure) hss.get(i);
+                    
+                    IVertex prevTierVertex = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex - 1)).get(vertexTierKey);
 
-                        ITripletValue tripletValue = prevTierVertex.getTripletValue();
+                    ITripletValue tripletValue = prevTierVertex.getTripletValue();
 
-                        ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
-                        if (basicTier.contains(adjoinTarget))
-                        {
-                            //  calculate substructure-edge for target edge 1
-                            createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
-                        }
-                        adjoinTarget = tripletValue.getAdjoinRightTarget2();
-                        if (basicTier.contains(adjoinTarget))
-                        {
-                            //  calculate substructure-edge for target edge 2
-                            createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
-                        }
-                    }
-                    
-                    return true;
-                }
-
-                private void createOrUpdateNextTierVertex(final int tierIndex,
-                        final ITier basicTier, final IHyperStructure hs,
-                        IVertex prevTierVertex, ITripletValue adjoinTarget)
-                {
-                    ICompactTripletsStructure substructureEdge = shiftVertexAlongTheEdge(
-                            hs, prevTierVertex, basicTier.getCName(),
-                            adjoinTarget.isNotC() ? Value.AllNegative : Value.AllPlain);
-                    
-                    OpenIntObjectHashMap tierVertices = null;
-                    IVertex existingVertex = null;
-                    
-                    if (tierIndex < hs.getTiers().size()) 
+                    ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
+                    if (basicTier.contains(adjoinTarget))
                     {
-                        tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
-                        existingVertex = (IVertex) tierVertices.get(adjoinTarget.getTierKey());
+                        //  calculate substructure-edge for target edge 1
+                        createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
                     }
-                    
-                    //  If the vertex is already on the next tier...
-                    if (existingVertex != null)
+                    adjoinTarget = tripletValue.getAdjoinRightTarget2();
+                    if (basicTier.contains(adjoinTarget))
                     {
-                        //  ... unite substructure-edge width substructure-vertex 
-                        //  and replace target substructure-vertex with resulting substructure
-                        
-                        existingVertex.getCTS().union(substructureEdge);
-                    }
-                    else
-                    {
-                        //  put substructure-edge to substructure-vertex as is
-                        hs.addVertex(basicTier.size(), new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
+                        //  calculate substructure-edge for target edge 2
+                        createOrUpdateNextTierVertex(tierIndex, basicTier, hs, prevTierVertex, adjoinTarget);
                     }
                 }
-
-                private ICompactTripletsStructure shiftVertexAlongTheEdge(
-                        final IHyperStructure hs, IVertex vertex, int cName, Value cValue)
-                {
-                    //  Work with copy of the substructure-vertex to keep original substructure the same
-                    ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) vertex.getCTS().clone();
-                    
-                    substructureEdge.concretize(cName, cValue);
-                    
-                    if (substructureEdge.isEmpty())
-                    {
-                        //  Future intersection with empty structure will result in empty structure
-                        return substructureEdge;
-                    }
-                    
-                    //  Filtration
-                    for (int s = 0; s < vertex.getTierIndex(); s++)
-                    {
-                        OpenIntObjectHashMap sTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(s);
-                        ObjectArrayList intersections = new ObjectArrayList();
-                        for (int v = 0; v < sTierVertices.size(); v++)
-                        {
-                            IVertex sVertex = (IVertex) sTierVertices.values().get(v); 
-                            ICompactTripletsStructure clone = (ICompactTripletsStructure) substructureEdge.clone();
-                            clone.intersect(sVertex.getCTS());
-                            intersections.add(clone);
-                        };
-                        substructureEdge = (ICompactTripletsStructure) intersections.get(0);
-                        for (int ks = 1; ks < intersections.size(); ks++)
-                        {
-                            substructureEdge.union((ICompactTripletsStructure) intersections.get(ks));
-                        }
-                    }
-                    
-                    return substructureEdge;
-                }
-            });
+            }
             
             unifyCoincidentSubstructuresOfATier(hss, tierIndex);
+
+            //  Check for dirty vertices
+            int dirtyTiersCount = countDirtyTiers(basicGraph);
+            if (dirtyTiersCount > 0)
+            {
+                LOGGER.debug("Remove last {} tier(s) of the HSS and rebuild them", dirtyTiersCount);
+                for (int i = 0; i < hss.size(); i++)
+                {
+                    IHyperStructure hs = (IHyperStructure) hss.get(i);
+                    int indexOfLastTier = hs.getTiers().size() - 1;
+                    hs.getTiers().removeFromTo(indexOfLastTier - (dirtyTiersCount - 1), indexOfLastTier);
+                }
+                j -= dirtyTiersCount;
+            }
         }
         
         return hss;
+    }
+
+    private static void createOrUpdateNextTierVertex(final int tierIndex,
+            final ITier basicTier, final IHyperStructure hs,
+            IVertex prevTierVertex, ITripletValue adjoinTarget)
+    {
+        ICompactTripletsStructure substructureEdge = shiftVertexAlongTheEdge(
+                hs, prevTierVertex, basicTier.getCName(),
+                adjoinTarget.isNotC() ? Value.AllNegative : Value.AllPlain);
+        
+        if (substructureEdge.isEmpty())
+        {
+            prevTierVertex.foundEmptyEdge();
+        }
+        
+        OpenIntObjectHashMap tierVertices = null;
+        IVertex existingVertex = null;
+        
+        if (tierIndex < hs.getTiers().size()) 
+        {
+            tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+            existingVertex = (IVertex) tierVertices.get(adjoinTarget.getTierKey());
+        }
+        
+        //  If the vertex is already on the next tier...
+        if (existingVertex != null)
+        {
+            //  ... unite substructure-edge width substructure-vertex 
+            //  and replace target substructure-vertex with resulting substructure
+            
+            existingVertex.getCTS().union(substructureEdge);
+        }
+        else
+        {
+            //  put substructure-edge to substructure-vertex as is
+            hs.addVertex(basicTier.size(), new SimpleVertex(basicTier, tierIndex, adjoinTarget, substructureEdge));
+        }
+    }
+
+    private static ICompactTripletsStructure shiftVertexAlongTheEdge(
+            final IHyperStructure hs, IVertex vertexToShift, int cName, Value cValue)
+    {
+        //  Work with copy of substructure-vertex to keep original substructure the same
+        ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) vertexToShift.getCTS().clone();
+        
+        substructureEdge.concretize(cName, cValue);
+        
+        if (substructureEdge.isEmpty())
+        {
+            //  Future intersection with empty structure will result in empty structure
+            return substructureEdge;
+        }
+        
+        //  Filtration
+        for (int s = 0; s < vertexToShift.getTierIndex(); s++)
+        {
+            OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(s);
+            ObjectArrayList intersections = new ObjectArrayList();
+            for (int v = 0; v < tierVertices.size(); v++)
+            {
+                IVertex tierVertex = (IVertex) tierVertices.values().get(v); 
+                ICompactTripletsStructure clone = (ICompactTripletsStructure) substructureEdge.clone();
+                clone.intersect(tierVertex.getCTS());
+                intersections.add(clone);
+            };
+            substructureEdge = (ICompactTripletsStructure) intersections.get(0);
+            for (int ks = 1; ks < intersections.size(); ks++)
+            {
+                substructureEdge.union((ICompactTripletsStructure) intersections.get(ks));
+            }
+        }
+        
+        return substructureEdge;
+    }
+
+    private static int countDirtyTiers(IHyperStructure basicGraph)
+    {
+        int count = 0;
+        for (int i = basicGraph.getTiers().size() - 1; i >= 0; i--)
+        {
+            OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(i);
+            IVertex tierVertex = (IVertex) tierVertices.get(tierVertices.keys().get(0));
+            if (tierVertex.isDirty())
+            {
+                count++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return count;
     }
 
     /**
@@ -1026,11 +1081,16 @@ public class Helper
     {
         IHyperStructure firstHS = (IHyperStructure) hss.get(0);
 
-        final OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) firstHS.getTiers().get(tierIndex);
+        final OpenIntObjectHashMap basicTierVertices = (OpenIntObjectHashMap) firstHS.getTiers().get(tierIndex);
 
-        //  Edges are the same in every HS of the same tier 
+        IntArrayList keys = basicTierVertices.keys();
         
-        IntArrayList keys = tierVertices.keys();
+        if (LOGGER.isDebugEnabled())
+        {
+            LOGGER.debug("Tier #{} of HSS contained {} vertices before unification: {}", 
+                    new Object[] { tierIndex + 1, basicTierVertices.size(), verticesTripletsToString(basicTierVertices) });
+        }
+
         for (int j = 0; j < keys.size(); j++)
         {
             int vertexTierKey = keys.get(j);
@@ -1071,85 +1131,124 @@ public class Helper
             }
             catch (EmptyStructureException e)
             {
-                //  Remove tier vertices with empty substructures from BG
+                LOGGER.info("Found empty substructure-vertex assigned to vertex {} of tier #{}",
+                        ((IVertex) vertices.get(0)).getTripletValue(), tierIndex + 1);
+                
+                //  Remove vertex with empty substructure from HSS and BG
                 for (int i = 0; i < hss.size(); i++)
                 {
                     IHyperStructure hs = (IHyperStructure) hss.get(i);
                     
-                    IVertex vertex = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tierIndex)).get(vertexTierKey);
+                    OpenIntObjectHashMap hsTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(tierIndex);
+
+                    IVertex vertex = (IVertex) hsTierVertices.get(vertexTierKey);
+
+                    hsTierVertices.removeKey(vertexTierKey);
+                    //  TODO Check if the latest version of slf4j-API supports varArgs
+                    LOGGER.debug("Vertex {} removed from tier #{} of HSS({}): {}", 
+                            new Object[] { vertex.getTripletValue(), tierIndex + 1, i, verticesTripletsToString(hsTierVertices) });
+
+                    ICompactTripletsStructure basicCTS = hs.getBasicCTS();
+                    ITier basicTier = basicCTS.getTier(tierIndex);
+                    basicTier.remove(vertex.getTripletValue());
+                    LOGGER.debug("Coincident vertex {} removed from tier #{} of the BG: {}", 
+                            new Object[] { vertex.getTripletValue(), tierIndex + 1, tripletsToString(basicTier) });
                     
-                    tierVertices.removeKey(vertexTierKey);
+                    LOGGER.debug("Executing cleaup procedure on the basic structure...");
+                    CleanupStatus status = basicCTS.cleanup(tierIndex, tierIndex);
                     
-                    //  If some tier of any HS is empty, then all HSS declared empty and the formula is not satisfiable
-                    if (tierVertices.size() == 0)
+                    if (basicCTS.isEmpty())
                     {
-                        throw new EmptyStructureException(hs);
+                        throw new EmptyStructureException(basicCTS);
                     }
 
-                    //  Remove incident edges & vertices
-                    removeBottom(hs, vertex);
-                    removeTop(hs, vertex);
+                    int deep = tierIndex - status.from;
+                    
+                    LOGGER.debug("{} vertices were removed from BG incuding some vertices in {} above tier(s)", status.numberOfClausesRemoved, deep);
+                    if (deep > 0)
+                    {
+                        //  Mark substructure-vertices of the above (deep + 1) tiers as dirty
+                        for (int d = 0; d < deep + 1; d++)
+                        {
+                            int dirtyTierIndex = tierIndex - d;
+                            if (dirtyTierIndex < 0)
+                            {
+                                break;
+                            }
+                            OpenIntObjectHashMap dirtyTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(dirtyTierIndex);
+                            dirtyTierVertices.forEachPair(new IntObjectProcedure()
+                            {
+                                public boolean apply(int key, Object value)
+                                {
+                                    ((IVertex) value).markDirty();
+                                    return true;
+                                }
+                            });
+                        }
+                    }
                 }
             }
         }
-    }
 
-    private static void removeBottom(final IHyperStructure hs, IVertex vertex)
-    {
-        int nextTierIndex = vertex.getTierIndex() + 1;
-        
-        if (nextTierIndex >= hs.getTiers().size())
+        if (LOGGER.isDebugEnabled())
         {
-            return;
-        }
-        
-        final OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(nextTierIndex);
-        
-        IntArrayList keys = tierVertices.keys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            int vertexTierKey = keys.get(i);
-            IVertex tierVertex = (IVertex) tierVertices.get(vertexTierKey);
-            if (tierVertex.getTopVertex1() == null && tierVertex.getTopVertex2() == null)
-            {
-                tierVertices.removeKey(vertexTierKey);
-                removeBottom(hs, tierVertex);
-            }
-        }
-        if (tierVertices.size() == 0)
-        {
-            throw new EmptyStructureException(hs);
+            LOGGER.debug("Tier #{} of HSS contained {} vertices after unification: {}", 
+                    new Object[] { tierIndex + 1, basicTierVertices.size(), verticesTripletsToString(basicTierVertices) });
         }
     }
 
-    private static void removeTop(final IHyperStructure hs, IVertex vertex)
+    private static StringBuilder tripletsToString(ITier tier)
     {
-        int prevTierIndex = vertex.getTierIndex() - 1;
-        
-        if (prevTierIndex < 0)
+        final StringBuilder builder = new StringBuilder();
+        appendToBuilder(tier, builder, _000_instance);
+        appendToBuilder(tier, builder, _001_instance);
+        appendToBuilder(tier, builder, _010_instance);
+        appendToBuilder(tier, builder, _011_instance);
+        appendToBuilder(tier, builder, _100_instance);
+        appendToBuilder(tier, builder, _101_instance);
+        appendToBuilder(tier, builder, _110_instance);
+        appendToBuilder(tier, builder, _111_instance);
+        return builder;
+    }
+
+    private static void appendToBuilder(final ITier tier, final StringBuilder builder, ITripletValue tripletValue)
+    {
+        if (tier.contains(tripletValue)) 
         {
-            return;
-        }
-        
-        final OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(prevTierIndex);
-        
-        IntArrayList keys = tierVertices.keys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            int vertexTierKey = keys.get(i);
-            IVertex tierVertex = (IVertex) tierVertices.get(vertexTierKey);
-            if (tierVertex.getBottomVertex1() == null && tierVertex.getBottomVertex2() == null)
+            if (builder.length() > 0)
             {
-                tierVertices.removeKey(vertexTierKey);
-                removeTop(hs, tierVertex);
+                builder.append(", ");
             }
-        }
-        if (tierVertices.size() == 0)
-        {
-            throw new EmptyStructureException(hs);
+            builder.append(tripletValue);
         }
     }
-    
+
+    private static StringBuilder verticesTripletsToString(final OpenIntObjectHashMap tierVertices)
+    {
+        final StringBuilder builder = new StringBuilder();
+        appendToBuilder(tierVertices, builder, _000_instance);
+        appendToBuilder(tierVertices, builder, _001_instance);
+        appendToBuilder(tierVertices, builder, _010_instance);
+        appendToBuilder(tierVertices, builder, _011_instance);
+        appendToBuilder(tierVertices, builder, _100_instance);
+        appendToBuilder(tierVertices, builder, _101_instance);
+        appendToBuilder(tierVertices, builder, _110_instance);
+        appendToBuilder(tierVertices, builder, _111_instance);
+        return builder;
+    }
+
+    private static void appendToBuilder(final OpenIntObjectHashMap tierVertices, final StringBuilder builder, ITripletValue tripletValue)
+    {
+        if (tierVertices.containsKey(tripletValue.getTierKey())) 
+        {
+            if (builder.length() > 0)
+            {
+                builder.append(", ");
+            }
+            builder.append(tripletValue);
+        }
+    }
+
     /**
      * Choose CTS with minimum number of clauses as a basic structure
      * @param cts List of ICompactTripletsStructure 
@@ -1210,7 +1309,9 @@ public class Helper
         final int offsetLeft = 10;
         final int offsetRight = 10;
         final int varCount = hs.getBasicCTS().getVarCount();
-        final int widthOfTierHeader = ("(,,)".length() + 3 * getLegendName(varCount).length()) * widthOfZeroChar;
+        final int widthOfTierHeader = ("(,,) j=".length() 
+                                       + 3 * getLegendName(varCount).length() 
+                                       + String.valueOf(varCount - 2).length()) * widthOfZeroChar;
         
         //  List of ITier
         ObjectArrayList ctsTiers = hs.getBasicCTS().getTiers();
@@ -1240,10 +1341,11 @@ public class Helper
             
             final int y = offsetTop + heightOfZeroChar + tierIndex * heightOfZeroChar + tierIndex * heightBetweenTriplets;
 
-            graphics.drawString((format("({0},{1},{2})", 
+            graphics.drawString((format("({0},{1},{2}) j={3}", 
                                     getLegendName(ctsTier.getAName()), 
                                     getLegendName(ctsTier.getBName()),
-                                    getLegendName(ctsTier.getCName()))), 
+                                    getLegendName(ctsTier.getCName()),
+                                    tierIndex + 1)), 
                                 widthOfValuesArea, y);
 
             tier.forEachPair(new IntObjectProcedure()
@@ -1255,6 +1357,12 @@ public class Helper
                     int tripletOffset = getTripletOffset(vertex, offsetLeft, widthBetweenTriplets, widthBetweenChars, widthOfZeroChar);
                     
                     Color color = graphics.getColor();
+                    
+                    if (vertex.hasEmptyEdge())
+                    {
+                        graphics.setColor(Color.GREEN);
+                    }
+
                     if (route != null)
                     {
                         IVertex routeVertex = (IVertex) route.get(tierIndex);
@@ -1264,6 +1372,11 @@ public class Helper
                         {
                             //  Highlight triplet value
                             graphics.setColor(Color.RED);
+                            
+                            if (vertex.hasEmptyEdge())
+                            {
+                                graphics.setColor(Color.BLUE);
+                            }
                         }
                     }
                     
@@ -1383,7 +1496,7 @@ public class Helper
                 //  Note: For debug purposes only. 
                 result.add(null);
                 
-                System.err.println("Implementation error: " + j + " tier has been built with error. Please provide CNF file to developers.");
+                System.err.println("Implementation error: " + j + " tier was built with errors. Please provide CNF file to developers.");
             }
         }
 

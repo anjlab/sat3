@@ -9,6 +9,8 @@ public class SimpleVertex implements IVertex
     private ICompactTripletsStructure structure;
     private int tierIndex;
     private IHyperStructure hyperStructure;
+    private boolean hasEmptyEdge;
+    private boolean dirty;
     
     /**
      * 
@@ -25,6 +27,22 @@ public class SimpleVertex implements IVertex
         this.tripletValue = tripletValue;
         this.structure = structure;
         this.tierIndex = tierIndex;
+    }
+    public void markDirty()
+    {
+        dirty = true;
+    }
+    public boolean isDirty()
+    {
+        return dirty;
+    }
+    public boolean hasEmptyEdge()
+    {
+        return hasEmptyEdge;
+    }
+    public void foundEmptyEdge()
+    {
+        hasEmptyEdge = true;
     }
     void setHyperStructure(IHyperStructure hyperStructure)
     {

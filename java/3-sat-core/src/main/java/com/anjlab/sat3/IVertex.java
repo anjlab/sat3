@@ -12,4 +12,10 @@ public interface IVertex extends ICompactTripletsStructureHolder
     IVertex getBottomVertex2();
     IVertex getTopVertex1();
     IVertex getTopVertex2();
+
+    void foundEmptyEdge();
+    boolean hasEmptyEdge();
+
+    void markDirty();
+    boolean isDirty();
 }

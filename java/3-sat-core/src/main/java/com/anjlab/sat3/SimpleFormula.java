@@ -340,30 +340,23 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     }
 
     /**
-     * <p>The formula should be 'clean' in (0 ... from) range and (to ... tiers.size()-1) range, 
-     * as well as inside (from ... to) range.</p>
+     * {@inheritDoc}
      * 
-     * <p>Such formulas appear as a result of concretization of 'clean' formula.</p>
-     * 
-     * <p><b>IMPORTANT!</b> If formula doesn't not meet the above condition, the
-     * result will be incorrect and no exception will be thrown 
-     * (even if {@link Helper#EnableAssertions} set to <code>true</code>).</p>
-     * 
-     * @param from
-     * @param to
-     * @return
+     * <p><b>IMPORTANT!</b> If formula doesn't not meet the above conditions, the
+     * result will be incorrect. In this case if {@link Helper#EnableAssertions} 
+     * set to <code>true</code> an exception will be thrown.</p>
      */
-    public boolean cleanup(int from, int to)
+    public CleanupStatus cleanup(int from, int to)
     {
         if (tiers.size() == 1)
         {
-            return false;
+            return new CleanupStatus(false, from, to, 0);
         }
 
         if (tiers.size() != getVarCount() - 2)
         {
             clear();
-            return true;
+            return new CleanupStatus(true, 0, 0, 0);
         }
 
         if ((from > to) || (from < 0) || (to > tiers.size() - 1))
@@ -375,22 +368,21 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         {
             assertTiersSorted();
         }
-
-        boolean someClausesRemoved = false;
-        boolean someClausesRemovedDuringTopToBottom;
-        boolean someClausesRemovedDuringBottomToTop;
+        
+        int numberOfClausesRemoved = 0;
         
         int index;
 
         index = from - 1;
-        someClausesRemovedDuringTopToBottom = false;
         while (index >= 0)
         {
             ITier tier = (ITier) tiers.get(index);
             ITier bottom = (ITier) tiers.get(index + 1);
             int size = tier.size();
             tier.adjoinRight(bottom);
-            if (tier.size() == size)
+            int removed = size - tier.size();
+            numberOfClausesRemoved += removed;
+            if (removed == 0)
             {
                 //  Nothing removed
                 break;
@@ -400,22 +392,24 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                 if (tier.isEmpty())
                 {
                     clear();
-                    return true;
+                    return new CleanupStatus(true, 0, 0, 0);
                 }
-                someClausesRemovedDuringTopToBottom = true;
             }
             index--;
         }
-            
+        
+        int actualFrom = index;
+        
         index = to + 1;
-        someClausesRemovedDuringBottomToTop = false;
         while (index < tiers.size())
         {
             ITier top = (ITier) tiers.get(index - 1);
             ITier tier = (ITier) tiers.get(index);
             int size = tier.size();
             tier.adjoinLeft(top);
-            if (tier.size() == size)
+            int removed = size - tier.size();
+            numberOfClausesRemoved += removed;
+            if (removed == 0)
             {
                 //  Nothing removed
                 break;
@@ -425,14 +419,13 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                 if (tier.isEmpty())
                 {
                     clear();
-                    return true;
+                    return new CleanupStatus(true, 0, 0, 0);
                 }
-                someClausesRemovedDuringBottomToTop = true;
             }
             index++;
         }
         
-        someClausesRemoved |= someClausesRemovedDuringTopToBottom || someClausesRemovedDuringBottomToTop;
+        int actualTo = index;
         
         if (Helper.EnableAssertions)
         {
@@ -444,7 +437,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             }
         }
         
-        return someClausesRemoved;
+        return new CleanupStatus(numberOfClausesRemoved > 0, actualFrom, actualTo, numberOfClausesRemoved);
     }
     
     public boolean cleanup()
@@ -687,7 +680,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             {
                 to = tiers.size() - 1;
             }
-            return cleanup(from, to);
+            return cleanup(from, to).someClausesRemoved;
         }
         
         return someClausesRemoved;
