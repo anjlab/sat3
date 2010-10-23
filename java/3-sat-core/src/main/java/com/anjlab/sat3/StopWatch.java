@@ -1,9 +1,12 @@
 package com.anjlab.sat3;
 
-import static java.text.MessageFormat.format;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StopWatch
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StopWatch.class);
+    
     private long overall;
     private long start;
     private long end;
@@ -12,7 +15,7 @@ public class StopWatch
     public void start(String comment)
     {
         Helper.printLine('*', 70);
-        System.out.println(comment + "...");
+        LOGGER.info(comment + "...");
         this.comment = comment;
         start = System.currentTimeMillis();
     }
@@ -23,6 +26,6 @@ public class StopWatch
     }
     public void printElapsed()
     {
-        System.out.println(format("{0}: {1}ms; overall: {2}ms", comment, (end - start), overall));
+        LOGGER.info("{}: {}ms; overall: {}ms", new Object[] { comment, (end - start), overall });
     }
 }

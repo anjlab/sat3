@@ -1,10 +1,16 @@
 package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.printFormulas;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Program.class);
+    
     public static void main(String[] args) throws Exception
     {
         if (args.length != 1)
@@ -33,7 +39,7 @@ public class Program
             ObjectArrayList ct = Helper.createCTF(formula);
             stopWatch.stop();
             printFormulas(ct);
-            System.out.println("CTF: " + ct.size());
+            LOGGER.info("CTF: {}", ct.size());
             stopWatch.printElapsed();
     
             stopWatch.start("Create CTS");
@@ -52,7 +58,7 @@ public class Program
             printFormulas(ct);
             stopWatch.printElapsed();
 
-            System.out.println("CTF: " + ct.size());
+            LOGGER.info("CTF: {}", ct.size());
             
             stopWatch.start("Create HSS");
             ObjectArrayList hss = Helper.createHyperStructuresSystem(ct);

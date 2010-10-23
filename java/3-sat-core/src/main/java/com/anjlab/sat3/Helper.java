@@ -31,8 +31,6 @@ import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.anjlab.sat3.ICompactTripletsStructure.CleanupStatus;
-
 import cern.colt.function.IntObjectProcedure;
 import cern.colt.function.LongObjectProcedure;
 import cern.colt.list.IntArrayList;
@@ -40,6 +38,8 @@ import cern.colt.list.LongArrayList;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
+
+import com.anjlab.sat3.ICompactTripletsStructure.CleanupStatus;
 
 public class Helper
 {
@@ -151,7 +151,7 @@ public class Helper
 
         StringBuilder builder = buildPrettyOutput(formula);
 
-        System.out.println(builder);
+        LOGGER.info(builder.toString());
     }
 
    public static StringBuilder buildPrettyOutput(ITabularFormula formula)
@@ -380,7 +380,7 @@ public class Helper
 
     public static void printLine(char c, int length) {
         String string = getString(c, length);
-        System.out.println(string);
+        LOGGER.info(string);
     }
 
     private static String getString(char c, int length)
@@ -811,20 +811,21 @@ public class Helper
 
     public static void printBits(byte keys)
     {
+        StringBuilder builder = new StringBuilder(8);
         int mask = 0x80;
         while (mask > 0)
         {
             if ((keys & mask) == mask)
             {
-                System.out.print("1");
+                builder.append('1');
             }
             else
             {
-                System.out.print("0");
+                builder.append('0');
             }
             mask >>= 1;
         }
-        System.out.println();
+        LOGGER.info(builder.toString());
     }
 
     public static void debugPrettyPrintToFile(ITabularFormula formula)
@@ -909,14 +910,19 @@ public class Helper
 
         IHyperStructure basicGraph = (IHyperStructure)hss.get(0);
 
+        if (Helper.EnableAssertions)
+        {
+            assertIntersectionOfTierSubstructuresIsNotEmpty(basicGraph, 0);
+        }
+
         for (int j = 1; j < basicTiers.size(); j++)
         {
             LOGGER.info("Building HSS tier #{} of {}", j+1, basicTiers.size());
-            
+         
             final int tierIndex = j;
             final ITier basicPrevTier = (ITier) basicTiers.get(tierIndex - 1);
             final ITier basicTier = (ITier) basicTiers.get(tierIndex);
-            
+
             OpenIntObjectHashMap basicPrevTierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex - 1);
             
             if (LOGGER.isDebugEnabled())
@@ -976,9 +982,33 @@ public class Helper
                 }
                 j -= dirtyTiersCount;
             }
+            else
+            {
+                if (Helper.EnableAssertions)
+                {
+                    assertIntersectionOfTierSubstructuresIsNotEmpty(basicGraph, tierIndex);
+                }
+            }
         }
         
         return hss;
+    }
+
+    private static void assertIntersectionOfTierSubstructuresIsNotEmpty(
+            IHyperStructure basicGraph, final int tierIndex)
+            throws AssertionError
+    {
+        OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(tierIndex);
+        if (tierVertices.size() == 1)
+        {
+            return;
+        }
+        ICompactTripletsStructure intersection = intersectAll(tierVertices.values());
+        if (!intersection.isEmpty())
+        {
+            Helper.prettyPrint(intersection);
+            throw new AssertionError("By the construction rules, intersection of substructure-vertices of a single tier should be an empty substructure");
+        }
     }
 
     private static void createOrUpdateNextTierVertex(final int tierIndex,
@@ -1167,24 +1197,7 @@ public class Helper
                     LOGGER.debug("{} vertices were removed from BG incuding some vertices in {} above tier(s)", status.numberOfClausesRemoved, deep);
                     if (deep > 0)
                     {
-                        //  Mark substructure-vertices of the above (deep + 1) tiers as dirty
-                        for (int d = 0; d < deep + 1; d++)
-                        {
-                            int dirtyTierIndex = tierIndex - d;
-                            if (dirtyTierIndex < 0)
-                            {
-                                break;
-                            }
-                            OpenIntObjectHashMap dirtyTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(dirtyTierIndex);
-                            dirtyTierVertices.forEachPair(new IntObjectProcedure()
-                            {
-                                public boolean apply(int key, Object value)
-                                {
-                                    ((IVertex) value).markDirty();
-                                    return true;
-                                }
-                            });
-                        }
+                        markDirty(tierIndex, hs, deep);
                     }
                 }
             }
@@ -1194,6 +1207,28 @@ public class Helper
         {
             LOGGER.debug("Tier #{} of HSS contained {} vertices after unification: {}", 
                     new Object[] { tierIndex + 1, basicTierVertices.size(), verticesTripletsToString(basicTierVertices) });
+        }
+    }
+
+    private static void markDirty(int tierIndex, IHyperStructure hs, int deep)
+    {
+        //  Mark substructure-vertices of the above (deep + 1) tiers as dirty
+        for (int d = 0; d < deep + 1; d++)
+        {
+            int dirtyTierIndex = tierIndex - d;
+            if (dirtyTierIndex < 0)
+            {
+                break;
+            }
+            OpenIntObjectHashMap dirtyTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(dirtyTierIndex);
+            dirtyTierVertices.forEachPair(new IntObjectProcedure()
+            {
+                public boolean apply(int key, Object value)
+                {
+                    ((IVertex) value).markDirty();
+                    return true;
+                }
+            });
         }
     }
 
@@ -1518,7 +1553,7 @@ public class Helper
      */
     public static ICompactTripletsStructure intersectAll(ObjectArrayList route)
     {
-        ICompactTripletsStructure result = ((IVertex)route.get(0)).getCTS();
+        ICompactTripletsStructure result = (ICompactTripletsStructure) ((IVertex)route.get(0)).getCTS().clone();
         for (int i = 1; i < route.size(); i++)
         {
             IVertex vertex = (IVertex) route.get(i);
