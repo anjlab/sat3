@@ -7,6 +7,7 @@ import cern.colt.list.IntArrayList;
 
 public class GenericFormulaReader
 {
+    private int originalVarCount = 0;
     private int n = 0;
     private int m = 0;
     private int b = 0;
@@ -61,6 +62,9 @@ public class GenericFormulaReader
                 r = r * 10 + ch - '0';
             } 
         }
+        
+        System.out.println("Original VarCount: " + originalVarCount + ". Final VarCount: " + n + ". Added: " + (n - originalVarCount));
+        
         return formula;
     }
 
@@ -83,6 +87,8 @@ public class GenericFormulaReader
                 
                 n = Integer.parseInt(pLine[2]);
                 m = Integer.parseInt(pLine[3]);
+                
+                originalVarCount = n;
                 
                 break;
             }
