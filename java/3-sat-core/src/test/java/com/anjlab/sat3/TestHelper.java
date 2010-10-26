@@ -11,6 +11,7 @@ import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Random;
 
 import org.junit.Assert;
@@ -184,5 +185,21 @@ public class TestHelper
             {
             }
         }
+    }
+    
+    @Test
+    public void testCreateCTS() throws IOException
+    {
+        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat("target/test-classes/simplesat-example.cnf");
+        Helper.prettyPrint(formula);
+        ObjectArrayList ctf = Helper.createCTF(formula);
+        Helper.printFormulas(ctf);
+        Helper.createCTS(formula, ctf);
+        Helper.printFormulas(ctf);
+        
+        ICompactTripletsStructure s = (ICompactTripletsStructure)ctf.get(0);
+        
+        assertEquals(5, s.getVarCount());
+        assertEquals(21, s.getClausesCount());
     }
 }

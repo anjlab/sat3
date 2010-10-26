@@ -145,11 +145,14 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             
             int varCount = variables.size();
             int tiersCount = varCount - 2;
-            if (permutation.size() == varCount && tiers.size() == tiersCount)
+            
+            //Nick: comment code because it disallow inversion for CTF that have
+            //full set of variable permutations: tested by 
+ /*            if (permutation.size() == varCount && tiers.size() == tiersCount)
             {
                 //  Nothing to complete (the formula is already have completed permutation)
                 return;
-            }
+            }*/
             
             int[] variablesElements = ((SimplePermutation)variables).elements();
             for (int i = 0; i < varCount; i++)
