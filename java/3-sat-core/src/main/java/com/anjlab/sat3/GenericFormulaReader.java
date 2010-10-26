@@ -75,7 +75,7 @@ public class GenericFormulaReader
             }
             if (line.startsWith("p"))
             {
-                String[] pLine = line.split("\\W");
+                String[] pLine = line.split("\\W+");
                 if (pLine.length != 4 || !pLine[1].equals("cnf"))
                 {
                     throw new AssertionError("Bad DIMACS CNF file format");

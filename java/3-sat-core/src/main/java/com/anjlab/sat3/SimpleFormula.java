@@ -398,7 +398,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             index--;
         }
         
-        int actualFrom = index;
+        int actualFrom = index + 1;
         
         index = to + 1;
         while (index < tiers.size())
@@ -425,7 +425,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             index++;
         }
         
-        int actualTo = index;
+        int actualTo = index - 1;
         
         if (Helper.EnableAssertions)
         {
@@ -691,7 +691,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         return tiers.size() == 0;
     }
 
-    private void clear()
+    public void clear()
     {
         tiers.clear();
         

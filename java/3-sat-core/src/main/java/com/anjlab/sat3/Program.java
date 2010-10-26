@@ -65,21 +65,25 @@ public class Program
             stopWatch.stop();
             stopWatch.printElapsed();
 
-            stopWatch.start("Find HS route");
-            ObjectArrayList route = Helper.findHyperStructureRoute((IHyperStructure) hss.get(0));
-            stopWatch.stop();
-            stopWatch.printElapsed();
-            
-//            stopWatch.start("Calculate CTS from the route");
-//            ICompactTripletsStructure s = Helper.intersectAll(route);
-//            stopWatch.stop();
-//            Helper.prettyPrint(s);
-//            stopWatch.printElapsed();
-            
-            stopWatch.start("Write HSS(0) to image file");
-            Helper.writeToImage((IHyperStructure) hss.get(0), route, "target/hss.png");
-            stopWatch.stop();
-            stopWatch.printElapsed();
+            for (int h = 0; h < hss.size(); h++)
+            {
+                stopWatch.start("Find HSS(" + h + ") route");
+                ObjectArrayList route = Helper.findHyperStructureRoute((IHyperStructure) hss.get(h));
+                stopWatch.stop();
+                stopWatch.printElapsed();
+
+//              stopWatch.start("Calculate CTS from the route");
+//              ICompactTripletsStructure s = Helper.intersectAll(route);
+//              stopWatch.stop();
+//              Helper.prettyPrint(s);
+//              stopWatch.printElapsed();
+
+                String filename = "target/hss-0" + h + ".png";
+                stopWatch.start("Write HSS(" + h + ") to image filename " + filename);
+                Helper.writeToImage((IHyperStructure) hss.get(h), route, filename);
+                stopWatch.stop();
+                stopWatch.printElapsed();
+            }
         }
         catch (EmptyStructureException e)
         {

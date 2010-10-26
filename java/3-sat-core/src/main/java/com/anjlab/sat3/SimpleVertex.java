@@ -67,7 +67,15 @@ public class SimpleVertex implements IVertex
     }
     public String toString()
     {
-        return structure.toString();
+        return permutation.getAName()
+             + ","
+             + permutation.getBName()
+             + ","
+             + permutation.getCName()
+             + " -> "
+             + tripletValue.toString()
+             + "\n"
+             + structure.toString();
     }
     public IVertex getBottomVertex1()
     {
