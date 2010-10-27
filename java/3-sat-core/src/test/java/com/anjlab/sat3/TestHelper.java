@@ -11,6 +11,7 @@ import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
@@ -201,5 +202,20 @@ public class TestHelper
         
         assertEquals(5, s.getVarCount());
         assertEquals(21, s.getClausesCount());
+    }
+    
+    @Test
+    public void testConvertCTStructuresToRomanovSKTFileFormat() throws Exception
+    {
+        String filename = "target/test-classes/" + "uf75-0100.cnf";
+        File file = new File(filename);
+        ITabularFormula formula = Helper.loadFromDIMACSFileFormat(filename);
+        ObjectArrayList ctf = Helper.createCTF(formula);
+        Helper.createCTS(formula, ctf);
+        
+        System.out.println("CTS: " + ctf.size());
+        
+        Helper.convertCTStructuresToRomanovSKTFileFormat(ctf, "target/" + file.getName() + ".skt");
+        Helper.saveToDIMACSFileFormat((ITabularFormula) ctf.get(0), "target/" + file.getName() + "-cts-0.cnf");
     }
 }

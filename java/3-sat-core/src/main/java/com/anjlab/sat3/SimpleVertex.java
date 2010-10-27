@@ -67,7 +67,8 @@ public class SimpleVertex implements IVertex
     }
     public String toString()
     {
-        return permutation.getAName()
+        return (isDirty() ? "dirty " : "")
+             + permutation.getAName()
              + ","
              + permutation.getBName()
              + ","

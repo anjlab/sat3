@@ -98,11 +98,4 @@ public class TestLoadSave
                 + ", tiersCount=" + formula.getTiers().size()
                 + ", loadTime=" + (end - start));
     }
-
-    @Test
-    public void testConvertTo3SAT() throws Exception
-    {
-        ITabularFormula f = Helper.loadFromGenericDIMACSFileFormat("target/test-classes/cnf-v112-c418-100-sat.cnf");
-        Helper.saveToDIMACSFileFormat(f, "target/f.cnf");
-    }
 }

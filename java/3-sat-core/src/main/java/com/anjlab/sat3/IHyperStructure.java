@@ -14,6 +14,4 @@ public interface IHyperStructure
     ObjectArrayList getTiers();
     
     void addVertex(int tierSize, IVertex vertex);
-    void build();
-    boolean isBasicGraphChangedDuringBuild();
 }
