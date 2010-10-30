@@ -180,7 +180,7 @@ public class TestHelper
                 System.out.println(n);
                 ITabularFormula formula = Helper.createRandomFormula(21, n);
                 ObjectArrayList ctf = Helper.createCTF(formula);
-                Helper.createCTS(formula, ctf);
+                Helper.completeToCTS(ctf, formula.getPermutation());
             }
             catch (EmptyStructureException e)
             {
@@ -195,7 +195,7 @@ public class TestHelper
         Helper.prettyPrint(formula);
         ObjectArrayList ctf = Helper.createCTF(formula);
         Helper.printFormulas(ctf);
-        Helper.createCTS(formula, ctf);
+        Helper.completeToCTS(ctf, formula.getPermutation());
         Helper.printFormulas(ctf);
         
         ICompactTripletsStructure s = (ICompactTripletsStructure)ctf.get(0);
@@ -207,11 +207,13 @@ public class TestHelper
     @Test
     public void testConvertCTStructuresToRomanovSKTFileFormat() throws Exception
     {
-        String filename = "target/test-classes/" + "uf75-0100.cnf";
+        String filename = "target/test-classes/" + "cnf-v22-c73-12.cnf";
         File file = new File(filename);
-        ITabularFormula formula = Helper.loadFromDIMACSFileFormat(filename);
+        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(filename);
         ObjectArrayList ctf = Helper.createCTF(formula);
-        Helper.createCTS(formula, ctf);
+        System.out.println("CTF: " + ctf.size());
+
+        Helper.completeToCTS(ctf, formula.getPermutation());
         
         System.out.println("CTS: " + ctf.size());
         

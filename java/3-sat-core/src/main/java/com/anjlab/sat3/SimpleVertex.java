@@ -9,7 +9,8 @@ public class SimpleVertex implements IVertex
     private ICompactTripletsStructure structure;
     private int tierIndex;
     private IHyperStructure hyperStructure;
-    private boolean hasEmptyEdge;
+    private boolean bottom1Empty;
+    private boolean bottom2Empty;
     private boolean dirty;
     
     /**
@@ -36,13 +37,20 @@ public class SimpleVertex implements IVertex
     {
         return dirty;
     }
-    public boolean hasEmptyEdge()
+    public boolean hasEmptyBottomEdge()
     {
-        return hasEmptyEdge;
+        return bottom1Empty || bottom2Empty;
     }
-    public void foundEmptyEdge()
+    public void foundEmptyEdge(EdgeKind edgeKind)
     {
-        hasEmptyEdge = true;
+        if (edgeKind == EdgeKind.Bottom1)
+        {
+            bottom1Empty = true;
+        }
+        else
+        {
+            bottom2Empty = true;
+        }
     }
     void setHyperStructure(IHyperStructure hyperStructure)
     {
@@ -78,28 +86,20 @@ public class SimpleVertex implements IVertex
              + "\n"
              + structure.toString();
     }
+    public boolean bothEdgesAreEmpty()
+    {
+        return getBottomVertex1() == null && getBottomVertex2() == null;
+    }
     public IVertex getBottomVertex1()
     {
-        return tierIndex < hyperStructure.getTiers().size() - 1 
+        return (!bottom1Empty) && (tierIndex < hyperStructure.getTiers().size() - 1) 
              ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex + 1)).get(tripletValue.getAdjoinRightTarget1().getTierKey())
              : null; 
     }
     public IVertex getBottomVertex2()
     {
-        return tierIndex < hyperStructure.getTiers().size() - 1 
+        return (!bottom2Empty) && (tierIndex < hyperStructure.getTiers().size() - 1) 
              ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex + 1)).get(tripletValue.getAdjoinRightTarget2().getTierKey())
              : null; 
-    }
-    public IVertex getTopVertex1()
-    {
-        return tierIndex > 0 
-            ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource1().getTierKey())
-            : null;
-    }
-    public IVertex getTopVertex2()
-    {
-        return tierIndex > 0 
-        ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource2().getTierKey())
-        : null;
     }
 }

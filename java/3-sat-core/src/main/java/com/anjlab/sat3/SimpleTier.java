@@ -1,5 +1,6 @@
 package com.anjlab.sat3;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class SimpleTier extends SimpleTripletPermutation implements ITier
@@ -23,7 +24,7 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     
     private SimpleTier(SimpleTier tier)
     {
-        super(tier.getABC(), tier.getCanonicalName(), tier.canonicalHashCode());
+        super(tier.getABC().clone(), tier.getCanonicalName(), tier.canonicalHashCode());
     }
     
     public final ITier clone()
@@ -376,5 +377,20 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
     {
         keys_73516240 = (byte)(~keys_73516240);
         size = 8 - size;
+    }
+    
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof SimpleTier))
+        {
+            return false;
+        }
+        SimpleTier otherTier = (SimpleTier) obj;
+        if (!Arrays.equals(getABC(), otherTier.getABC()))
+        {
+            //  Permutation differs
+            return false;
+        }
+        return keys_73516240 == otherTier.keys_73516240;
     }
 }

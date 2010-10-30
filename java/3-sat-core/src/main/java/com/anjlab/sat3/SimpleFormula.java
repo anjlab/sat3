@@ -769,4 +769,106 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     {
         return (ITier) tiers.get(tierIndex);
     }
+    
+    public boolean evaluate(ObjectArrayList route)
+    {
+        boolean result = true;
+        for (int j = 0; j < getTiers().size(); j++)
+        {
+            for (ITripletValue tiplet : getTier(j))
+            {
+                ITripletPermutation permutation = getTier(j);
+                
+                boolean aValue = getValueFromRoute(route, permutation.getAName());
+                boolean bValue = getValueFromRoute(route, permutation.getBName());
+                boolean cValue = getValueFromRoute(route, permutation.getCName());
+
+                if (tiplet.isNotA()) aValue = !aValue;
+                if (tiplet.isNotB()) bValue = !bValue;
+                if (tiplet.isNotC()) cValue = !cValue;
+
+                result = result && (aValue || bValue || cValue);
+                
+                if (!result)
+                {
+                    return result;
+                }
+            }
+        }
+        return result;
+    }
+
+    private boolean getValueFromRoute(ObjectArrayList route, int varName)
+    {
+        for (int i = 0; i < route.size(); i++)
+        {
+            IVertex vertex = (IVertex) route.get(i);
+            if (vertex.getPermutation().hasVariable(varName))
+            {
+                if (varName == vertex.getPermutation().getAName())
+                {
+                    return vertex.getTripletValue().isNotA();
+                }
+                if (varName == vertex.getPermutation().getBName())
+                {
+                    return vertex.getTripletValue().isNotB();
+                }
+                if (varName == vertex.getPermutation().getCName())
+                {
+                    return vertex.getTripletValue().isNotC();
+                }
+            }
+        }
+        throw new IllegalArgumentException("Variable " + varName + " was not found in route");
+    }
+    
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof SimpleFormula))
+        {
+            return false;
+        }
+        SimpleFormula other = (SimpleFormula) obj;
+        if (!this.permutation.sameAs(other.permutation))
+        {
+            //  Permutations differs
+            return false;
+        }
+        for (int j = 0; j < tiers.size(); j++)
+        {
+            ITier tier = (ITier) tiers.get(j);
+            ITier otherTier = (ITier) other.tiers.get(j);
+            if (!tier.equals(otherTier))
+            {
+                //  Tiers differs
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public boolean containsAllValuesOf(ITier anotherTier)
+    {
+        for (int i = 0; i < getTiers().size(); i++)
+        {
+            ITier tier = getTier(i);
+            if (tier.hasSameVariablesAs(anotherTier))
+            {
+                int[] abc = new int[3];
+                System.arraycopy(tier.getABC(), 0, abc, 0, 3);
+                try
+                {
+                    tier.transposeTo(anotherTier);
+                    if (tier.equals(anotherTier))
+                    {
+                        return true;
+                    }
+                } finally
+                {
+                    tier.transposeTo(abc);
+                }
+            }
+        }
+        return false;
+    }
 }

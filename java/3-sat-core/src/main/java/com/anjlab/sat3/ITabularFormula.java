@@ -10,7 +10,7 @@ public interface ITabularFormula
      */
     int getClausesCount();
     /**
-     * @return List of ITier
+     * @return List of {@link ITier}
      */
     ObjectArrayList getTiers();
     ITier getTier(int tierIndex);
@@ -21,13 +21,21 @@ public interface ITabularFormula
     boolean isEmpty();
     void complete(IPermutation variables) throws EmptyStructureException;
     /**
-     * @return List of ITier
+     * @return List of {@link ITier}
      */
     ObjectArrayList findTiersFor(int varName);
     /**
-     * @return List of ITier
+     * @return List of {@link ITier}
      */
     ObjectArrayList findTiersFor(int varName1, int varName2);
     void sortTiers();
     ITabularFormula clone();
+    
+    /**
+     * 
+     * @param route List of {@link IVertex}, containing inverse triplet values. 
+     * @return
+     */
+    boolean evaluate(ObjectArrayList route);
+    boolean containsAllValuesOf(ITier tier);
 }
