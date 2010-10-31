@@ -50,9 +50,9 @@ public class Helper
     
     public static boolean UsePrettyPrint = false;
 
-    public static boolean EnableAssertions = false;
+    public static boolean EnableAssertions = true;
     
-    public static boolean UseUniversalVarNames = false;
+    public static boolean UseUniversalVarNames = true;
 
     /**
      * 
@@ -1258,8 +1258,8 @@ public class Helper
             
             try
             {
-                LOGGER.info("Unify unions: s = {}, nextTierIndex is {} of {}",
-                        new Object[] { s, nextTierIndex, ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() });
+                LOGGER.info("Unify unions: s = {}, nextTierIndex = {} of {}",
+                        new Object[] { s, nextTierIndex, ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
                 unifyIntermediateSubstructures(substructureEdges);
             }
             catch (EmptyStructureException e)
