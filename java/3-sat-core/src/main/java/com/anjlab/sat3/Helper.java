@@ -1888,6 +1888,45 @@ public class Helper
                     allNotEmpty = false;
                     break;
                 }
+                
+                //  Forward filter
+                
+                for (int s = j + 1; s < tiersCount - 1; s++)
+                {
+                    OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(s);
+                    ObjectArrayList intersections = new ObjectArrayList();
+                    for (int k = 0; k < tier.size(); k++)
+                    {
+                        ICompactTripletsStructure vertexClone = (ICompactTripletsStructure) ((IVertex) tier.values().get(k)).getCTS();
+                        ICompactTripletsStructure lastTierClone = (ICompactTripletsStructure) ((IVertex) verticesFromLastTiers.get(h)).getCTS().clone();
+                        lastTierClone.intersect(vertexClone);
+                        if (lastTierClone.isEmpty())
+                        {
+                            continue;
+                        }
+                        lastTierClone.intersect(clone);
+                        intersections.add(lastTierClone);
+                    }
+                    if (intersections.size() == 0)
+                    {
+                        allNotEmpty = false;
+                        break;
+                    }
+                    
+                    //  TODO Unify coincident intersections across HSS?
+                    
+                    //  Union intersections
+                    clone = (ICompactTripletsStructure) intersections.get(0);
+                    for (int i = 1; i < intersections.size(); i++)
+                    {
+                        clone.union((ICompactTripletsStructure) intersections.get(i));
+                    }
+                    if (clone.isEmpty())
+                    {
+                        allNotEmpty = false;
+                        break;
+                    }
+                }
             }
             if (allNotEmpty)
             {
@@ -1944,6 +1983,43 @@ public class Helper
                 {
                     allNotEmpty = false;
                     break;
+                }
+                
+                //  Forward filter
+                
+                for (int s = j + 1; s < tiersCount - 1; s++)
+                {
+                    OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(s);
+                    ObjectArrayList intersections = new ObjectArrayList();
+                    for (int k = 0; k < tier.size(); k++)
+                    {
+                        ICompactTripletsStructure vertexClone = (ICompactTripletsStructure) ((IVertex) tier.values().get(k)).getCTS();
+                        ICompactTripletsStructure lastTierClone = (ICompactTripletsStructure) ((IVertex) verticesFromLastTiers.get(h)).getCTS().clone();
+                        lastTierClone.intersect(vertexClone);
+                        if (lastTierClone.isEmpty())
+                        {
+                            continue;
+                        }
+                        lastTierClone.intersect(clone);
+                        intersections.add(lastTierClone);
+                    }
+                    if (intersections.size() == 0)
+                    {
+                        allNotEmpty = false;
+                        break;
+                    }
+                    
+                    //  Union intersections
+                    clone = (ICompactTripletsStructure) intersections.get(0);
+                    for (int i = 1; i < intersections.size(); i++)
+                    {
+                        clone.union((ICompactTripletsStructure) intersections.get(i));
+                    }
+                    if (clone.isEmpty())
+                    {
+                        allNotEmpty = false;
+                        break;
+                    }
                 }
             }
             if (allNotEmpty)
@@ -2177,4 +2253,5 @@ public class Helper
         
         return result;
     }
+    
 }
