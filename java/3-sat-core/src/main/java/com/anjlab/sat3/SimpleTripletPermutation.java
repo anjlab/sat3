@@ -30,7 +30,7 @@ public class SimpleTripletPermutation implements ITripletPermutation
         setCanonicalAttributes(a, b, c);
     }
 
-    void setCanonicalAttributes(int a, int b, int c)
+    final void setCanonicalAttributes(int a, int b, int c)
     {
         if (a < b)
         {
@@ -126,7 +126,7 @@ public class SimpleTripletPermutation implements ITripletPermutation
         transpose(targetA, targetB);
     }
 
-    public void transposeTo(int[] targetABC)
+    public final void transposeTo(int[] targetABC)
     {
         if (Helper.EnableAssertions)
         {

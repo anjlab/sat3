@@ -1,6 +1,7 @@
 package com.anjlab.sat3;
 
 import cern.colt.list.ObjectArrayList;
+import cern.colt.map.OpenIntObjectHashMap;
 
 public interface IHyperStructure
 {
@@ -9,7 +10,7 @@ public interface IHyperStructure
     
     /**
      * 
-     * @return List of OpenIntObjectHashMap
+     * @return List of {@link OpenIntObjectHashMap}
      */
     ObjectArrayList getTiers();
     

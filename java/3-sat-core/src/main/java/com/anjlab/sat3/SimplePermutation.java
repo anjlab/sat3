@@ -18,13 +18,13 @@ public final class SimplePermutation implements IPermutation
         positionHash = new OpenIntIntHashMap();
     }
 
-    public final boolean contains(int varName)
+    public boolean contains(int varName)
     {
         //    O(1)
         return permutationHash.containsKey(varName);
     }
 
-    public final int indexOf(int varName)
+    public int indexOf(int varName)
     {
         //  TODO Replacing zero-based indexing with the 1-based
         //  allow remove invocation of containsKey method here
@@ -35,7 +35,7 @@ public final class SimplePermutation implements IPermutation
              : -1;
     }
 
-    public final void add(int varName)
+    public void add(int varName)
     {
         if (Helper.EnableAssertions)
         {
@@ -56,7 +56,7 @@ public final class SimplePermutation implements IPermutation
      * Note: This implementation can be slow. To avoid usage of this method remove 
      * the <code>JoinBetweenTiers2</code> implementation of {@link IJoinMethod} from {@link JoinMethods#getMethods()}.
      */
-    public final void add(int index, int varName)
+    public void add(int index, int varName)
     {
         if (Helper.EnableAssertions)
         {
@@ -77,7 +77,7 @@ public final class SimplePermutation implements IPermutation
         positionHash.put(index, varName);
     }
 
-    public final void shiftToStart(int from, int to)
+    public void shiftToStart(int from, int to)
     {
         if (to <= from)
         {
@@ -99,7 +99,7 @@ public final class SimplePermutation implements IPermutation
         }
     }
     
-    public final void shiftToEnd(int from, int to)
+    public void shiftToEnd(int from, int to)
     {
         if (to <= from)
         {
@@ -136,7 +136,7 @@ public final class SimplePermutation implements IPermutation
         permutation.setQuick(index2, varName1);
     }
     
-    private final void assertNotContains(int varName)
+    private void assertNotContains(int varName)
     {
         if (contains(varName))
         {
@@ -144,27 +144,27 @@ public final class SimplePermutation implements IPermutation
         }
     }
 
-    public final int size()
+    public int size()
     {
         return permutation.size();
     }
 
-    public final int[] elements()
+    public int[] elements()
     {
         return permutation.elements();
     }
     
-    public final int get(int index)
+    public int get(int index)
     {
         return permutation.get(index);
     }
 
-    public final String toString()
+    public String toString()
     {
         return permutation.toString();
     }
     
-    public final boolean sameAs(IPermutation permutation)
+    public boolean sameAs(IPermutation permutation)
     {
         return Arrays.equals(
                 this.permutation.elements(),

@@ -34,32 +34,29 @@ public class Program
             stopWatch.stop();
             Helper.prettyPrint(formula);
             stopWatch.printElapsed();
-    
+
+            stopWatch.start("Clone initial formula");
             ITabularFormula formulaClone = formula.clone();
+            stopWatch.stop();
+            stopWatch.printElapsed();
             
             stopWatch.start("Create CTF");
             ObjectArrayList ct = Helper.createCTF(formula);
             stopWatch.stop();
             printFormulas(ct);
-            LOGGER.info("CTF: {}", ct.size());
             stopWatch.printElapsed();
+            
+            LOGGER.info("CTF count: {}", ct.size());
 
             assertNoTripletsLost(formula, ct);
 
-            ObjectArrayList ctfClone = new ObjectArrayList();
-            for (int i = 0; i < ct.size(); i++)
-            {
-                ctfClone.add(((ITabularFormula) ct.get(i)).clone());
-            }
+            ObjectArrayList ctfClone = Helper.cloneStructures(ct);
             
             stopWatch.start("Create CTS");
             Helper.completeToCTS(ct, formula.getPermutation());
             stopWatch.stop();
-//            formula = null;
             printFormulas(ct);
             stopWatch.printElapsed();
-            
-    //        saveCTS(args[0], ct);
             
             stopWatch.start("Unify all CTS");
             Helper.unify(ct);
@@ -87,12 +84,6 @@ public class Program
             verifySatisfiable(formulaClone, route);
             verifySatisfiable(ctfClone, route);
             
-//          stopWatch.start("Calculate CTS from the route");
-//          ICompactTripletsStructure s = Helper.intersectAll(route);
-//          stopWatch.stop();
-//          Helper.prettyPrint(s);
-//          stopWatch.printElapsed();
-
             ObjectArrayList markers = Helper.findNonEmptyIntersections((IHyperStructure) hss.get(0), (IVertex) route.get(route.size() - 1));
             
             String filename = "target/hss.png";
@@ -155,8 +146,7 @@ public class Program
         
         if (!satisfiable)
         {
-//                throw new AssertionError("HSS was built but initial formula is not satisfiable with values from HS route");
-            System.err.println("HSS was built but initial formula is not satisfiable with values from HS route");
+            throw new AssertionError("HSS was built but initial formula is not satisfiable with values from HS route");
         }
         else
         {
@@ -179,8 +169,7 @@ public class Program
         
         if (!satisfiable)
         {
-//                throw new AssertionError("HSS was built but CTF is not satisfiable with values from HS route");
-            System.err.println("HSS was built but CTF is not satisfiable with values from HS route");
+            throw new AssertionError("HSS was built but CTF is not satisfiable with values from HS route");
         }
         else
         {

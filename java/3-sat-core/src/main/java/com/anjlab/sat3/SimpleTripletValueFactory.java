@@ -2,7 +2,7 @@ package com.anjlab.sat3;
 
 import cern.colt.map.OpenIntObjectHashMap;
 
-public class SimpleTripletValueFactory {
+public final class SimpleTripletValueFactory {
 
     public static final ITripletValue _000_instance = new _000();
     public static final ITripletValue _001_instance = new _001();

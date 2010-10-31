@@ -26,5 +26,4 @@ public interface ITripletPermutation
     void swapAB();
     void swapAC();
     void swapBC();
-
 }

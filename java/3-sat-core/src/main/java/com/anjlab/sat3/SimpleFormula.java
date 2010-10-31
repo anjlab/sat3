@@ -131,12 +131,12 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         }
     };
     
-    public final void sortTiers()
+    public void sortTiers()
     {
         tiers.quickSortFromTo(0, tiers.size() - 1, tierComparator);
     }
 
-    public final void complete(IPermutation variables) throws EmptyStructureException
+    public void complete(IPermutation variables) throws EmptyStructureException
     {
         try
         {

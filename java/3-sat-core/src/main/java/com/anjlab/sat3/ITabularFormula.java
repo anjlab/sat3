@@ -33,7 +33,8 @@ public interface ITabularFormula
     
     /**
      * 
-     * @param route List of {@link IVertex}, containing inverse triplet values. 
+     * @param route List of {@link IVertex} forming HSS route. 
+     * Contains inverse triplet values of variables. 
      * @return
      */
     boolean evaluate(ObjectArrayList route);

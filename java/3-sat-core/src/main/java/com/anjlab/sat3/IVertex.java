@@ -11,11 +11,6 @@ public interface IVertex extends ICompactTripletsStructureHolder
     IVertex getBottomVertex1();
     IVertex getBottomVertex2();
 
-    public static enum EdgeKind
-    {
-        Bottom1, Bottom2
-    }
-    
     void foundEmptyEdge(EdgeKind edge);
     boolean hasEmptyBottomEdge();
 

@@ -2,12 +2,12 @@ package com.anjlab.sat3;
 
 import cern.colt.map.OpenIntObjectHashMap;
 
-public class SimpleVertex implements IVertex
+public final class SimpleVertex implements IVertex
 {
-    private ITripletPermutation permutation;
-    private ITripletValue tripletValue;
-    private ICompactTripletsStructure structure;
-    private int tierIndex;
+    private final ITripletPermutation permutation;
+    private final ITripletValue tripletValue;
+    private final ICompactTripletsStructure structure;
+    private final int tierIndex;
     private IHyperStructure hyperStructure;
     private boolean bottom1Empty;
     private boolean bottom2Empty;
