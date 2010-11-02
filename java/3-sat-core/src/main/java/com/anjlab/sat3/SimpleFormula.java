@@ -1,8 +1,10 @@
 package com.anjlab.sat3;
 
 import static com.anjlab.sat3.SimpleTier.createCompleteTier;
+import static java.lang.Boolean.parseBoolean;
 
 import java.util.Comparator;
+import java.util.Properties;
 
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
@@ -768,6 +770,34 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     public ITier getTier(int tierIndex)
     {
         return (ITier) tiers.get(tierIndex);
+    }
+    
+    public boolean evaluate(Properties properties)
+    {
+        boolean result = true;
+        for (int j = 0; j < getTiers().size(); j++)
+        {
+            for (ITripletValue tiplet : getTier(j))
+            {
+                ITripletPermutation permutation = getTier(j);
+                
+                boolean aValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getAName()))));
+                boolean bValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getBName()))));
+                boolean cValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getCName()))));
+
+                if (tiplet.isNotA()) aValue = !aValue;
+                if (tiplet.isNotB()) bValue = !bValue;
+                if (tiplet.isNotC()) cValue = !cValue;
+
+                result = result && (aValue || bValue || cValue);
+                
+                if (!result)
+                {
+                    return result;
+                }
+            }
+        }
+        return result;
     }
     
     public boolean evaluate(ObjectArrayList route)

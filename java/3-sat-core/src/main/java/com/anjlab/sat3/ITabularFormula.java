@@ -1,5 +1,7 @@
 package com.anjlab.sat3;
 
+import java.util.Properties;
+
 import cern.colt.list.ObjectArrayList;
 
 public interface ITabularFormula
@@ -38,5 +40,6 @@ public interface ITabularFormula
      * @return
      */
     boolean evaluate(ObjectArrayList route);
+    boolean evaluate(Properties properties);
     boolean containsAllValuesOf(ITier tier);
 }

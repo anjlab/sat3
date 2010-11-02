@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -853,15 +854,18 @@ public class Helper
     /**
      * 
      * @param cts
+     * @param statistics 
      * @return List of {@link IHyperStructure}
      * @throws EmptyStructureException
      */
-    public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts) throws EmptyStructureException
+    public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts, Properties statistics) throws EmptyStructureException
     {
         final ObjectArrayList hss = new ObjectArrayList();
         
         ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
 
+        statistics.put("BasicCTSInitialClausesCount", String.valueOf(sBasic.getClausesCount()));
+        
         //  List of ITier
         ObjectArrayList basicTiers = sBasic.getTiers();
         

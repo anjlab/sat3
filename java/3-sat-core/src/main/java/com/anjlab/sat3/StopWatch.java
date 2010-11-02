@@ -19,10 +19,12 @@ public class StopWatch
         this.comment = comment;
         start = System.currentTimeMillis();
     }
-    public void stop()
+    public long stop()
     {
         end = System.currentTimeMillis();
-        overall += (end - start);
+        long delta = end - start;
+        overall += delta;
+        return delta;
     }
     public void printElapsed()
     {

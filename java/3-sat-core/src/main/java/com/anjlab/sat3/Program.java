@@ -3,6 +3,7 @@ package com.anjlab.sat3;
 import static com.anjlab.sat3.Helper.printFormulas;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,6 +22,7 @@ import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
+    private static final String EVALUATE_OPTION = "e";
     private static final String RESULTS_OUTPUT_FILE_OPTION = "o";
     private static final String HELP_OPTION = "h";
     private static final String HSS_IMAGE_OUTPUT_FILENAME_OPTION = "i";
@@ -51,13 +53,16 @@ public class Program
         Helper.EnableAssertions = !commandLine.hasOption(DISABLE_ASSERTIONS_OPTION);
         Helper.UseUniversalVarNames = !commandLine.hasOption(USE_ABC_VAR_NAMES_OPTION);
         
+        Properties statistics = new Properties();
         StopWatch stopWatch = new StopWatch();
         
         try
         {
             stopWatch.start("Load formula");
             ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(formulaFile);
-            stopWatch.stop();
+            long timeElapsed = stopWatch.stop();
+            
+            statistics.put("InitialFormulaLoadTime", String.valueOf(timeElapsed));
             
             if (formula.getVarCount() > 26)
             {
@@ -65,20 +70,64 @@ public class Program
                 Helper.UseUniversalVarNames = true;
             }
             
+            statistics.put("InitialFormulaVarCount", String.valueOf(formula.getVarCount()));
+            statistics.put("InitialFormulaClausesCount", String.valueOf(formula.getClausesCount()));
+            
             Helper.prettyPrint(formula);
             stopWatch.printElapsed();
-
-            //  Clone initial formula to verify formula satisfiability later
-            stopWatch.start("Clone initial formula");
-            ITabularFormula formulaClone = formula.clone();
-            stopWatch.stop();
-            stopWatch.printElapsed();
             
-            stopWatch.start("Create CTF");
+            if (commandLine.hasOption(EVALUATE_OPTION))
+            {
+                stopWatch.start("Evaluate formula");
+                Properties properties = new Properties();
+                FileInputStream is = null;
+                try
+                {
+                    is = new FileInputStream(new File(commandLine.getOptionValue(EVALUATE_OPTION)));
+                    properties.load(is);
+                    boolean satisfiable = formula.evaluate(properties);
+                    stopWatch.stop();
+                    if (satisfiable)
+                    {
+                        System.out.println("Formula evaluated as SAT");
+                    }
+                    else
+                    {
+                        System.out.println("Formula evaluated as UNSAT");
+                    }
+                    stopWatch.printElapsed();
+                }
+                finally
+                {
+                    if (is != null)
+                    {
+                        is.close();
+                    }
+                }
+                //  Only evaluate formula value
+                return;
+            }
+            
+            //  Find if formula is SAT
+            
+            //  Clone initial formula to verify formula satisfiability later
+            ITabularFormula formulaClone = null;
+            if (Helper.EnableAssertions)
+            {
+                stopWatch.start("Clone initial formula");
+                formulaClone = formula.clone();
+                stopWatch.stop();
+                stopWatch.printElapsed();
+            }
+            
+            stopWatch.start("CreateCTF");
             ObjectArrayList ct = Helper.createCTF(formula);
-            stopWatch.stop();
+            timeElapsed = stopWatch.stop();
             printFormulas(ct);
             stopWatch.printElapsed();
+            
+            statistics.put("CTFCreationTime", String.valueOf(timeElapsed));
+            statistics.put("CTFCount", String.valueOf(ct.size()));
             
             LOGGER.info("CTF count: {}", ct.size());
 
@@ -88,32 +137,46 @@ public class Program
             }
 
             //  Clone CTF to verify formula satisfiability against it later
-            ObjectArrayList ctfClone = Helper.cloneStructures(ct);
+            ObjectArrayList ctfClone = null;
+            
+            if (Helper.EnableAssertions)
+            {
+                ctfClone = Helper.cloneStructures(ct);
+            }
             
             stopWatch.start("Create CTS");
             Helper.completeToCTS(ct, formula.getPermutation());
-            stopWatch.stop();
+            timeElapsed = stopWatch.stop();
             printFormulas(ct);
             stopWatch.printElapsed();
+            
+            statistics.put("CTSCreationTime", String.valueOf(timeElapsed));
             
             stopWatch.start("Unify all CTS");
             Helper.unify(ct);
-            stopWatch.stop();
+            timeElapsed = stopWatch.stop();
             printFormulas(ct);
             stopWatch.printElapsed();
 
+            statistics.put("CTSUnificationTime", String.valueOf(timeElapsed));
+            
             LOGGER.info("CTF: {}", ct.size());
             
             stopWatch.start("Create HSS");
-            ObjectArrayList hss = Helper.createHyperStructuresSystem(ct);
-            stopWatch.stop();
+            ObjectArrayList hss = Helper.createHyperStructuresSystem(ct, statistics);
+            timeElapsed = stopWatch.stop();
             stopWatch.printElapsed();
 
+            statistics.put("HSSCreationTime", String.valueOf(timeElapsed));
+            statistics.put("BasicCTSFinalClausesCount", String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
+            
             stopWatch.start("Find HSS(0) route");
             ObjectArrayList route = Helper.findHSSRoute(hss);
-            stopWatch.stop();
+            timeElapsed = stopWatch.stop();
             stopWatch.printElapsed();
 
+            statistics.put("SearchHSSRouteTime", String.valueOf(timeElapsed));
+            
             if (Helper.EnableAssertions)
             {
                 if (!formula.equals(formulaClone))
@@ -123,8 +186,11 @@ public class Program
             }
             
             stopWatch.start("Verify formula is satisfiable using variable values from HSS route");
-            verifySatisfiable(formulaClone, route);
-            verifySatisfiable(ctfClone, route);
+            verifySatisfiable(formula, route);
+            if (Helper.EnableAssertions)
+            {
+                verifySatisfiable(ctfClone, route);
+            }
             stopWatch.stop();
             stopWatch.printElapsed();
 
@@ -146,7 +212,7 @@ public class Program
             
             String resultsFilename = getResultsFilename(commandLine, formulaFile);
             stopWatch.start("Write HSS route to " + resultsFilename);
-            writeSatToFile(resultsFilename, route);
+            writeSatToFile(resultsFilename, statistics, route);
             stopWatch.stop();
             stopWatch.printElapsed();
         }
@@ -155,7 +221,7 @@ public class Program
             stopWatch.stop();
             stopWatch.printElapsed();
             
-            writeUnsatToFile(getResultsFilename(commandLine, formulaFile));
+            writeUnsatToFile(getResultsFilename(commandLine, formulaFile), statistics);
             
             LOGGER.info("One of the structures was built empty", e);
             
@@ -167,14 +233,12 @@ public class Program
         }
     }
 
-    private static void writeUnsatToFile(String resultsFile) throws IOException
+    private static void writeUnsatToFile(String resultsFile, Properties statistics) throws IOException
     {
         OutputStream out = null;
-        Properties properties = new Properties();
         try
         {
-            out = new FileOutputStream(new File(resultsFile));
-            properties.store(out, "Unsatisfiable");
+            statistics.store(out, "Unsatisfiable");
         }
         finally
         {
@@ -185,10 +249,9 @@ public class Program
         }
     }
 
-    private static void writeSatToFile(String resultsFile, ObjectArrayList route) throws IOException
+    private static void writeSatToFile(String resultsFile, Properties statistics, ObjectArrayList route) throws IOException
     {
         OutputStream out = null;
-        Properties properties = new Properties();
         try
         {
             out = new FileOutputStream(new File(resultsFile));
@@ -197,15 +260,15 @@ public class Program
             for (int i = 0; i < route.size(); i++)
             {
                 vertex = (IVertex) route.get(i);
-                properties.put(String.valueOf(vertex.getPermutation().getAName()), String.valueOf(vertex.getTripletValue().isNotA()));
+                statistics.put(String.valueOf(vertex.getPermutation().getAName()), String.valueOf(vertex.getTripletValue().isNotA()));
             }
             if (vertex != null)
             {
-                properties.put(String.valueOf(vertex.getPermutation().getBName()), String.valueOf(vertex.getTripletValue().isNotB()));
-                properties.put(String.valueOf(vertex.getPermutation().getCName()), String.valueOf(vertex.getTripletValue().isNotC()));
+                statistics.put(String.valueOf(vertex.getPermutation().getBName()), String.valueOf(vertex.getTripletValue().isNotB()));
+                statistics.put(String.valueOf(vertex.getPermutation().getCName()), String.valueOf(vertex.getTripletValue().isNotC()));
             }
             
-            properties.store(out, "Satisfiable. HSS route contains inverse values");
+            statistics.store(out, "Satisfiable. Variable values from HSS route");
         }
         finally
         {
@@ -263,6 +326,12 @@ public class Program
                                        .withArgName("filename")
                                        .withDescription("File name where resulting HSS route will be written (if found any). Defaults to <PATH>-results.txt")
                                        .create(RESULTS_OUTPUT_FILE_OPTION));
+        
+        options.addOption(OptionBuilder.withLongOpt("evaluate-formula")
+                                       .hasArg()
+                                       .withArgName("filename")
+                                       .withDescription("Evaluate formula using variable values from this file.")
+                                       .create(EVALUATE_OPTION));
 
         return options;
     }
