@@ -10,10 +10,13 @@
       <outputDirectory>lib</outputDirectory>
     </dependencySet>
   </dependencySets>
-  <files>
-    <file>
-      <source>src/main/shell/*.bat</source>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/shell</directory>
       <outputDirectory>/</outputDirectory>
-    </file>
-  </files>
+      <includes>
+        <include>*.bat</include>
+      </includes>
+    </fileSet>
+  </fileSets>
 </assembly>
