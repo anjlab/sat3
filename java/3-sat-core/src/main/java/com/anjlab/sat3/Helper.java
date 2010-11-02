@@ -34,8 +34,6 @@ import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.provider.certpath.Vertex;
-
 import cern.colt.function.IntObjectProcedure;
 import cern.colt.function.LongObjectProcedure;
 import cern.colt.list.IntArrayList;
@@ -43,7 +41,6 @@ import cern.colt.list.LongArrayList;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
-
 
 public class Helper
 {
