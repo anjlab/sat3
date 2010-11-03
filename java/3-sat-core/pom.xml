@@ -5,7 +5,7 @@
   <parent>
     <artifactId>3-sat</artifactId>
     <groupId>com.anjlab</groupId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
   </parent>
   <groupId>com.anjlab</groupId>
   <artifactId>3-sat-core</artifactId>

@@ -43,7 +43,7 @@ public class Program
         {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp(Program.class.getName() + " [OPTIONS] <PATH>" +
-                    "\nWhere <PATH> is a path to file containing N-SAT formula instance in DIMACS CNF file format.", options);
+                    "\nWhere <PATH> is a path to file containing N-SAT formula instance in DIMACS CNF or Romanov SKT file format.", options);
             System.exit(0);
         }
 
@@ -59,7 +59,7 @@ public class Program
         try
         {
             stopWatch.start("Load formula");
-            ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(formulaFile);
+            ITabularFormula formula = Helper.loadFromFile(formulaFile);
             long timeElapsed = stopWatch.stop();
             
             statistics.put("InitialFormulaLoadTime", String.valueOf(timeElapsed));

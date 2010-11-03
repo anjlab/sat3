@@ -14,14 +14,12 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
@@ -309,39 +307,33 @@ public class Helper
             }
         }
     }
-
-    public static ITabularFormula loadFromDIMACSFileFormat(String filename) throws IOException
-    {
-        BufferedReader reader = null;
-        try
-        {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename)), "ascii"));
-            
-            return new FormulaReader().readFormula(reader);
-        }
-        finally
-        {
-            if (reader != null)
-            {
-                reader.close();
-            }
-        }
-    }
     
-    public static ITabularFormula loadFromGenericDIMACSFileFormat(String filename) throws IOException
+    public static ITabularFormula loadFromFile(String filename) throws IOException
     {
-        BufferedReader reader = null;
+        String fileExt = filename.substring(filename.lastIndexOf('.'), filename.length());
+        
+        IFormulaReader formulaReader;
+        if (".skt".equals(fileExt))
+        {
+            formulaReader = new RomanovSKTFormulaReader();
+        }
+        else
+        {
+            formulaReader = new GenericFormulaReader();
+        }
+        
+        FileInputStream is = null;
         try
         {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename)), "ascii"));
+            is = new FileInputStream(new File(filename));
             
-            return new GenericFormulaReader().readFormula(reader);
+            return formulaReader.readFormula(is);
         }
         finally
         {
-            if (reader != null)
+            if (is != null)
             {
-                reader.close();
+                is.close();
             }
         }
     }
@@ -390,108 +382,7 @@ public class Helper
         String string = new String(line);
         return string;
     }
-
-    private static class FormulaReader
-    {
-        private int n = 0;
-        private int sign = 1;
-        private int r = 0;
-        private int a, b, c;
-
-        public String toString()
-        {
-            return "n=" + n + ", sign=" + sign + ", r=" + r + ", a=" + a + ", b=" + b + ", c=" + c;
-        }
-        
-        private ITabularFormula formula = new SimpleFormula();
-
-        public ITabularFormula readFormula(BufferedReader reader) throws IOException
-        {
-            readMetadata(reader);
-            
-            int ch;
-            while ((ch = reader.read()) != -1)
-            {
-                if (Character.isWhitespace(ch))
-                {
-                    if (r != 0) newNumber();
-                    continue;
-                }
-                if (ch == '0' && r == 0)
-                {
-                    continue;
-                }
-                if (ch == '-')
-                {
-                    sign = -1;
-                }
-
-                if ('0' <= ch && ch < '0' + 10)
-                {
-                    r = r * 10 + ch - '0';
-                } 
-                else
-                {
-                    newNumber();
-                }
-            }
-            return formula;
-        }
-
-        private void readMetadata(BufferedReader reader) throws IOException
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                if (line.startsWith("c"))
-                {
-                    continue;
-                }
-                if (line.startsWith("p"))
-                {
-                    if (!line.contains("cnf"))
-                    {
-                        throw new AssertionError("Bad DIMACS CNF file format");
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void newNumber()
-        {
-            if (r == 0) return;
-
-            r = r * sign;
-            if (n == 0)
-            {
-                a = r;
-                n++;
-            } 
-            else if (n == 1)
-            {
-                b = r;
-                n++;
-            } 
-            else if (n == 2)
-            {
-                c = r;
-                addTriplet();
-                n = 0;
-            }
-            
-            r = 0;
-            sign = 1;
-        }
-
-        private void addTriplet()
-        {
-            ITriplet triplet = new SimpleTriplet(a, b, c);
-
-            formula.add(triplet);
-        }
-    }
-
+    
     /**
      * 
      * @param cts List of ICompactTripletsStructureHolder
@@ -1576,7 +1467,7 @@ public class Helper
      * 
      * @param hs
      * @param route List of {@link IVertex} (optional). Route to highlight on the image.
-     * @param markers List of {@link Vertex} (optional). Set of vertices that will be marked with rounded rectangles on resulting image.
+     * @param markers List of {@link IVertex} (optional). Set of vertices that will be marked with rounded rectangles on resulting image.
      * @param filename
      * @throws IOException
      */
@@ -2082,16 +1973,16 @@ public class Helper
         return result;
     }
     
-    public static void convertCTStructuresToRomanovSKTFileFormat(ObjectArrayList ctf, String filename)
+    public static void convertCTStructuresToRomanovSKTFileFormat(ObjectArrayList cts, String filename)
         throws FileNotFoundException, IOException
     {
         OutputStream os = null;
         try
         {
             os = new FileOutputStream(new File(filename));
-            for (int i = 0; i < ctf.size(); i++)
+            for (int i = 0; i < cts.size(); i++)
             {
-                ITabularFormula f = (ITabularFormula) ctf.get(i);
+                ITabularFormula f = (ITabularFormula) cts.get(i);
                 for (int j = 0; j < f.getTiers().size(); j++)
                 {
                     ITier tier = f.getTier(j);

@@ -2,10 +2,12 @@ package com.anjlab.sat3;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import cern.colt.list.IntArrayList;
 
-public class GenericFormulaReader
+public class GenericFormulaReader implements IFormulaReader
 {
     private int originalVarCount = 0;
     private int n = 0;
@@ -22,8 +24,10 @@ public class GenericFormulaReader
         return "n=" + n + ", m=" + m;
     }
 
-    public ITabularFormula readFormula(BufferedReader reader) throws IOException
+    public ITabularFormula readFormula(InputStream input) throws IOException
     {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input, "ascii"));
+        
         readMetadata(reader);
         
         int sign = 1;

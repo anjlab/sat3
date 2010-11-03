@@ -191,7 +191,7 @@ public class TestHelper
     @Test
     public void testCreateCTS() throws IOException
     {
-        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat("target/test-classes/simplesat-example.cnf");
+        ITabularFormula formula = Helper.loadFromFile("target/test-classes/simplesat-example.cnf");
         Helper.prettyPrint(formula);
         ObjectArrayList ctf = Helper.createCTF(formula);
         Helper.printFormulas(ctf);
@@ -209,7 +209,7 @@ public class TestHelper
     {
         String filename = "target/test-classes/" + "cnf-v22-c73-12.cnf";
         File file = new File(filename);
-        ITabularFormula formula = Helper.loadFromGenericDIMACSFileFormat(filename);
+        ITabularFormula formula = Helper.loadFromFile(filename);
         ObjectArrayList ctf = Helper.createCTF(formula);
         System.out.println("CTF: " + ctf.size());
 
