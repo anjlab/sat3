@@ -18,6 +18,7 @@ ECHO *******************************************************
 ECHO * Solving instances
 
 FOR %%f IN (%CNF_FOLDER%\*.cnf) DO IF NOT EXIST %CNF_FOLDER%\%%f-results.txt (java -cp %CP% %SOLVER_MAIN_CLASS% %%f)
+FOR %%f IN (%CNF_FOLDER%\*.skt) DO IF NOT EXIST %CNF_FOLDER%\%%f-results.txt (java -cp %CP% %SOLVER_MAIN_CLASS% %%f)
 
 ECHO *******************************************************
 ECHO * Aggregating results

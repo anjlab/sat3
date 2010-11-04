@@ -16,15 +16,15 @@ public class RomanovSKTFormulaReader implements IFormulaReader
         
         while (true)
         {
-            int a = readInt(input);
+            int a = Helper.readInt(input);
             
             if (a == Integer.MAX_VALUE)
             {
                 break;
             }
             
-            int b = readInt(input);
-            int c = readInt(input);
+            int b = Helper.readInt(input);
+            int c = Helper.readInt(input);
             
             if (a == 0 && b == 0 && c == 0)
             {
@@ -54,20 +54,6 @@ public class RomanovSKTFormulaReader implements IFormulaReader
         }
         
         return formula;
-    }
-
-    private int readInt(InputStream input) throws IOException
-    {
-        int value = Integer.MAX_VALUE;
-        int buf;
-        if ((buf = input.read()) != -1)
-        {
-            value = buf;
-            value = value | (input.read() << 8);
-            value = value | (input.read() << 16);
-            value = value | (input.read() << 24);
-        }
-        return value;
     }
 
 }

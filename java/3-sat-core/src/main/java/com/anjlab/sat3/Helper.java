@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
@@ -2081,6 +2082,28 @@ public class Helper
             ctf.add(((ITabularFormula) ct.get(i)).clone());
         }
         return ctf;
+    }
+
+    /**
+     * There are should be at least 4 bytes in input stream. Otherwise result may be not defined.
+     * If input stream contains no more data, method return {@link Integer#MAX_VALUE}.
+     * 
+     * @param input
+     * @return Next Integer from input stream.
+     * @throws IOException
+     */
+    public static int readInt(InputStream input) throws IOException
+    {
+        int value = Integer.MAX_VALUE;
+        int buf;
+        if ((buf = input.read()) != -1)
+        {
+            value = buf;
+            value = value | (input.read() << 8);
+            value = value | (input.read() << 16);
+            value = value | (input.read() << 24);
+        }
+        return value;
     }
     
 }
