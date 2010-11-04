@@ -221,9 +221,13 @@ public class Program
             stopWatch.stop();
             stopWatch.printElapsed();
             
-            writeUnsatToFile(getResultsFilename(commandLine, formulaFile), statistics);
-            
             LOGGER.info("One of the structures was built empty", e);
+            
+            String resultsFilename = getResultsFilename(commandLine, formulaFile);
+            stopWatch.start("Saving current statictics of calculations to " + resultsFilename);
+            writeUnsatToFile(resultsFilename, statistics);
+            stopWatch.stop();
+            stopWatch.printElapsed();
             
             System.out.println("Formula not satisfiable");
         }
@@ -238,6 +242,8 @@ public class Program
         OutputStream out = null;
         try
         {
+            out = new FileOutputStream(new File(resultsFile));
+            
             statistics.store(out, "Unsatisfiable");
         }
         finally

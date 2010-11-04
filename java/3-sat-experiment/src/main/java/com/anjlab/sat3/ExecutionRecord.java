@@ -21,17 +21,23 @@ public class ExecutionRecord
     public ExecutionRecord(String filename, Properties statistics)
     {
         this.filename = filename; 
-        initialFormulaLoadTime = Long.parseLong((String) statistics.get("InitialFormulaLoadTime"));
-        initialFormulaVarCount = Long.parseLong((String) statistics.get("InitialFormulaVarCount"));
-        initialFormulaClausesCount = Long.parseLong((String) statistics.get("InitialFormulaClausesCount"));
-        ctfCreationTime = Long.parseLong((String) statistics.get("CTFCreationTime"));
-        ctfCount = Long.parseLong((String) statistics.get("CTFCount"));
-        ctsCreationTime = Long.parseLong((String) statistics.get("CTSCreationTime"));
-        ctsUnificationTime = Long.parseLong((String) statistics.get("CTSUnificationTime"));
-        basicCTSInitialClausesCount = Long.parseLong((String) statistics.get("BasicCTSInitialClausesCount"));
-        hssCreationTime = Long.parseLong((String) statistics.get("HSSCreationTime"));
-        basicCTSFinalClausesCount = Long.parseLong((String) statistics.get("BasicCTSFinalClausesCount"));
-        searchHSSRouteTime = Long.parseLong((String) statistics.get("SearchHSSRouteTime"));
+        initialFormulaLoadTime = tryParseLong(statistics, "InitialFormulaLoadTime");
+        initialFormulaVarCount = tryParseLong(statistics, "InitialFormulaVarCount");
+        initialFormulaClausesCount = tryParseLong(statistics, "InitialFormulaClausesCount");
+        ctfCreationTime = tryParseLong(statistics, "CTFCreationTime");
+        ctfCount = tryParseLong(statistics, "CTFCount");
+        ctsCreationTime = tryParseLong(statistics, "CTSCreationTime");
+        ctsUnificationTime = tryParseLong(statistics, "CTSUnificationTime");
+        basicCTSInitialClausesCount = tryParseLong(statistics, "BasicCTSInitialClausesCount");
+        hssCreationTime = tryParseLong(statistics, "HSSCreationTime");
+        basicCTSFinalClausesCount = tryParseLong(statistics, "BasicCTSFinalClausesCount");
+        searchHSSRouteTime = tryParseLong(statistics, "SearchHSSRouteTime");
+    }
+
+    private long tryParseLong(Properties statistics, String property)
+    {
+        String value = (String) statistics.get(property);
+        return value == null ? -1 : Long.parseLong(value);
     }
 
     public String toTABDelimitedLine()

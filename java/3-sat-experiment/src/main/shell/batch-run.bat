@@ -17,8 +17,14 @@ SET SOLVER_MAIN_CLASS=com.anjlab.sat3.Program
 ECHO *******************************************************
 ECHO * Solving instances
 
-FOR %%f IN (%CNF_FOLDER%\*.cnf) DO IF NOT EXIST %CNF_FOLDER%\%%f-results.txt (java -cp %CP% %SOLVER_MAIN_CLASS% %%f)
-FOR %%f IN (%CNF_FOLDER%\*.skt) DO IF NOT EXIST %CNF_FOLDER%\%%f-results.txt (java -cp %CP% %SOLVER_MAIN_CLASS% %%f)
+FOR %%f IN (%CNF_FOLDER%\*.cnf) DO IF NOT EXIST "%%f-results.txt" (
+    ECHO Solving instance %%f
+    java -cp %CP% %SOLVER_MAIN_CLASS% "%%f"
+) ELSE (ECHO Skip already solved instance %%f)
+FOR %%f IN (%CNF_FOLDER%\*.skt) DO IF NOT EXIST "%%f-results.txt" (
+    ECHO Solving instance %%f
+    java -cp %CP% %SOLVER_MAIN_CLASS% "%%f"
+) ELSE (ECHO Skip already solved instance %%f)
 
 ECHO *******************************************************
 ECHO * Aggregating results
