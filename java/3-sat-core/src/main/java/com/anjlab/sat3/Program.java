@@ -22,6 +22,7 @@ import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
+    private static final String CREATE_SKT_OPTION = "c";
     private static final String EVALUATE_OPTION = "e";
     private static final String RESULTS_OUTPUT_FILE_OPTION = "o";
     private static final String HELP_OPTION = "h";
@@ -151,6 +152,17 @@ public class Program
             stopWatch.printElapsed();
             
             statistics.put("CTSCreationTime", String.valueOf(timeElapsed));
+            
+            if (commandLine.hasOption(CREATE_SKT_OPTION))
+            {
+                String sktFilename = formulaFile + ".skt";
+                stopWatch.start("Convert CTS to " + sktFilename);
+                Helper.convertCTStructuresToRomanovSKTFileFormat(ct, sktFilename);
+                stopWatch.stop();
+                stopWatch.printElapsed();
+                
+                return;
+            }
             
             stopWatch.start("Unify all CTS");
             Helper.unify(ct);
@@ -338,6 +350,10 @@ public class Program
                                        .withArgName("filename")
                                        .withDescription("Evaluate formula using variable values from this file.")
                                        .create(EVALUATE_OPTION));
+
+        options.addOption(OptionBuilder.withLongOpt("create-skt")
+                                       .withDescription("Convert input formula to Romanov SKT file format.")
+                                       .create(CREATE_SKT_OPTION));
 
         return options;
     }
