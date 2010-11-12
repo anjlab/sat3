@@ -31,4 +31,5 @@ public interface ICompactTripletsStructure extends ITabularFormula
     CleanupStatus cleanup(int from, int to);
     Value valueOf(int varName);
     void clear();
+    boolean isElementary();
 }

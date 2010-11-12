@@ -7,6 +7,7 @@ import static com.anjlab.sat3.SimpleTripletValueFactory._010_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._100_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import junit.framework.Assert;
 
@@ -373,5 +374,23 @@ public class TestCTSOperations
         Helper.prettyPrint(formula);
         
         Assert.assertEquals(6, formula.getClausesCount());
+    }
+    
+    @Test
+    public void testElementary()
+    {
+        ICompactTripletsStructure cts = (ICompactTripletsStructure) 
+                        Helper.createFormula(1, 2, -3,
+                                                2, -3, 4, 
+                                                   -3, 4, 5, 
+                                                       4, 5, -6);
+        assertTrue(cts.isElementary());
+        
+        ICompactTripletsStructure ctsNotAllTiersPresent = (ICompactTripletsStructure) 
+                        Helper.createFormula(1, 2, -3,
+                                                2, -3, 4, 
+                                                       4, 5, -6);
+        
+        assertFalse(ctsNotAllTiersPresent.isElementary());
     }
 }

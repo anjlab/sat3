@@ -893,4 +893,26 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         }
         return false;
     }
+    
+    public boolean isElementary()
+    {
+        if (Helper.EnableAssertions)
+        {
+            assertTiersSorted();
+        }
+        if (tiers.size() != permutation.size() - 2)
+        {
+            //  Not all tiers present in CTS
+            return false;
+        }
+        for (int j = 0; j < tiers.size(); j++)
+        {
+            ITier tier = (ITier) tiers.get(j);
+            if (tier.size() != 1)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }
