@@ -27,7 +27,7 @@
         <version>2.2</version>
         <configuration>
           <descriptors>
-            <descriptor>src/main/assembly/experiment.xml</descriptor>
+            <descriptor>src/main/assembly/packaging.xml</descriptor>
           </descriptors>
         </configuration>
         <executions>

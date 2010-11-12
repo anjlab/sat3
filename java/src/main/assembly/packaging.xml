@@ -1,23 +1,22 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
-  <id>experiment</id>
+  <id>sources</id>
   <formats>
     <format>zip</format>
   </formats>
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>lib</outputDirectory>
-    </dependencySet>
-  </dependencySets>
   <fileSets>
     <fileSet>
-      <directory>src/main/shell</directory>
+      <directory>${project.basedir}</directory>
       <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>*.bat</include>
-        <include>*.rb</include>        
-      </includes>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <excludes>
+        <exclude>**/.settings/**</exclude>
+        <exclude>**/.gitignore</exclude>
+        <exclude>**/.classpath</exclude>
+        <exclude>**/.project</exclude>
+        <exclude>**/${project.build.directory}/**</exclude>
+      </excludes>
     </fileSet>
   </fileSets>
 </assembly>
