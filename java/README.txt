@@ -4,7 +4,7 @@ Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem
 Copyright (C) 2010 AnjLab
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.
-See LICENSE.txt file or visit <http://www.gnu.org/copyleft/lesser.html> for details.
+See LICENSE.txt file or visit http://www.gnu.org/copyleft/lesser.html for details.
 Version: 1.0.3
 
 usage: com.anjlab.sat3.Program [OPTIONS] <PATH>
