@@ -12,11 +12,19 @@
   </dependencySets>
   <fileSets>
     <fileSet>
+      <directory>..</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>LICENSE.txt</include>
+        <include>README.txt</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>src/main/shell</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>*.bat</include>
-        <include>*.rb</include>        
+        <include>*.rb</include>
       </includes>
     </fileSet>
   </fileSets>

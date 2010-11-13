@@ -5,12 +5,11 @@
   <parent>
     <artifactId>3-sat</artifactId>
     <groupId>com.anjlab</groupId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
   </parent>
   <groupId>com.anjlab</groupId>
   <artifactId>3-sat-core</artifactId>
-  <name>3-sat-core</name>
-  <url>http://anjlab.com</url>
+  <name>3-SAT Core RI</name>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

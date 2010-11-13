@@ -1,3 +1,26 @@
+/*
+ * Copyright (C) 2010 AnjLab
+ * 
+ * This file is part of 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem 
+ * is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem
+ * is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.anjlab.sat3;
 
 import static com.anjlab.sat3.SimpleTripletValueFactory._000_instance;
@@ -23,10 +46,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 import javax.imageio.ImageIO;
 
@@ -149,6 +178,7 @@ public class Helper
         printLine('-', 50);
 
         StringBuilder builder = buildPrettyOutput(formula);
+        builder.insert(0, '\n');
 
         LOGGER.info(builder.toString());
     }
@@ -751,102 +781,114 @@ public class Helper
     {
         final ObjectArrayList hss = new ObjectArrayList();
         
-        ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
-
-        statistics.put("BasicCTSInitialClausesCount", String.valueOf(sBasic.getClausesCount()));
-        
-        //  List of ITier
-        ObjectArrayList basicTiers = sBasic.getTiers();
-        
-        IHyperStructure basicGraph = createFirstHSSTier(cts, hss, sBasic, basicTiers);
-
-        for (int j = 1; j < basicTiers.size(); j++)
+        try
         {
-            if (LOGGER.isDebugEnabled())
-            {
-                LOGGER.info("Building HSS tier #{} of {}", j+1, basicTiers.size());
-            }
-         
-            final int nextTierIndex = j;
-            final ITier basicPrevTier = (ITier) basicTiers.get(nextTierIndex - 1);
-            final ITier basicNextTier = (ITier) basicTiers.get(nextTierIndex);
-
-            OpenIntObjectHashMap basicPrevTierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(nextTierIndex - 1);
+            ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
+    
+            statistics.put("BasicCTSInitialClausesCount", String.valueOf(sBasic.getClausesCount()));
             
-            if (LOGGER.isDebugEnabled())
-            {
-                LOGGER.debug("HSS   tier #{} is: {}", nextTierIndex, verticesTripletsToString(basicPrevTierVertices));
-                LOGGER.debug("Basic tier #{} is: {}", nextTierIndex, tripletsToString(basicPrevTier));
-                LOGGER.debug("Basic tier #{} is: {}", nextTierIndex + 1, tripletsToString(basicNextTier));
-            }
-
-            if (basicPrevTier.size() != basicPrevTierVertices.size())
-            {
-                throw new AssertionError("BG and HSS should be isomorphic");
-            }
+            //  List of ITier
+            ObjectArrayList basicTiers = sBasic.getTiers();
             
-            //  Shift each vertex of the tier along associated edges to the next tier
-            
-            int prevTierIndex = nextTierIndex - 1;
-            IntArrayList keys = basicPrevTierVertices.keys();
-            for (int k = 0; k < keys.size(); k++)
+            IHyperStructure basicGraph = createFirstHSSTier(cts, hss, sBasic, basicTiers);
+    
+            for (int j = 1; j < basicTiers.size(); j++)
             {
-                int tierKeyOfTheVertexToShift = keys.get(k);
-
-                IVertex prevTierVertex = (IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(prevTierIndex)).get(tierKeyOfTheVertexToShift);
-
-                ITripletValue tripletValue = prevTierVertex.getTripletValue();
-
-                ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
-                if (basicNextTier.contains(adjoinTarget))
+                if (LOGGER.isDebugEnabled())
                 {
-                    //  calculate substructure-edge for target edge 1
-                    createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom1);
+                    LOGGER.info("Building HSS tier #{} of {}", j+1, basicTiers.size());
                 }
-                adjoinTarget = tripletValue.getAdjoinRightTarget2();
-                if (basicNextTier.contains(adjoinTarget))
-                {
-                    //  calculate substructure-edge for target edge 2
-                    createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom2);
-                }
-            }
-            
-            if (!clearLeafVertices(hss, nextTierIndex - 1))
-            {
-                unifyCoincidentSubstructuresOfATier(hss, nextTierIndex);
-            }
-
-            //  Check for dirty vertices
-            int dirtyTiersCount = countDirtyTiers(basicGraph);
-            if (dirtyTiersCount > 0)
-            {
-                LOGGER.debug("Remove last {} tier(s) of the HSS and rebuild them", dirtyTiersCount);
-                for (int i = 0; i < hss.size(); i++)
-                {
-                    IHyperStructure hs = (IHyperStructure) hss.get(i);
-                    int indexOfLastTier = hs.getTiers().size() - 1;
-                    hs.getTiers().removeFromTo(indexOfLastTier - (dirtyTiersCount - 1), indexOfLastTier);
-                }
-                j -= dirtyTiersCount;
+             
+                final int nextTierIndex = j;
+                final ITier basicPrevTier = (ITier) basicTiers.get(nextTierIndex - 1);
+                final ITier basicNextTier = (ITier) basicTiers.get(nextTierIndex);
+    
+                OpenIntObjectHashMap basicPrevTierVertices = (OpenIntObjectHashMap) basicGraph.getTiers().get(nextTierIndex - 1);
                 
-                if (j < 0)
+                if (LOGGER.isDebugEnabled())
                 {
-                    j = 0;
-                    basicGraph = createFirstHSSTier(cts, hss, sBasic, basicTiers);
+                    LOGGER.debug("HSS   tier #{} is: {}", nextTierIndex, verticesTripletsToString(basicPrevTierVertices));
+                    LOGGER.debug("Basic tier #{} is: {}", nextTierIndex, tripletsToString(basicPrevTier));
+                    LOGGER.debug("Basic tier #{} is: {}", nextTierIndex + 1, tripletsToString(basicNextTier));
+                }
+    
+                if (basicPrevTier.size() != basicPrevTierVertices.size())
+                {
+                    throw new AssertionError("BG and HSS should be isomorphic");
+                }
+                
+                //  Shift each vertex of the tier along associated edges to the next tier
+                
+                int prevTierIndex = nextTierIndex - 1;
+                IntArrayList keys = basicPrevTierVertices.keys();
+                for (int k = 0; k < keys.size(); k++)
+                {
+                    int tierKeyOfTheVertexToShift = keys.get(k);
+    
+                    IVertex prevTierVertex = (IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(prevTierIndex)).get(tierKeyOfTheVertexToShift);
+    
+                    ITripletValue tripletValue = prevTierVertex.getTripletValue();
+    
+                    ITripletValue adjoinTarget = tripletValue.getAdjoinRightTarget1();
+                    if (basicNextTier.contains(adjoinTarget))
+                    {
+                        //  calculate substructure-edge for target edge 1
+                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom1);
+                    }
+                    adjoinTarget = tripletValue.getAdjoinRightTarget2();
+                    if (basicNextTier.contains(adjoinTarget))
+                    {
+                        //  calculate substructure-edge for target edge 2
+                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom2);
+                    }
+                }
+                
+                if (!clearLeafVertices(hss, nextTierIndex - 1))
+                {
+                    unifyCoincidentSubstructuresOfATier(hss, nextTierIndex);
+                }
+    
+                //  Check for dirty vertices
+                int dirtyTiersCount = countDirtyTiers(basicGraph);
+                if (dirtyTiersCount > 0)
+                {
+                    LOGGER.debug("Remove last {} tier(s) of the HSS and rebuild them", dirtyTiersCount);
+                    for (int i = 0; i < hss.size(); i++)
+                    {
+                        IHyperStructure hs = (IHyperStructure) hss.get(i);
+                        int indexOfLastTier = hs.getTiers().size() - 1;
+                        hs.getTiers().removeFromTo(indexOfLastTier - (dirtyTiersCount - 1), indexOfLastTier);
+                    }
+                    j -= dirtyTiersCount;
+                    
+                    if (j < 0)
+                    {
+                        j = 0;
+                        basicGraph = createFirstHSSTier(cts, hss, sBasic, basicTiers);
+                    }
+                }
+                else
+                {
+                    if (Helper.EnableAssertions)
+                    {
+                        assertHSSTierContainsSameNameVertices(hss, nextTierIndex);
+                    }
+    
+                    if (Helper.EnableAssertions)
+                    {
+                        assertIntersectionOfTierSubstructuresIsEmpty(basicGraph, nextTierIndex);
+                    }
                 }
             }
-            else
+        }
+        finally
+        {
+            int hssTiersCount = 0;
+            if (hss.size() > 0)
             {
-                if (Helper.EnableAssertions)
-                {
-                    assertHSSTierContainsSameNameVertices(hss, nextTierIndex);
-                }
-
-                if (Helper.EnableAssertions)
-                {
-                    assertIntersectionOfTierSubstructuresIsEmpty(basicGraph, nextTierIndex);
-                }
+                hssTiersCount = ((IHyperStructure) hss.get(0)).getTiers().size();
             }
+            statistics.put("NumberOfHSSTiersBuilt", String.valueOf(hssTiersCount));
         }
         
         return hss;
@@ -2104,6 +2146,57 @@ public class Helper
             value = value | (input.read() << 24);
         }
         return value;
+    }
+
+    public static String getImplementationVersionFromManifest(String implementationTitle)
+    {
+        String version = "Unknown";
+        ClassLoader cl = Helper.class.getClassLoader();
+        if (!(cl instanceof URLClassLoader))
+        {
+            return version;
+        }
+        URLClassLoader ucl = (URLClassLoader) cl;
+        for (URL url : ucl.getURLs())
+        {
+            JarFile jar = null;
+            try
+            {
+                String protocol = url.getProtocol();
+                if (!"file".equalsIgnoreCase(protocol))
+                {
+                    continue;
+                }
+                String filename = URLDecoder.decode(url.getFile(), "utf-8");
+                jar = new JarFile(filename);
+                Manifest manifest = jar.getManifest();
+                Attributes attributes = manifest.getMainAttributes();
+                String title = String.valueOf(attributes.get(Attributes.Name.IMPLEMENTATION_TITLE));
+                if (title.equalsIgnoreCase(implementationTitle))
+                {
+                    return String.valueOf(attributes.get(Attributes.Name.IMPLEMENTATION_VERSION));
+                }
+            }
+            catch (IOException e)
+            {
+                LOGGER.warn("Error reading manifest from " + url, e);
+            }
+            finally
+            {
+                if (jar != null)
+                {
+                    try
+                    {
+                        jar.close();
+                    }
+                    catch (IOException e)
+                    {
+                        LOGGER.warn("Error closing " + url, e);
+                    }
+                }
+            }
+        }
+        return version;
     }
     
 }

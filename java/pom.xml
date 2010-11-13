@@ -4,15 +4,76 @@
 
   <groupId>com.anjlab</groupId>
   <artifactId>3-sat</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <packaging>pom</packaging>
 
-  <name>3-sat</name>
-  <url>http://maven.apache.org</url>
+  <name>3-SAT RI</name>
+  <description>Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem</description>
+  <url>http://github.com/anjlab/sat3</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <organization>
+    <name>AnjLab</name>
+    <url>http://anjlab.com</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>Dmitry Gusev</name>
+      <email>dmitry.gusev@gmail.com</email>
+      <id>dmitrygusev</id>
+      <url>http://dmitrygusev.blogspot.com</url>
+      <timezone>+3</timezone>
+      <organization>AnjLab</organization>
+      <organizationUrl>http://anjlab.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Nick Zhebrun</name>
+      <email>nikolay.zhebrun@gmail.com</email>
+      <id>AnfiniL</id>
+      <url>http://zhebrun.blogspot.com/</url>
+      <timezone>+3</timezone>
+      <organization>AnjLab</organization>
+      <organizationUrl>http://anjlab.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+     <name>Yury Korolev</name>
+     <email>yury.korolev@gmail.com</email>
+     <id>yury</id>
+     <url>http://yury.posterous.com/</url>
+     <timezone>+3</timezone>
+     <organization>AnjLab</organization>
+     <organizationUrl>http://anjlab.com</organizationUrl>
+     <roles>
+       <role>Developer</role>
+     </roles>
+   </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Romanov V.F.</name>
+      <email>romfv@mail.ru</email>
+      <timezone>+3</timezone>
+      <organization>Vladimir State University</organization>
+      <organizationUrl>http://www.vlsu.ru/</organizationUrl>
+      <roles>
+        <role>Scientific Advisor</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+  <licenses>
+    <license>
+      <name>LGPL version 3</name>
+      <url>http://www.gnu.org/copyleft/lesser.html</url>
+    </license>
+  </licenses>
 
   <modules>
     <module>3-sat-core</module>
@@ -54,8 +115,25 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <License-Name>LGPL version 3</License-Name>
+              <License-URL>http://www.gnu.org/copyleft/lesser.html</License-URL>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -96,4 +174,8 @@
         </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 </project>

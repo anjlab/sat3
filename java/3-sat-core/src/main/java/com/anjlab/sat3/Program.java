@@ -1,3 +1,26 @@
+/*
+ * Copyright (C) 2010 AnjLab
+ * 
+ * This file is part of 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem 
+ * is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem
+ * is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.anjlab.sat3;
 
 import static com.anjlab.sat3.Helper.printFormulas;
@@ -35,6 +58,16 @@ public class Program
     
     public static void main(String[] args) throws Exception
     {
+        System.out.println("Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem"
+                           + "\nCopyright (C) 2010 AnjLab"
+                           + "\nThis program comes with ABSOLUTELY NO WARRANTY."
+                           + "\nThis is free software, and you are welcome to redistribute it under certain conditions." 
+                           + "\nSee LICENSE.txt file or visit <http://www.gnu.org/copyleft/lesser.html> for details.");
+        
+        LOGGER.debug("Reading version number from manifest");
+        String implementationVersion = Helper.getImplementationVersionFromManifest("3-SAT Core RI");
+        System.out.println("Version: " + implementationVersion + "\n");
+        
         Options options = getCommandLineOptions();
         
         CommandLineParser parser = new PosixParser();
@@ -59,6 +92,8 @@ public class Program
         
         try
         {
+            statistics.put("ImplementationVersion", implementationVersion);
+            
             stopWatch.start("Load formula");
             ITabularFormula formula = Helper.loadFromFile(formulaFile);
             long timeElapsed = stopWatch.stop();
@@ -174,13 +209,22 @@ public class Program
             
             LOGGER.info("CTF: {}", ct.size());
             
-            stopWatch.start("Create HSS");
-            ObjectArrayList hss = Helper.createHyperStructuresSystem(ct, statistics);
-            timeElapsed = stopWatch.stop();
-            stopWatch.printElapsed();
-
-            statistics.put("HSSCreationTime", String.valueOf(timeElapsed));
-            statistics.put("BasicCTSFinalClausesCount", String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
+            ObjectArrayList hss = null;
+            try
+            {
+                stopWatch.start("Create HSS");
+                hss = Helper.createHyperStructuresSystem(ct, statistics);
+            }
+            finally
+            {
+                timeElapsed = stopWatch.stop();
+                stopWatch.printElapsed();
+                if (hss != null)
+                {
+                    statistics.put("BasicCTSFinalClausesCount", String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
+                }
+                statistics.put("HSSCreationTime", String.valueOf(timeElapsed));
+            }
             
             stopWatch.start("Find HSS(0) route");
             ObjectArrayList route = Helper.findHSSRoute(hss);
