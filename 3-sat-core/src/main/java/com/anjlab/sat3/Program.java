@@ -76,8 +76,8 @@ public class Program
         if (commandLine.getArgs().length != 1 || commandLine.hasOption(HELP_OPTION))
         {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(Program.class.getName() + " [OPTIONS] <PATH>" +
-                    "\nWhere <PATH> is a path to file containing N-SAT formula instance in DIMACS CNF or Romanov SKT file format.", options);
+            formatter.printHelp(Program.class.getName() + " [OPTIONS] <input-file-name>" +
+                    "\nWhere <input-file-name> is a path to file containing k-SAT formula instance in DIMACS CNF or Romanov SKT file format.", options);
             System.exit(0);
         }
 
@@ -368,7 +368,7 @@ public class Program
                                        .create(USE_PRETTY_PRINT_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("disable-assertions")
-                                       .withDescription("Disables program self-check during execution.")
+                                       .withDescription("Disables internal program self-check during execution. This may improve performance.")
                                        .create(DISABLE_ASSERTIONS_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("use-abc-var-names")
@@ -380,13 +380,13 @@ public class Program
         options.addOption(OptionBuilder.withLongOpt("hss-image-output")
                                        .hasArg()
                                        .withArgName("filename")
-                                       .withDescription("File name where firsth resulting hyperstructure image will be written (if built any). Defaults to <PATH>-hss-0.png")
+                                       .withDescription("File name where visual representation of resulting basic graph will be written (only for SAT instances). Defaults to <input-file-name>-hss-0.png")
                                        .create(HSS_IMAGE_OUTPUT_FILENAME_OPTION));
 
         options.addOption(OptionBuilder.withLongOpt("output")
                                        .hasArg()
                                        .withArgName("filename")
-                                       .withDescription("File name where resulting HSS route will be written (if found any). Defaults to <PATH>-results.txt")
+                                       .withDescription("File name where results of calculation will be written (time measurements and satisfying set for SAT instances). Defaults to <input-file-name>-results.txt")
                                        .create(RESULTS_OUTPUT_FILE_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("evaluate-formula")
