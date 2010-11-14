@@ -23,8 +23,17 @@
       <directory>src/main/shell</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
-        <include>*.bat</include>
-        <include>*.rb</include>
+        <include>*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../3-sat-core/src/test/resources</directory>
+      <outputDirectory>/examples</outputDirectory>
+      <includes>
+        <include>uu*.cnf</include>
+        <include>uf*.cnf</include>
+        <include>cnf-*.cnf</include>
+        <include>article-example.cnf</include>
       </includes>
     </fileSet>
   </fileSets>
