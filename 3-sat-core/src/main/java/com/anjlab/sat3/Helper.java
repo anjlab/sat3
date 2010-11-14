@@ -72,6 +72,20 @@ import cern.colt.map.OpenLongObjectHashMap;
 
 public class Helper
 {
+    public static final String IMPLEMENTATION_VERSION = "ImplementationVersion";
+    public static final String INITIAL_FORMULA_LOAD_TIME = "InitialFormulaLoadTime";
+    public static final String INITIAL_FORMULA_VAR_COUNT = "InitialFormulaVarCount";
+    public static final String INITIAL_FORMULA_CLAUSES_COUNT = "InitialFormulaClausesCount";
+    public static final String CTF_CREATION_TIME = "CTFCreationTime";
+    public static final String CTF_COUNT = "CTFCount";
+    public static final String CTS_CREATION_TIME = "CTSCreationTime";
+    public static final String CTS_UNIFICATION_TIME = "CTSUnificationTime";
+    public static final String BASIC_CTS_INITIAL_CLAUSES_COUNT = "BasicCTSInitialClausesCount";
+    public static final String HSS_CREATION_TIME = "HSSCreationTime";
+    public static final String NUMBER_OF_HSS_TIERS_BUILT = "NumberOfHSSTiersBuilt";
+    public static final String BASIC_CTS_FINAL_CLAUSES_COUNT = "BasicCTSFinalClausesCount";
+    public static final String SEARCH_HSS_ROUTE_TIME = "SearchHSSRouteTime";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Helper.class);
     
     public static boolean UsePrettyPrint = false;
@@ -785,7 +799,7 @@ public class Helper
         {
             ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
     
-            statistics.put("BasicCTSInitialClausesCount", String.valueOf(sBasic.getClausesCount()));
+            statistics.put(BASIC_CTS_INITIAL_CLAUSES_COUNT, String.valueOf(sBasic.getClausesCount()));
             
             //  List of ITier
             ObjectArrayList basicTiers = sBasic.getTiers();
@@ -888,7 +902,7 @@ public class Helper
             {
                 hssTiersCount = ((IHyperStructure) hss.get(0)).getTiers().size();
             }
-            statistics.put("NumberOfHSSTiersBuilt", String.valueOf(hssTiersCount));
+            statistics.put(NUMBER_OF_HSS_TIERS_BUILT, String.valueOf(hssTiersCount));
         }
         
         return hss;

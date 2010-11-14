@@ -27,6 +27,8 @@ import java.util.Properties;
 
 public class ExecutionRecord
 {
+    private final String filename;
+    private final String implementationVersion; 
     private final long initialFormulaLoadTime;
     private final long initialFormulaVarCount;
     private final long initialFormulaClausesCount;
@@ -36,24 +38,26 @@ public class ExecutionRecord
     private final long ctsUnificationTime;
     private final long basicCTSInitialClausesCount;
     private final long hssCreationTime;
+    private final long numberOfHssTiersBuilt;
     private final long basicCTSFinalClausesCount;
     private final long searchHSSRouteTime;
-    private final String filename;
     
     public ExecutionRecord(String filename, Properties statistics)
     {
         this.filename = filename; 
-        initialFormulaLoadTime = tryParseLong(statistics, "InitialFormulaLoadTime");
-        initialFormulaVarCount = tryParseLong(statistics, "InitialFormulaVarCount");
-        initialFormulaClausesCount = tryParseLong(statistics, "InitialFormulaClausesCount");
-        ctfCreationTime = tryParseLong(statistics, "CTFCreationTime");
-        ctfCount = tryParseLong(statistics, "CTFCount");
-        ctsCreationTime = tryParseLong(statistics, "CTSCreationTime");
-        ctsUnificationTime = tryParseLong(statistics, "CTSUnificationTime");
-        basicCTSInitialClausesCount = tryParseLong(statistics, "BasicCTSInitialClausesCount");
-        hssCreationTime = tryParseLong(statistics, "HSSCreationTime");
-        basicCTSFinalClausesCount = tryParseLong(statistics, "BasicCTSFinalClausesCount");
-        searchHSSRouteTime = tryParseLong(statistics, "SearchHSSRouteTime");
+        implementationVersion = String.valueOf(statistics.get(Helper.IMPLEMENTATION_VERSION));
+        initialFormulaLoadTime = tryParseLong(statistics, Helper.INITIAL_FORMULA_LOAD_TIME);
+        initialFormulaVarCount = tryParseLong(statistics, Helper.INITIAL_FORMULA_VAR_COUNT);
+        initialFormulaClausesCount = tryParseLong(statistics, Helper.INITIAL_FORMULA_CLAUSES_COUNT);
+        ctfCreationTime = tryParseLong(statistics, Helper.CTF_CREATION_TIME);
+        ctfCount = tryParseLong(statistics, Helper.CTF_COUNT);
+        ctsCreationTime = tryParseLong(statistics, Helper.CTS_CREATION_TIME);
+        ctsUnificationTime = tryParseLong(statistics, Helper.CTS_UNIFICATION_TIME);
+        basicCTSInitialClausesCount = tryParseLong(statistics, Helper.BASIC_CTS_INITIAL_CLAUSES_COUNT);
+        hssCreationTime = tryParseLong(statistics, Helper.HSS_CREATION_TIME);
+        numberOfHssTiersBuilt = tryParseLong(statistics, Helper.NUMBER_OF_HSS_TIERS_BUILT);
+        basicCTSFinalClausesCount = tryParseLong(statistics, Helper.BASIC_CTS_FINAL_CLAUSES_COUNT);
+        searchHSSRouteTime = tryParseLong(statistics, Helper.SEARCH_HSS_ROUTE_TIME);
     }
 
     private long tryParseLong(Properties statistics, String property)
@@ -66,6 +70,8 @@ public class ExecutionRecord
     {
         StringBuilder builder = new StringBuilder();
         builder.append(filename);
+        builder.append('\t');
+        builder.append(implementationVersion);
         builder.append('\t');
         builder.append(initialFormulaLoadTime);
         builder.append('\t');
@@ -85,6 +91,8 @@ public class ExecutionRecord
         builder.append('\t');
         builder.append(hssCreationTime);
         builder.append('\t');
+        builder.append(numberOfHssTiersBuilt);
+        builder.append('\t');
         builder.append(basicCTSFinalClausesCount);
         builder.append('\t');
         builder.append(searchHSSRouteTime);
@@ -96,27 +104,31 @@ public class ExecutionRecord
         StringBuilder builder = new StringBuilder();
         builder.append("FileName");
         builder.append('\t');
-        builder.append("InitialFormulaLoadTime");
+        builder.append(Helper.IMPLEMENTATION_VERSION);
         builder.append('\t');
-        builder.append("InitialFormulaVarCount");
+        builder.append(Helper.INITIAL_FORMULA_LOAD_TIME);
         builder.append('\t');
-        builder.append("InitialFormulaClausesCount");
+        builder.append(Helper.INITIAL_FORMULA_VAR_COUNT);
         builder.append('\t');
-        builder.append("CTFCreationTime");
+        builder.append(Helper.INITIAL_FORMULA_CLAUSES_COUNT);
         builder.append('\t');
-        builder.append("CTFCount");
+        builder.append(Helper.CTF_CREATION_TIME);
         builder.append('\t');
-        builder.append("CTSCreationTime");
+        builder.append(Helper.CTF_COUNT);
         builder.append('\t');
-        builder.append("CTSUnificationTime");
+        builder.append(Helper.CTS_CREATION_TIME);
         builder.append('\t');
-        builder.append("BasicCTSInitialClausesCount");
+        builder.append(Helper.CTS_UNIFICATION_TIME);
         builder.append('\t');
-        builder.append("HSSCreationTime");
+        builder.append(Helper.BASIC_CTS_INITIAL_CLAUSES_COUNT);
         builder.append('\t');
-        builder.append("BasicCTSFinalClausesCount");
+        builder.append(Helper.HSS_CREATION_TIME);
         builder.append('\t');
-        builder.append("SearchHSSRouteTime");
+        builder.append(Helper.NUMBER_OF_HSS_TIERS_BUILT);
+        builder.append('\t');
+        builder.append(Helper.BASIC_CTS_FINAL_CLAUSES_COUNT);
+        builder.append('\t');
+        builder.append(Helper.SEARCH_HSS_ROUTE_TIME);
         return builder.toString();
     }
 

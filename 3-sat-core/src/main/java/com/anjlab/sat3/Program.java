@@ -76,8 +76,8 @@ public class Program
         if (commandLine.getArgs().length != 1 || commandLine.hasOption(HELP_OPTION))
         {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(Program.class.getName() + " [OPTIONS] <PATH>" +
-                    "\nWhere <PATH> is a path to file containing N-SAT formula instance in DIMACS CNF or Romanov SKT file format.", options);
+            formatter.printHelp(Program.class.getName() + " [OPTIONS] <input-file-name>" +
+                    "\nWhere <input-file-name> is a path to file containing k-SAT formula instance in DIMACS CNF or Romanov SKT file format.", options);
             System.exit(0);
         }
 
@@ -92,13 +92,13 @@ public class Program
         
         try
         {
-            statistics.put("ImplementationVersion", implementationVersion);
+            statistics.put(Helper.IMPLEMENTATION_VERSION, implementationVersion);
             
             stopWatch.start("Load formula");
             ITabularFormula formula = Helper.loadFromFile(formulaFile);
             long timeElapsed = stopWatch.stop();
             
-            statistics.put("InitialFormulaLoadTime", String.valueOf(timeElapsed));
+            statistics.put(Helper.INITIAL_FORMULA_LOAD_TIME, String.valueOf(timeElapsed));
             
             if (formula.getVarCount() > 26)
             {
@@ -106,8 +106,8 @@ public class Program
                 Helper.UseUniversalVarNames = true;
             }
             
-            statistics.put("InitialFormulaVarCount", String.valueOf(formula.getVarCount()));
-            statistics.put("InitialFormulaClausesCount", String.valueOf(formula.getClausesCount()));
+            statistics.put(Helper.INITIAL_FORMULA_VAR_COUNT, String.valueOf(formula.getVarCount()));
+            statistics.put(Helper.INITIAL_FORMULA_CLAUSES_COUNT, String.valueOf(formula.getClausesCount()));
             
             Helper.prettyPrint(formula);
             stopWatch.printElapsed();
@@ -156,14 +156,14 @@ public class Program
                 stopWatch.printElapsed();
             }
             
-            stopWatch.start("CreateCTF");
+            stopWatch.start("Create CTF");
             ObjectArrayList ct = Helper.createCTF(formula);
             timeElapsed = stopWatch.stop();
             printFormulas(ct);
             stopWatch.printElapsed();
             
-            statistics.put("CTFCreationTime", String.valueOf(timeElapsed));
-            statistics.put("CTFCount", String.valueOf(ct.size()));
+            statistics.put(Helper.CTF_CREATION_TIME, String.valueOf(timeElapsed));
+            statistics.put(Helper.CTF_COUNT, String.valueOf(ct.size()));
             
             LOGGER.info("CTF count: {}", ct.size());
 
@@ -186,7 +186,7 @@ public class Program
             printFormulas(ct);
             stopWatch.printElapsed();
             
-            statistics.put("CTSCreationTime", String.valueOf(timeElapsed));
+            statistics.put(Helper.CTS_CREATION_TIME, String.valueOf(timeElapsed));
             
             if (commandLine.hasOption(CREATE_SKT_OPTION))
             {
@@ -205,7 +205,7 @@ public class Program
             printFormulas(ct);
             stopWatch.printElapsed();
 
-            statistics.put("CTSUnificationTime", String.valueOf(timeElapsed));
+            statistics.put(Helper.CTS_UNIFICATION_TIME, String.valueOf(timeElapsed));
             
             LOGGER.info("CTF: {}", ct.size());
             
@@ -221,9 +221,9 @@ public class Program
                 stopWatch.printElapsed();
                 if (hss != null)
                 {
-                    statistics.put("BasicCTSFinalClausesCount", String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
+                    statistics.put(Helper.BASIC_CTS_FINAL_CLAUSES_COUNT, String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
                 }
-                statistics.put("HSSCreationTime", String.valueOf(timeElapsed));
+                statistics.put(Helper.HSS_CREATION_TIME, String.valueOf(timeElapsed));
             }
             
             stopWatch.start("Find HSS(0) route");
@@ -231,7 +231,7 @@ public class Program
             timeElapsed = stopWatch.stop();
             stopWatch.printElapsed();
 
-            statistics.put("SearchHSSRouteTime", String.valueOf(timeElapsed));
+            statistics.put(Helper.SEARCH_HSS_ROUTE_TIME, String.valueOf(timeElapsed));
             
             if (Helper.EnableAssertions)
             {
@@ -368,7 +368,7 @@ public class Program
                                        .create(USE_PRETTY_PRINT_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("disable-assertions")
-                                       .withDescription("Disables program self-check during execution.")
+                                       .withDescription("Disables internal program self-check during execution. This may improve performance.")
                                        .create(DISABLE_ASSERTIONS_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("use-abc-var-names")
@@ -380,13 +380,13 @@ public class Program
         options.addOption(OptionBuilder.withLongOpt("hss-image-output")
                                        .hasArg()
                                        .withArgName("filename")
-                                       .withDescription("File name where firsth resulting hyperstructure image will be written (if built any). Defaults to <PATH>-hss-0.png")
+                                       .withDescription("File name where visual representation of resulting basic graph will be written (only for SAT instances). Defaults to <input-file-name>-hss-0.png")
                                        .create(HSS_IMAGE_OUTPUT_FILENAME_OPTION));
 
         options.addOption(OptionBuilder.withLongOpt("output")
                                        .hasArg()
                                        .withArgName("filename")
-                                       .withDescription("File name where resulting HSS route will be written (if found any). Defaults to <PATH>-results.txt")
+                                       .withDescription("File name where results of calculation will be written (time measurements and satisfying set for SAT instances). Defaults to <input-file-name>-results.txt")
                                        .create(RESULTS_OUTPUT_FILE_OPTION));
         
         options.addOption(OptionBuilder.withLongOpt("evaluate-formula")
