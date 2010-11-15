@@ -44,7 +44,8 @@ solved within few minutes.
 
 Note that it took about 14 hours for this reference implementation to 
 solve satisfiable 3-SAT instances with variable count = 398 and
-number of clauses = 1040 (flat50-115 from "Flat" Graph Colouring set).
+number of clauses = 1040 (flat50-115 from 
+["Flat" Graph Colouring set](http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)).
 
 1. Download and extract package (link to downloads?)
 2. Unzip package to any folder __[target_folder]__
@@ -62,7 +63,8 @@ number of clauses = 1040 (flat50-115 from "Flat" Graph Colouring set).
 5. By default output files will be created in the same folder as input 
    file
 
-Refer to [[Usage Scenarios]] wiki page for more options.
+Refer to [Usage Scenarios](https://github.com/yury/sat3/wiki/Usage-Scenarios)
+wiki page for more options.
 
 # 3. License
 (LGPL version 3)
