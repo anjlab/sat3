@@ -1,0 +1,23 @@
+#Satisfiable. Variable values from HSS route
+#Mon Nov 15 10:14:25 MSK 2010
+CTSUnificationTime=13
+InitialFormulaClausesCount=44
+SearchHSSRouteTime=3
+BasicCTSInitialClausesCount=11
+CTFCreationTime=10
+InitialFormulaLoadTime=38
+CTSCreationTime=5
+ImplementationVersion=1.0.3
+NumberOfHSSTiersBuilt=6
+HSSCreationTime=62
+8=false
+7=false
+InitialFormulaVarCount=8
+6=true
+5=true
+4=true
+3=true
+2=false
+1=true
+BasicCTSFinalClausesCount=11
+CTFCount=5

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 AnjLab
+ * Copyright (c) 2010 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.

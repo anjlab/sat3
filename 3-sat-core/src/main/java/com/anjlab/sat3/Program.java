@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 AnjLab
+ * Copyright (c) 2010 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -59,7 +59,7 @@ public class Program
     public static void main(String[] args) throws Exception
     {
         System.out.println("Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem"
-                           + "\nCopyright (C) 2010 AnjLab"
+                           + "\nCopyright (c) 2010 AnjLab"
                            + "\nThis program comes with ABSOLUTELY NO WARRANTY."
                            + "\nThis is free software, and you are welcome to redistribute it under certain conditions." 
                            + "\nSee LICENSE.txt file or visit <http://www.gnu.org/copyleft/lesser.html> for details.");
