@@ -23,7 +23,7 @@ As a result we generate two files:
      classification result (SAT or UNSAT) and additional info (time
      measurements and satisfying set if formula is SAT). 
 
-     See [How to read output files](https://github.com/yury/sat3/wiki/How-to-read-output-files)
+     See [How to read output files](https://github.com/anjlab/sat3/wiki/How-to-read-output-files)
      wiki page.
      
 2.  [input-file-name]-__hss-0.png__ - this file contains graphical 
@@ -33,7 +33,7 @@ As a result we generate two files:
     for the formula.
 
 
-See [Solving-article-example.cnf](https://github.com/yury/sat3/wiki/Solving-article-example.cnf)
+See [Solving-article-example.cnf](https://github.com/anjlab/sat3/wiki/Solving-article-example.cnf)
 wiki page for sample outputs.
   
 ## Step by step instructions to get your first results:
@@ -63,7 +63,7 @@ number of clauses = 1040 (flat50-115 from
 5. By default output files will be created in the same folder as input 
    file
 
-Refer to [Command line tools](https://github.com/yury/sat3/wiki/Command-line-tools)
+Refer to [Command line tools](https://github.com/anjlab/sat3/wiki/Command-line-tools)
 wiki page for more options.
 
 # 3. License
