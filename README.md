@@ -63,7 +63,7 @@ number of clauses = 1040 (flat50-115 from
 5. By default output files will be created in the same folder as input 
    file
 
-Refer to [Usage Scenarios](https://github.com/yury/sat3/wiki/Usage-Scenarios)
+Refer to [Command line tools](https://github.com/yury/sat3/wiki/Command-line-tools)
 wiki page for more options.
 
 # 3. License
