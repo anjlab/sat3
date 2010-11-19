@@ -27,7 +27,7 @@ As a result we generate two files:
      wiki page.
      
 2.  [input-file-name]-__hss-0.png__ - this file contains graphical 
-    representation of basic graph (see [Romanov's paper for reference](http://http://romvf.wordpress.com/)).
+    representation of basic graph (see [Romanov's paper for reference](http://arxiv.org/abs/1011.3944)).
     
     Red colored path represents HS route which is joint satisfying set 
     for the formula.
