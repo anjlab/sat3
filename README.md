@@ -47,7 +47,7 @@ solve satisfiable 3-SAT instances with variable count = 398 and
 number of clauses = 1040 (flat50-115 from 
 ["Flat" Graph Colouring set](http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)).
 
-1. Download and extract package (link to downloads?)
+1. Download and extract [package](https://github.com/downloads/anjlab/sat3/3-sat-experiment-1.0.3-bin.zip)
 2. Unzip package to any folder __[target_folder]__
 3. Run console and __`cd`__ to __[target_folder]__
 4. In console run following command:
