@@ -10,7 +10,7 @@ def section(text)
 end
 
 if cnf_dir.nil?
-  puts "USAGE: ./batch-run.rb path-to-cnf-dir"
+  puts "USAGE: ./solve-batch path-to-cnf-dir"
   exit
 end
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+res_dir = ARGV[0]
+
+CLASS_PATH      = "'lib/*'"
+AGGREGATE_CLASS = "com.anjlab.sat3.ResultsAggregator"
+
+def section(text)
+  puts "*" * 42
+  puts "* #{text}"
+end
+
+if res_dir.nil?
+  puts "USAGE: ./aggregate-results path-to-results-dir"
+  exit
+end
+
+unless File.directory? res_dir
+  abort "Invalid results folder '#{res_dir}'. Please pass valid folder name containing *-results.txt files as argument to this batch."
+  exit 1
+end
+
+section "Aggregating results"
+
+exec "java -cp #{CLASS_PATH} #{AGGREGATE_CLASS} #{res_dir}"
