@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+src_path = ARGV[0]
+dest_path = ARGV[1]
+
+def ascii2cnf(src, dest)
+  header_missed = true
+  src.each_line do |line|
+    line.chomp!
+    if line[0] == ?#
+      dest.puts("c#{line[1..-1]}")
+    elsif header_missed
+      header_missed = false
+      parts = line.split(/\s/)
+      dest.puts("p cnf #{parts[0]} #{parts[1]}")
+    else
+      dest.puts("#{line} 0")
+    end
+  end
+end
+
+case src_path
+when nil
+  puts <<-TXT
+Please specify source file to convert.
+We support only basic and compact ASCII encoding format (*.txt)
+  see http://www.is.titech.ac.jp/~watanabe/gensat/index.html#encoding for details
+TXT
+when /\.txt$/
+  File.open(src_path) do |src|
+    File.open(dest_path || "#{src_path}.cnf", "w") do |dest|
+      ascii2cnf(src, dest)
+    end
+  end
+end
