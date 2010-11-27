@@ -189,6 +189,37 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         return Helper.buildPrettyOutput(formula).insert(0, '\n').toString();
     }
 
+//    public void adjoinRight(ITier tier)
+//    {
+//        int key = 1;
+//        boolean hasValue = (keys_73516240 & key) == key;
+//        if (hasValue)
+//        {
+//            //  adjoinRight
+//            ITripletValue triplet = SimpleTripletValueFactory.getTripletValue(key);
+//            if (!tier.contains(triplet.getAdjoinRightTarget1())
+//                    && !tier.contains(triplet.getAdjoinRightTarget2()))
+//            {
+//                removeKey(key);
+//            }
+//        }
+//        while (key < 0x80)
+//        {
+//            key <<= 1;
+//            hasValue = (keys_73516240 & key) == key;
+//            if (hasValue)
+//            {
+//                //  adjoinRight
+//                ITripletValue triplet = SimpleTripletValueFactory.getTripletValue(key);
+//                if (!tier.contains(triplet.getAdjoinRightTarget1())
+//                        && !tier.contains(triplet.getAdjoinRightTarget2()))
+//                {
+//                    removeKey(key);
+//                }
+//            }
+//        }
+//    }
+    
     public void adjoinRight(ITier tier)
     {
         int tier_keys_73516240 = ((SimpleTier) tier).keys_73516240;
@@ -203,6 +234,37 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         updateSize();
     }
 
+//    public void adjoinLeft(ITier tier)
+//    {
+//        int key = 1;
+//        boolean hasValue = (keys_73516240 & key) == key;
+//        if (hasValue)
+//        {
+//            //  adjoinLeft
+//            ITripletValue triplet = SimpleTripletValueFactory.getTripletValue(key);
+//            if (!tier.contains(triplet.getAdjoinLeftSource1())
+//                    && !tier.contains(triplet.getAdjoinLeftSource2()))
+//            {
+//                removeKey(key);
+//            }
+//        }
+//        while (key < 0x80)
+//        {
+//            key <<= 1;
+//            hasValue = (keys_73516240 & key) == key;
+//            if (hasValue)
+//            {
+//                //  adjoinLeft
+//                ITripletValue triplet = SimpleTripletValueFactory.getTripletValue(key);
+//                if (!tier.contains(triplet.getAdjoinLeftSource1())
+//                        && !tier.contains(triplet.getAdjoinLeftSource2()))
+//                {
+//                    removeKey(key);
+//                }
+//            }
+//        }
+//    }
+    
     public void adjoinLeft(ITier tier)
     {
         int tier_keys_76325410 = ((SimpleTier) tier).get_keys_76325410();

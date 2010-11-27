@@ -4,7 +4,7 @@
 
   <groupId>com.anjlab</groupId>
   <artifactId>3-sat</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4</version>
   <packaging>pom</packaging>
 
   <name>3-SAT RI</name>

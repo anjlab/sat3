@@ -23,8 +23,6 @@
  */
 package com.anjlab.sat3;
 
-import cern.colt.map.OpenIntObjectHashMap;
-
 public final class SimpleTripletValueFactory {
 
     public static final ITripletValue _000_instance = new _000();
@@ -36,18 +34,18 @@ public final class SimpleTripletValueFactory {
     public static final ITripletValue _110_instance = new _110();
     public static final ITripletValue _111_instance = new _111();
 
-    private static final OpenIntObjectHashMap values = new OpenIntObjectHashMap(8 * 2 + 1);
+    private static final ITripletValue[] values = new ITripletValue[128];
 
     static
     { 
-        values.put(_000_instance.getTierKey(), _000_instance);    //    1
-        values.put(_001_instance.getTierKey(), _001_instance);    //    2
-        values.put(_010_instance.getTierKey(), _010_instance);    //    4
-        values.put(_011_instance.getTierKey(), _011_instance);    //    8
-        values.put(_100_instance.getTierKey(), _100_instance);    //    16
-        values.put(_101_instance.getTierKey(), _101_instance);    //    32
-        values.put(_110_instance.getTierKey(), _110_instance);    //    64
-        values.put(_111_instance.getTierKey(), _111_instance);    //    128
+        values[(byte)(_000_instance.getTierKey() - 1)] = _000_instance;    //    1
+        values[(byte)(_001_instance.getTierKey() - 1)] = _001_instance;    //    2
+        values[(byte)(_010_instance.getTierKey() - 1)] = _010_instance;    //    4
+        values[(byte)(_011_instance.getTierKey() - 1)] = _011_instance;    //    8
+        values[(byte)(_100_instance.getTierKey() - 1)] = _100_instance;    //    16
+        values[(byte)(_101_instance.getTierKey() - 1)] = _101_instance;    //    32
+        values[(byte)(_110_instance.getTierKey() - 1)] = _110_instance;    //    64
+        values[(byte)(_111_instance.getTierKey() - 1)] = _111_instance;    //    128
     }
     
     public static ITripletValue getTripletValue(int a, int b, int c)
@@ -64,11 +62,11 @@ public final class SimpleTripletValueFactory {
         if (b < 0) key <<= 2;
         if (c < 0) key <<= 1;
         
-        return (ITripletValue) values.get(key);
+        return values[(byte)(key - 1)];
     }
 
     public static ITripletValue getTripletValue(int tierKey) {
-        ITripletValue tripletValue = (ITripletValue) values.get(tierKey);
+        ITripletValue tripletValue = (ITripletValue) values[(byte)(tierKey - 1)];
         return tripletValue;
     }
     

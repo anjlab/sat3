@@ -241,15 +241,6 @@ public class Program
                 }
             }
             
-            stopWatch.start("Verify formula is satisfiable using variable values from HSS route");
-            verifySatisfiable(formula, route);
-            if (Helper.EnableAssertions)
-            {
-                verifySatisfiable(ctfClone, route);
-            }
-            stopWatch.stop();
-            stopWatch.printElapsed();
-
             //  Draw non-empty intersections of HSS(0) with last vertex in HSS route 
             //  to illustrate possible options of HSS route search
             ObjectArrayList markers = Helper.findNonEmptyIntersections((IHyperStructure) hss.get(0), (IVertex) route.get(route.size() - 1));
@@ -263,6 +254,15 @@ public class Program
             
             stopWatch.start("Write HSS as image to " + hssImageFile);
             Helper.writeToImage((IHyperStructure) hss.get(0), route, markers, hssImageFile);
+            stopWatch.stop();
+            stopWatch.printElapsed();
+            
+            stopWatch.start("Verify formula is satisfiable using variable values from HSS route");
+            verifySatisfiable(formula, route);
+            if (Helper.EnableAssertions)
+            {
+                verifySatisfiable(ctfClone, route);
+            }
             stopWatch.stop();
             stopWatch.printElapsed();
             

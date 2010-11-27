@@ -98,7 +98,8 @@ public final class SimpleVertex implements IVertex
     }
     public String toString()
     {
-        return (isDirty() ? "dirty " : "")
+        return "\n" 
+             + (isDirty() ? "dirty " : "")
              + permutation.getAName()
              + ","
              + permutation.getBName()
