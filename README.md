@@ -1,6 +1,6 @@
 # 1. What this project is about
 
-This project is reference implementation of [Romanov's Polynomial Algorithm](http://http://romvf.wordpress.com/)
+This project is reference implementation of [Romanov's Polynomial Algorithm](http://romvf.wordpress.com/)
 for [3-SAT Problem](http://en.wikipedia.org/wiki/Boolean_satisfiability_problem#3-satisfiability). 
 Algorithm implemented in pure Java with command line interface. 
 Current version is single-threaded implementation.
