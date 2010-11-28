@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,6 +57,8 @@ import java.util.Random;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -371,6 +374,8 @@ public class Helper
         try
         {
             is = new FileInputStream(new File(filename));
+            
+            //  TODO Clear SimpleFormula's tierHash3 after formula loaded
             
             return formulaReader.readFormula(is);
         }
@@ -1721,7 +1726,7 @@ public class Helper
      * @param hss
      * @return List of {@link IVertex} that form non-empty (n-2)-intersection, i.e. hyperstructure route.
      */
-    public static ObjectArrayList findHSSRoute(ObjectArrayList hss)
+    private static ObjectArrayList findHSSRoute(ObjectArrayList hss)
     {
         IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
         int tiersCount = basicGraph.getTiers().size();
@@ -1729,82 +1734,10 @@ public class Helper
         ObjectArrayList result = new ObjectArrayList(tiersCount);
         ObjectArrayList structures = new ObjectArrayList();
 
-        //  Pick any vertex from the last tier of each HS (with the same index for each HS)
         OpenIntObjectHashMap verticesFromLastTiers = new OpenIntObjectHashMap();
-        for(int h = 0; h < hss.size(); h++)
-        {
-            IHyperStructure hs = (IHyperStructure) hss.get(h);
-            
-            IVertex vertexFromTheLastTier = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tiersCount - 1)).values().get(0);
-            verticesFromLastTiers.put(h, vertexFromTheLastTier);
-            
-            ICompactTripletsStructure structure = ((IVertex) verticesFromLastTiers.get(h)).getCTS();
-            structures.add(structure);
-        }
+        fillVerticesFromLastTier(hss, structures, verticesFromLastTiers);
 
-        byte prevVertexTierKey = -1;
-        
-        //  Find non-empty intersection of last-tier vertex with the first tier vertex in each HS 
-        //  (index of first tier vertex should be the same for each HS). 
-        for (int j = 0; j < 1; j++)
-        {
-            boolean added = false;
-            int tierSize = ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).size();
-            
-            for (int s = 0; s < tierSize; s++)
-            {
-                boolean allSameNameIntersectionsNotEmpty = true;
-                ObjectArrayList intersections = new ObjectArrayList();
-                ObjectArrayList targetVertices = new ObjectArrayList();
-                
-                for (int h = 0; h < hss.size(); h++)
-                {
-                    IHyperStructure hs = (IHyperStructure) hss.get(h);
-                    
-                    OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(j);
-                    
-                    IVertex tierVertex = (IVertex) tierVertices.values().get(s);
-                    
-                    ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
-                    
-                    clone.intersect(tierVertex.getCTS());
-                    
-                    if (clone.isEmpty())
-                    {
-                        allSameNameIntersectionsNotEmpty = false;
-                        break;
-                    }
-                    
-                    targetVertices.add(tierVertex);
-                    intersections.add(clone);
-                }
-                
-                allSameNameIntersectionsNotEmpty = allSameNameIntersectionsNotEmpty 
-                                                && forwardFilterPassed(hss, targetVertices, j, tiersCount, intersections, verticesFromLastTiers);
-                
-                if (allSameNameIntersectionsNotEmpty)
-                {
-                    IVertex vertex = (IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).values().get(s);
-                    
-                    result.add(vertex);
-                    
-                    added = true;
-                    
-                    prevVertexTierKey = vertex.getTripletValue().getTierKey();
-                    
-                    updateStructures(hss, structures, j, prevVertexTierKey);
-                    
-                    break;
-                }
-            }
-            if (!added)
-            {
-                //  Note: For debug purposes only. 
-                result.add(null);
-                
-                System.err.println("Implementation error: " + (j+1) + " tier was built with errors. Please provide CNF file to developers.");
-            }
-        }
+        byte prevVertexTierKey = findIntersectionWithFirstTier(hss, result, structures, verticesFromLastTiers);
 
         if (prevVertexTierKey == -1)
         {
@@ -1958,6 +1891,97 @@ public class Helper
         }
         
         return result;
+    }
+
+    private static byte findIntersectionWithFirstTier(ObjectArrayList hss,
+            ObjectArrayList result,
+            ObjectArrayList structures,
+            OpenIntObjectHashMap verticesFromLastTiers)
+    {
+        IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
+        int tiersCount = basicGraph.getTiers().size();
+        
+        byte prevVertexTierKey = -1;
+        
+        //  Find non-empty intersection of last-tier vertex with the first tier vertex in each HS 
+        //  (index of first tier vertex should be the same for each HS). 
+        for (int j = 0; j < 1; j++)
+        {
+            boolean added = false;
+            int tierSize = ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).size();
+            
+            for (int s = 0; s < tierSize; s++)
+            {
+                boolean allSameNameIntersectionsNotEmpty = true;
+                ObjectArrayList intersections = new ObjectArrayList();
+                ObjectArrayList targetVertices = new ObjectArrayList();
+                
+                for (int h = 0; h < hss.size(); h++)
+                {
+                    IHyperStructure hs = (IHyperStructure) hss.get(h);
+                    
+                    OpenIntObjectHashMap tierVertices = (OpenIntObjectHashMap) hs.getTiers().get(j);
+                    
+                    IVertex tierVertex = (IVertex) tierVertices.values().get(s);
+                    
+                    ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
+                    
+                    clone.intersect(tierVertex.getCTS());
+                    
+                    if (clone.isEmpty())
+                    {
+                        allSameNameIntersectionsNotEmpty = false;
+                        break;
+                    }
+                    
+                    targetVertices.add(tierVertex);
+                    intersections.add(clone);
+                }
+                
+                allSameNameIntersectionsNotEmpty = allSameNameIntersectionsNotEmpty 
+                                                && forwardFilterPassed(hss, targetVertices, j, tiersCount, intersections, verticesFromLastTiers);
+                
+                if (allSameNameIntersectionsNotEmpty)
+                {
+                    IVertex vertex = (IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).values().get(s);
+                    
+                    result.add(vertex);
+                    
+                    added = true;
+                    
+                    prevVertexTierKey = vertex.getTripletValue().getTierKey();
+                    
+                    updateStructures(hss, structures, j, prevVertexTierKey);
+                    
+                    break;
+                }
+            }
+            if (!added)
+            {
+                throw new AssertionError("No vertices from first tier have non-empty intersection with vertex from last tier.");
+            }
+        }
+        return prevVertexTierKey;
+    }
+
+    private static void fillVerticesFromLastTier(ObjectArrayList hss,
+            ObjectArrayList structures,
+            OpenIntObjectHashMap verticesFromLastTiers)
+    {
+        IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
+        int tiersCount = basicGraph.getTiers().size();
+        
+        //  Pick any vertex from the last tier of each HS (with the same index for each HS)
+        for(int h = 0; h < hss.size(); h++)
+        {
+            IHyperStructure hs = (IHyperStructure) hss.get(h);
+            
+            IVertex vertexFromTheLastTier = (IVertex) ((OpenIntObjectHashMap) hs.getTiers().get(tiersCount - 1)).values().get(0);
+            verticesFromLastTiers.put(h, vertexFromTheLastTier);
+            
+            ICompactTripletsStructure structure = ((IVertex) verticesFromLastTiers.get(h)).getCTS();
+            structures.add(structure);
+        }
     }
 
     private static boolean forwardFilterPassed(ObjectArrayList hss, ObjectArrayList sourceVertices, int j, int tiersCount, ObjectArrayList structures, OpenIntObjectHashMap verticesFromLastTiers)
@@ -2275,7 +2299,10 @@ public class Helper
                 String title = String.valueOf(attributes.get(Attributes.Name.IMPLEMENTATION_TITLE));
                 if (title.equalsIgnoreCase(implementationTitle))
                 {
-                    return String.valueOf(attributes.get(Attributes.Name.IMPLEMENTATION_VERSION));
+                    Attributes buildInfo = manifest.getEntries().get("Build-Info");
+                    return String.valueOf(attributes.get(Attributes.Name.IMPLEMENTATION_VERSION))
+                         + " "
+                         + buildInfo.getValue("Build-Timestamp");
                 }
             }
             catch (IOException e)
@@ -2298,6 +2325,397 @@ public class Helper
             }
         }
         return version;
+    }
+    
+    public static ObjectArrayList loadHSS(String hssPath) throws IOException
+    {
+        ObjectArrayList hss = new ObjectArrayList();
+        
+        String basicCTSPath = hssPath + File.separator + "basic-cts.cnf";
+        LOGGER.info("Load CTS from {}...", basicCTSPath);
+        ITabularFormula basicCTS = loadFromFile(basicCTSPath);
+        LOGGER.info("done");
+        
+        String[] otherCTSPaths = new File(hssPath).list(new FilenameFilter()
+        {
+            public boolean accept(File dir, String name)
+            {
+                return name.endsWith("-other-cts.cnf");
+            }
+        });
+        
+        Arrays.sort(otherCTSPaths);
+        
+        for (String otherCTSPath : otherCTSPaths)
+        {
+            Matcher matcher = Pattern.compile("hss-(\\d+)-").matcher(otherCTSPath);
+            matcher.find();
+            final String hsIndex = matcher.group(1);
+            
+            LOGGER.info("Load CTS from {}...", otherCTSPath);
+            ITabularFormula otherCTS = loadFromFile(hssPath + File.separator + otherCTSPath);
+            LOGGER.info("done");
+            IHyperStructure hs = new SimpleHyperStructure((ICompactTripletsStructure) basicCTS, (ICompactTripletsStructure) otherCTS);
+            hss.add(hs);
+            
+            String[] substructuresPaths = new File(hssPath).list(new FilenameFilter()
+            {
+                public boolean accept(File dir, String name)
+                {
+                    return name.startsWith("hss-" + hsIndex + "-tier");
+                }
+            });
+            
+            Arrays.sort(substructuresPaths);
+            
+            String verticesInfoPath = hssPath + File.separator + "hss-" + hsIndex + "-vertices.properties";
+            Properties verticesInfo = new Properties();
+            InputStream is = new FileInputStream(new File(verticesInfoPath));
+            try
+            {
+                verticesInfo.load(is);
+            }
+            finally
+            {
+                is.close();
+            }
+            
+            for (String substructurePath : substructuresPaths)
+            {
+                Matcher matcher2 = Pattern.compile("tier-(\\d+)-(\\d+)").matcher(substructurePath);
+                matcher2.find();
+                int j = Integer.parseInt(matcher2.group(1));
+                String tripletString = matcher2.group(2);
+                
+                ITripletValue tripletValue = SimpleTripletValueFactory.getTripletValue(tripletString);
+                
+                if (hs.getTiers().size() == j)
+                {
+                    hs.getTiers().add(new OpenIntObjectHashMap(8));
+                }
+                OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(j);
+                
+                LOGGER.info("Load CTS from {}...", substructurePath);
+                ITabularFormula substructure = loadFromFile(hssPath + File.separator + substructurePath);
+                LOGGER.info("done");
+                
+                SimpleVertex vertex = new SimpleVertex(basicCTS.getTier(j), j, tripletValue, (ICompactTripletsStructure) substructure);
+                vertex.setHyperStructure(hs);
+                
+                boolean bottom1empty = Boolean.parseBoolean((String) verticesInfo.get(substructurePath + "-bottom1empty"));
+                boolean bottom2empty = Boolean.parseBoolean((String) verticesInfo.get(substructurePath + "-bottom2empty"));
+                
+                if (bottom1empty) vertex.foundEmptyEdge(EdgeKind.Bottom1);
+                if (bottom2empty) vertex.foundEmptyEdge(EdgeKind.Bottom2);
+                
+                tier.put(tripletValue.getTierKey(), vertex);
+            }
+        }
+        
+        return hss;
+    }
+    
+    public static void saveHSS(String hssPath, ObjectArrayList hss) throws IOException
+    {
+        File hssPathFile = new File(hssPath);
+        
+        if (!hssPathFile.exists() && !hssPathFile.mkdir())
+        {
+            throw new IOException("Cannot create " + hssPath);
+        }
+        
+        File[] files = hssPathFile.listFiles();
+        for (File file : files)
+        {
+            if (!file.delete())
+            {
+                throw new IOException("Cannot delete " + file.getAbsolutePath());
+            }
+        }
+        
+        IHyperStructure hs = (IHyperStructure) hss.get(0);
+        
+        String basicCTSPath = hssPath + File.separator + "basic-cts.cnf";
+        LOGGER.info("Saving {}...", basicCTSPath);
+        saveToDIMACSFileFormat(hs.getBasicCTS(), basicCTSPath);
+        LOGGER.info("done");
+        
+        int hssLength = String.valueOf(hss.size()).length();
+        int tiersLength = String.valueOf(hs.getTiers().size()).length();
+        
+        for (int h = 0; h < hss.size(); h++)
+        {
+            hs = (IHyperStructure) hss.get(h);
+            
+            String hssImageFilename = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + ".png";
+            LOGGER.info("Saving {}...", hssImageFilename);
+            writeToImage(hs, null, null, hssImageFilename);
+            LOGGER.info("done");
+            
+            String otherCTSPath = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + "-other-cts.cnf";
+            LOGGER.info("Saving {}...", otherCTSPath);
+            saveToDIMACSFileFormat(hs.getOtherCTS(), otherCTSPath);
+            LOGGER.info("done");
+            
+            Properties verticesInfo = new Properties();
+            
+            for (int j = 0; j < hs.getTiers().size(); j++)
+            {
+                OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(j);
+                for (int i = 0; i < tier.size(); i++)
+                {
+                    int key = tier.keys().get(i);
+                    IVertex vertex = (IVertex) tier.get(key);
+                    ITripletValue triplet = SimpleTripletValueFactory.getTripletValue(key);
+                    
+                    String vertexFilename = "hss-" + leadingZeros(h, hssLength)
+                                            + "-tier-" + leadingZeros(j, tiersLength)
+                                            + "-" + triplet + ".cnf";
+                    
+                    String substructureVertexPath = hssPath + File.separator 
+                                                    + vertexFilename; 
+                    
+                    LOGGER.info("Saving ...", substructureVertexPath);
+                    saveToDIMACSFileFormat(vertex.getCTS(), substructureVertexPath);
+                    LOGGER.info("done");
+                    
+                    verticesInfo.put(vertexFilename + "-bottom1empty", String.valueOf(vertex.isBottom1Empty()));
+                    verticesInfo.put(vertexFilename + "-bottom2empty", String.valueOf(vertex.isBottom2Empty()));
+                }
+            }
+            
+            String verticesInfoPath = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + "-vertices.properties";
+            LOGGER.info("Saving ...", verticesInfoPath);
+            OutputStream os = new FileOutputStream(new File(verticesInfoPath));
+            try
+            {
+               verticesInfo.store(os, null);
+            }
+            finally
+            {
+                os.close();
+            }
+            LOGGER.info("done");
+        }
+    }
+
+    private static String leadingZeros(int value, int length)
+    {
+        String result = String.valueOf(value);
+        if (result.length() < length)
+        {
+            result = getString('0', length - result.length()) + result;
+        }
+        return result;
+    }
+
+    public static ObjectArrayList reduceHSS(ObjectArrayList hss, String hssTempPath) throws IOException
+    {
+        ObjectArrayList route = findHSSRoute(hss);
+        if (isValidHSSRoute(route))
+        {
+            return route;
+        }
+        
+        IHyperStructure hs = (IHyperStructure) hss.get(0);
+        ICompactTripletsStructure basicCTS = hs.getBasicCTS();
+        
+        //  Find next tier with one vertex
+        for (int j = 0; j < basicCTS.getTiers().size(); j++)
+        {
+            //  TODO Configure hssTempPathReduced using CL options
+            final String hssTempPathReduced = hssTempPath + "-reduced";
+            if (j == 0)
+            {
+                if (basicCTS.getTier(0).size() > 1)
+                {
+                    //  First reduction
+                    ObjectArrayList structures = new ObjectArrayList();
+                    OpenIntObjectHashMap verticesFromLastTiers = new OpenIntObjectHashMap();
+                    
+                    fillVerticesFromLastTier(hss, structures, verticesFromLastTiers);
+                    
+                    ObjectArrayList result = new ObjectArrayList();
+                    findIntersectionWithFirstTier(hss, result, structures, verticesFromLastTiers);
+                    
+                    ITier firstTier = basicCTS.getTier(0);
+                    IVertex firstTierVertex = (IVertex) result.get(0);
+                    
+                    firstTier.intersect(firstTierVertex.getTripletValue());
+                    
+                    basicCTS.cleanup(0, 0);
+                    
+                    //  Unify CTS
+                    ObjectArrayList cts = new ObjectArrayList();
+                    cts.add(((IHyperStructure) hss.get(0)).getBasicCTS());
+                    for (int h = 0; h < hss.size(); h++)
+                    {
+                        hs = (IHyperStructure) hss.get(h);
+                        cts.add(hs.getOtherCTS());
+                    }
+                    unify(cts);
+                    //  Update HSS by creating new one (it must be created non-empty)
+                    Properties statistics = new Properties();
+                    hss = createHyperStructuresSystem(cts, statistics);
+                    saveHSS(hssTempPathReduced, hss);
+                    //  Check if its possible to find HSS route now
+                    route = findHSSRoute(hss);
+                    if (isValidHSSRoute(route))
+                    {
+                        return route;
+                    }
+                    //  Route not found. Reduce next tier
+                    
+                    //  Basic CTS may have been changed in newly created HSS
+                    if (!basicCTS.getPermutation().sameAs(((IHyperStructure) hss.get(0)).getBasicCTS().getPermutation()))
+                    {
+                        //  Basic CTS changed
+                        j = -1;
+                        basicCTS = ((IHyperStructure) hss.get(0)).getBasicCTS();
+                    }
+                }
+                continue;
+            }
+            
+            ITier tier = basicCTS.getTier(j);
+            if (tier.size() > 1)
+            {
+                //  Previous tier contains one vertex
+                OpenIntObjectHashMap prevTier = (OpenIntObjectHashMap) ((IHyperStructure)hss.get(0)).getTiers().get(j - 1);
+                IVertex prevVertex = (IVertex) prevTier.values().get(0);
+                
+                if (prevVertex.hasEmptyBottomEdge())
+                {
+                    //  If previous vertex contains only one bottom vertex 
+                    //  then we should keep that vertex (and move forward to reduce next HSS tier?)
+                    if (prevVertex.getBottomVertex1() != null)
+                    {
+                        tier.intersect(prevVertex.getBottomVertex1().getTripletValue());
+                    }
+                    else if (prevVertex.getBottomVertex2() != null)
+                    {
+                        tier.intersect(prevVertex.getBottomVertex2().getTripletValue());
+                    }
+                    
+                    basicCTS.cleanup(j, j);
+                    
+                    //  Unify CTS
+                    ObjectArrayList cts = new ObjectArrayList();
+                    cts.add(((IHyperStructure) hss.get(0)).getBasicCTS());
+                    for (int h = 0; h < hss.size(); h++)
+                    {
+                        hs = (IHyperStructure) hss.get(h);
+                        cts.add(hs.getOtherCTS());
+                    }
+                    unify(cts);
+                    //  Update HSS by creating new one (it must be created non-empty)
+                    Properties statistics = new Properties();
+                    hss = createHyperStructuresSystem(cts, statistics);
+                    saveHSS(hssTempPathReduced, hss);
+                    //  Check if its possible to find HSS route now
+                    route = findHSSRoute(hss);
+                    if (isValidHSSRoute(route))
+                    {
+                        return route;
+                    }
+                    //  Route not found. Reduce next tier
+                    
+                    //  Basic CTS may have been changed in newly created HSS
+                    if (!basicCTS.getPermutation().sameAs(((IHyperStructure) hss.get(0)).getBasicCTS().getPermutation()))
+                    {
+                        //  Basic CTS changed
+                        j = -1;
+                        basicCTS = ((IHyperStructure) hss.get(0)).getBasicCTS();
+                    }
+                }
+                else
+                {
+                    LOGGER.info("Backup HSS to {}...", hssTempPath);
+                    saveHSS(hssTempPath, hss);
+                    
+                    ITripletValue bottomVertex1TripletValue = prevVertex.getBottomVertex1().getTripletValue();
+                    ITripletValue bottomVertex2TripletValue = prevVertex.getBottomVertex2().getTripletValue();
+                    
+                    tier.intersect(bottomVertex1TripletValue);
+                    
+                    try
+                    {
+                        basicCTS.cleanup(j, j);
+                        
+                        //  Unify CTS
+                        ObjectArrayList cts = new ObjectArrayList();
+                        cts.add(((IHyperStructure) hss.get(0)).getBasicCTS());
+                        for (int h = 0; h < hss.size(); h++)
+                        {
+                            hs = (IHyperStructure) hss.get(h);
+                            cts.add(hs.getOtherCTS());
+                        }
+                        unify(cts);
+                        //  Update HSS by creating new one (it must be created non-empty)
+                        Properties statistics = new Properties();
+                        hss = createHyperStructuresSystem(cts, statistics);
+                    }
+                    catch (EmptyStructureException e)
+                    {
+                        //  If HSS was built empty then  
+                        //  restore HSS and keep vertex from bottomVertex2
+                        
+                        LOGGER.info("Restore HSS from backup {}", hssTempPath);
+                        hss = loadHSS(hssTempPath);
+                        LOGGER.info("done");
+                        
+                        basicCTS = ((IHyperStructure) hss.get(0)).getBasicCTS();
+                        tier = basicCTS.getTier(j);
+                        tier.intersect(bottomVertex2TripletValue);
+                        
+                        basicCTS.cleanup(j, j);
+                        
+                        //  Unify CTS
+                        ObjectArrayList cts = new ObjectArrayList();
+                        cts.add(((IHyperStructure) hss.get(0)).getBasicCTS());
+                        for (int h = 0; h < hss.size(); h++)
+                        {
+                            hs = (IHyperStructure) hss.get(h);
+                            cts.add(hs.getOtherCTS());
+                        }
+                        unify(cts);
+                        //  Update HSS by creating new one (it must be created non-empty)
+                        Properties statistics = new Properties();
+                        hss = createHyperStructuresSystem(cts, statistics);
+                    }
+                    saveHSS(hssTempPathReduced, hss);
+                    //  Check if its possible to find HSS route now
+                    route = findHSSRoute(hss);
+                    if (isValidHSSRoute(route))
+                    {
+                        return route;
+                    }
+                    //  Route not found. Reduce next tier
+                    
+                    //  Basic CTS may have been changed in newly created HSS
+                    if (!basicCTS.getPermutation().sameAs(((IHyperStructure) hss.get(0)).getBasicCTS().getPermutation()))
+                    {
+                        //  Basic CTS changed
+                        j = -1;
+                        basicCTS = ((IHyperStructure) hss.get(0)).getBasicCTS();
+                    }
+                }
+            }
+        }
+        
+        throw new AssertionError("HSS was reduced to elementary CTS in basic graph but HSS route not found");
+    }
+
+    private static boolean isValidHSSRoute(ObjectArrayList route)
+    {
+        for (int i = 0; i < route.size(); i++)
+        {
+            if (route.get(i) == null)
+            {
+                return false;
+            }
+        }
+        return true;
     }
     
 }

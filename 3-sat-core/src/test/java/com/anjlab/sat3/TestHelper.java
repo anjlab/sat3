@@ -31,11 +31,13 @@ import static com.anjlab.sat3.SimpleTripletValueFactory._100_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._101_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._110_instance;
 import static com.anjlab.sat3.SimpleTripletValueFactory._111_instance;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.Random;
 
 import org.junit.Assert;
@@ -43,6 +45,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import cern.colt.list.ObjectArrayList;
+import cern.colt.map.OpenIntObjectHashMap;
 
 public class TestHelper
 {
@@ -230,7 +233,7 @@ public class TestHelper
     @Test
     public void testConvertCTStructuresToRomanovSKTFileFormat() throws Exception
     {
-        String filename = "target/test-classes/" + "cnf-v22-c73-12.cnf";
+        String filename = "target/test-classes/cnf-v22-c73-12.cnf";
         File file = new File(filename);
         ITabularFormula formula = Helper.loadFromFile(filename);
         ObjectArrayList ctf = Helper.createCTF(formula);
@@ -242,5 +245,66 @@ public class TestHelper
         
         Helper.convertCTStructuresToRomanovSKTFileFormat(ctf, "target/" + file.getName() + ".skt");
         Helper.saveToDIMACSFileFormat((ITabularFormula) ctf.get(0), "target/" + file.getName() + "-cts-0.cnf");
+    }
+    
+    @Test
+    public void testSaveLoadHSS() throws Exception
+    {
+        String filename = "target/test-classes/article-example.cnf";
+        ITabularFormula formula = Helper.loadFromFile(filename);
+        ObjectArrayList ct = Helper.createCTF(formula);
+        Helper.completeToCTS(ct, formula.getPermutation());
+        Helper.unify(ct);
+        Properties statistics = new Properties();
+        ObjectArrayList hss = Helper.createHyperStructuresSystem(ct, statistics);
+        String hssPath = filename + "-hss";
+        Helper.saveHSS(hssPath, hss);
+        ObjectArrayList hss2 = Helper.loadHSS(hssPath);
+        
+        assertEquals(hss.size(), hss2.size());
+        
+        for (int h = 0; h < hss.size(); h++)
+        {
+            IHyperStructure hs = (IHyperStructure) hss.get(h);
+            IHyperStructure hs2 = (IHyperStructure) hss2.get(h);
+            
+            assertEquals(hs.getTiers().size(), hs2.getTiers().size());
+            
+            for (int j = 0; j < hs.getTiers().size(); j++)
+            {
+                OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(j);
+                OpenIntObjectHashMap tier2 = (OpenIntObjectHashMap) hs2.getTiers().get(j);
+                
+                assertEquals(tier.size(), tier2.size());
+                
+                for (int i = 0; i < tier.size(); i++)
+                {
+                    int key = tier.keys().get(i);
+                    
+                    assertTrue(tier2.containsKey(key));
+                    
+                    IVertex vertex = (IVertex) tier.get(key);
+                    IVertex vertex2 = (IVertex) tier2.get(key);
+                    
+                    assertVerticesEqual(vertex, vertex2);
+                    assertVerticesEqual(vertex.getBottomVertex1(), vertex2.getBottomVertex1());
+                    assertVerticesEqual(vertex.getBottomVertex2(), vertex2.getBottomVertex2());
+                }
+            }
+        }
+    }
+
+    private void assertVerticesEqual(IVertex vertex, IVertex vertex2)
+    {
+        if (vertex == null && vertex2 == null)
+        {
+            return;
+        }
+        assertArrayEquals(vertex.getPermutation().getABC(), vertex2.getPermutation().getABC());
+        assertEquals(vertex.getTierIndex(), vertex2.getTierIndex());
+        assertEquals(vertex.getTripletValue(), vertex2.getTripletValue());
+        assertEquals(vertex.isBottom1Empty(), vertex2.isBottom1Empty());
+        assertEquals(vertex.isBottom2Empty(), vertex2.isBottom2Empty());
+        assertEquals(vertex.getCTS(), vertex2.getCTS());
     }
 }

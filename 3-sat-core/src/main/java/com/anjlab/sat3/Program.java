@@ -27,6 +27,7 @@ import static com.anjlab.sat3.Helper.printFormulas;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,6 +46,7 @@ import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
+    private static final String FIND_HSS_ROUTE_OPTION = "r";
     private static final String CREATE_SKT_OPTION = "c";
     private static final String EVALUATE_OPTION = "e";
     private static final String RESULTS_OUTPUT_FILE_OPTION = "o";
@@ -112,33 +114,31 @@ public class Program
             Helper.prettyPrint(formula);
             stopWatch.printElapsed();
             
+            if (commandLine.hasOption(FIND_HSS_ROUTE_OPTION))
+            {
+                String hssPath = commandLine.getOptionValue(FIND_HSS_ROUTE_OPTION);
+                
+                stopWatch.start("Load HSS from " + hssPath);
+                ObjectArrayList hss = Helper.loadHSS(hssPath);
+                stopWatch.stop();
+                stopWatch.printElapsed();
+                
+                findHSSRoute(commandLine, formulaFile, statistics, stopWatch, formula, null, null, hss, hssPath);
+                
+                return;
+            }
+            
             if (commandLine.hasOption(EVALUATE_OPTION))
             {
-                stopWatch.start("Evaluate formula");
-                Properties properties = new Properties();
-                FileInputStream is = null;
-                try
+                String resultsFilename = commandLine.getOptionValue(EVALUATE_OPTION);
+                boolean satisfiable = evaluateFormula(stopWatch, formula, resultsFilename);
+                if (satisfiable)
                 {
-                    is = new FileInputStream(new File(commandLine.getOptionValue(EVALUATE_OPTION)));
-                    properties.load(is);
-                    boolean satisfiable = formula.evaluate(properties);
-                    stopWatch.stop();
-                    if (satisfiable)
-                    {
-                        System.out.println("Formula evaluated as SAT");
-                    }
-                    else
-                    {
-                        System.out.println("Formula evaluated as UNSAT");
-                    }
-                    stopWatch.printElapsed();
+                    System.out.println("Formula evaluated as SAT");
                 }
-                finally
+                else
                 {
-                    if (is != null)
-                    {
-                        is.close();
-                    }
+                    System.out.println("Formula evaluated as UNSAT");
                 }
                 //  Only evaluate formula value
                 return;
@@ -226,51 +226,13 @@ public class Program
                 statistics.put(Helper.HSS_CREATION_TIME, String.valueOf(timeElapsed));
             }
             
-            stopWatch.start("Find HSS(0) route");
-            ObjectArrayList route = Helper.findHSSRoute(hss);
-            timeElapsed = stopWatch.stop();
-            stopWatch.printElapsed();
-
-            statistics.put(Helper.SEARCH_HSS_ROUTE_TIME, String.valueOf(timeElapsed));
-            
-            if (Helper.EnableAssertions)
-            {
-                if (!formula.equals(formulaClone))
-                {
-                    LOGGER.warn("Initial formula differs from its cloned version");
-                }
-            }
-            
-            //  Draw non-empty intersections of HSS(0) with last vertex in HSS route 
-            //  to illustrate possible options of HSS route search
-            ObjectArrayList markers = Helper.findNonEmptyIntersections((IHyperStructure) hss.get(0), (IVertex) route.get(route.size() - 1));
-            
-            String hssImageFile = formulaFile + "-hss-0.png";
-            
-            if (commandLine.hasOption(HSS_IMAGE_OUTPUT_FILENAME_OPTION))
-            {
-                hssImageFile = commandLine.getOptionValue(HSS_IMAGE_OUTPUT_FILENAME_OPTION);
-            }
-            
-            stopWatch.start("Write HSS as image to " + hssImageFile);
-            Helper.writeToImage((IHyperStructure) hss.get(0), route, markers, hssImageFile);
+            String hssPath = formulaFile + "-hss";
+            stopWatch.start("Save HSS to " + hssPath + "...");
+            Helper.saveHSS(hssPath, hss);
             stopWatch.stop();
             stopWatch.printElapsed();
             
-            stopWatch.start("Verify formula is satisfiable using variable values from HSS route");
-            verifySatisfiable(formula, route);
-            if (Helper.EnableAssertions)
-            {
-                verifySatisfiable(ctfClone, route);
-            }
-            stopWatch.stop();
-            stopWatch.printElapsed();
-            
-            String resultsFilename = getResultsFilename(commandLine, formulaFile);
-            stopWatch.start("Write HSS route to " + resultsFilename);
-            writeSatToFile(resultsFilename, statistics, route);
-            stopWatch.stop();
-            stopWatch.printElapsed();
+            findHSSRoute(commandLine, formulaFile, statistics, stopWatch, formula, formulaClone, ctfClone, hss, hssPath);
         }
         catch (EmptyStructureException e)
         {
@@ -291,6 +253,90 @@ public class Program
         {
             System.out.println("Program completed");
         }
+    }
+
+    private static void findHSSRoute(CommandLine commandLine, String formulaFile,
+            Properties statistics, StopWatch stopWatch,
+            ITabularFormula formula, ITabularFormula formulaClone,
+            ObjectArrayList ctfClone, ObjectArrayList hss, String hssPath)
+            throws IOException
+    {
+        long timeElapsed;
+        //  TODO Configure hssTempPath using CL options
+        String hssTempPath = hssPath + "-temp"; 
+        stopWatch.start("Find HSS route");
+        ObjectArrayList route = Helper.reduceHSS(hss, hssTempPath);
+        timeElapsed = stopWatch.stop();
+        stopWatch.printElapsed();
+        
+        statistics.put(Helper.SEARCH_HSS_ROUTE_TIME, String.valueOf(timeElapsed));
+        
+        if (Helper.EnableAssertions)
+        {
+            if (formulaClone != null)
+            {
+                if (!formula.equals(formulaClone))
+                {
+                    LOGGER.warn("Initial formula differs from its cloned version");
+                }
+            }
+        }
+        
+        String hssImageFile = formulaFile + "-hss-0.png";
+        
+        if (commandLine.hasOption(HSS_IMAGE_OUTPUT_FILENAME_OPTION))
+        {
+            hssImageFile = commandLine.getOptionValue(HSS_IMAGE_OUTPUT_FILENAME_OPTION);
+        }
+        
+        stopWatch.start("Write HSS as image to " + hssImageFile);
+        Helper.writeToImage(((SimpleVertex) route.get(0)).getHyperStructure(), route, null, hssImageFile);
+        stopWatch.stop();
+        stopWatch.printElapsed();
+        
+        stopWatch.start("Verify formula is satisfiable using variable values from HSS route");
+        verifySatisfiable(formula, route);
+        if (Helper.EnableAssertions)
+        {
+            if (ctfClone != null)
+            {
+                verifySatisfiable(ctfClone, route);
+            }
+        }
+        stopWatch.stop();
+        stopWatch.printElapsed();
+        
+        String resultsFilename = getResultsFilename(commandLine, formulaFile);
+        stopWatch.start("Write HSS route to " + resultsFilename);
+        writeSatToFile(resultsFilename, statistics, route);
+        stopWatch.stop();
+        stopWatch.printElapsed();
+    }
+
+    private static boolean evaluateFormula(StopWatch stopWatch,
+            ITabularFormula formula, String resultsFilename)
+            throws FileNotFoundException, IOException
+    {
+        stopWatch.start("Evaluate formula");
+        boolean satisfiable;
+        Properties properties = new Properties();
+        FileInputStream is = null;
+        try
+        {
+            is = new FileInputStream(new File(resultsFilename));
+            properties.load(is);
+            satisfiable = formula.evaluate(properties);
+            stopWatch.stop();
+            stopWatch.printElapsed();
+        }
+        finally
+        {
+            if (is != null)
+            {
+                is.close();
+            }
+        }
+        return satisfiable;
     }
 
     private static void writeUnsatToFile(String resultsFile, Properties statistics) throws IOException
@@ -398,6 +444,12 @@ public class Program
         options.addOption(OptionBuilder.withLongOpt("create-skt")
                                        .withDescription("Convert input formula to Romanov SKT file format.")
                                        .create(CREATE_SKT_OPTION));
+
+        options.addOption(OptionBuilder.withLongOpt("find-hss-route")
+                                       .hasArg()
+                                       .withArgName("dirname")
+                                       .withDescription("Find route in HSS from folder <dirname>")
+                                       .create(FIND_HSS_ROUTE_OPTION));
 
         return options;
     }

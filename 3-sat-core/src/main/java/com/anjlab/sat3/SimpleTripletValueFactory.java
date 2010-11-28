@@ -70,6 +70,19 @@ public final class SimpleTripletValueFactory {
         return tripletValue;
     }
     
+    public static ITripletValue getTripletValue(String tripletString)
+    {
+        if (tripletString.equals("000")) return _000_instance; else
+        if (tripletString.equals("001")) return _001_instance; else
+        if (tripletString.equals("010")) return _010_instance; else
+        if (tripletString.equals("011")) return _011_instance; else
+        if (tripletString.equals("100")) return _100_instance; else
+        if (tripletString.equals("101")) return _101_instance; else
+        if (tripletString.equals("110")) return _110_instance; else
+        if (tripletString.equals("111")) return _111_instance; else
+            throw new IllegalArgumentException("tripletString = " + tripletString);
+    }
+    
     private static class _000 implements ITripletValue
     {
         public boolean isNotA() { return false; }

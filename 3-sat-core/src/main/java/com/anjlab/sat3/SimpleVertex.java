@@ -62,7 +62,15 @@ public final class SimpleVertex implements IVertex
     }
     public boolean hasEmptyBottomEdge()
     {
-        return bottom1Empty || bottom2Empty;
+        return isBottom1Empty() || isBottom2Empty();
+    }
+    public boolean isBottom1Empty()
+    {
+        return getBottomVertex1() == null;
+    }
+    public boolean isBottom2Empty()
+    {
+        return getBottomVertex2() == null;
     }
     public void foundEmptyEdge(EdgeKind edgeKind)
     {
@@ -78,6 +86,10 @@ public final class SimpleVertex implements IVertex
     void setHyperStructure(IHyperStructure hyperStructure)
     {
         this.hyperStructure = hyperStructure;
+    }
+    public IHyperStructure getHyperStructure()
+    {
+        return hyperStructure;
     }
     public ICompactTripletsStructure getCTS()
     {

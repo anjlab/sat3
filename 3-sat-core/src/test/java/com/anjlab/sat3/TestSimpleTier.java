@@ -465,4 +465,34 @@ public class TestSimpleTier
         value = tier.valueOfC();
         assertEquals("Value of c=0 and c=1 tier", Value.Mixed, value);
     }
+    
+    @Test
+    public void intersectWithTripletValue()
+    {
+        ITier tier = new SimpleTier(1, 2, 3);
+        tier.add(_000_instance);
+        tier.add(_001_instance);
+        tier.add(_010_instance);
+        tier.add(_011_instance);
+        tier.add(_100_instance);
+        tier.add(_101_instance);
+        tier.add(_110_instance);
+        tier.add(_111_instance);
+        
+        tier.intersect(_000_instance);
+        
+        assertEquals(1, tier.size());
+        assertTrue(tier.contains(_000_instance));
+    }
+    
+
+    @Test
+    public void intersectWithTripletValueThatDoesntExists()
+    {
+        ITier tier = new SimpleTier(1, 2, 3);
+        tier.add(_001_instance);
+        tier.intersect(_000_instance);
+        
+        assertEquals(0, tier.size());
+    }
 }

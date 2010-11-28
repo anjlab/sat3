@@ -67,6 +67,12 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         }
     }
 
+    public void intersect(ITripletValue tripletValue)
+    {
+        keys_73516240 = (byte)(keys_73516240 & tripletValue.getTierKey());
+        size = keys_73516240 == 0 ? 0 : 1;
+    }
+
     public int size()
     {
         return size;

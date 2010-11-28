@@ -36,6 +36,8 @@ public interface IVertex extends ICompactTripletsStructureHolder
 
     void foundEmptyEdge(EdgeKind edge);
     boolean hasEmptyBottomEdge();
+    boolean isBottom1Empty();
+    boolean isBottom2Empty();
 
     void markDirty();
     boolean isDirty();

@@ -41,4 +41,5 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
     Value valueOfC();
     ITabularFormula getFormula();
     void inverse();
+    void intersect(ITripletValue tripletValue);
 }
