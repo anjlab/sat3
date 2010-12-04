@@ -51,4 +51,6 @@ public interface IPermutation
     int[] elements();
     void shiftToStart(int from, int to);
     void shiftToEnd(int from, int to);
+    
+    int elementsHash();
 }

@@ -68,10 +68,10 @@ import org.slf4j.LoggerFactory;
 import cern.colt.function.IntObjectProcedure;
 import cern.colt.function.LongObjectProcedure;
 import cern.colt.list.IntArrayList;
-import cern.colt.list.LongArrayList;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
-import cern.colt.map.OpenLongObjectHashMap;
+
+import com.anjlab.sat3.VarPairsIndexFactory.VarPairsIndex;
 
 public class Helper
 {
@@ -445,7 +445,7 @@ public class Helper
             throw new IllegalArgumentException("Unification is a q-ary operation where q should be > 1");
         }
 
-        OpenLongObjectHashMap index = buildVarPairsIndex(cts);
+        VarPairsIndex index = VarPairsIndexFactory.getInstance().buildIndex(cts);
         
         unify(index, cts);
     }
@@ -456,7 +456,7 @@ public class Helper
      * @param cts List of {@link ICompactTripletsStructureHolder}
      * @throws EmptyStructureException
      */
-    private static void unify(OpenLongObjectHashMap index, ObjectArrayList cts) throws EmptyStructureException
+    private static void unify(VarPairsIndex index, ObjectArrayList cts) throws EmptyStructureException
     {
         boolean someClausesRemoved = false;
 
@@ -466,6 +466,9 @@ public class Helper
         int ctsCount = cts.size();
         
         Object[] ctsElements = cts.elements();
+        
+        final int[] abci = new int[3];
+        final int[] abcj = new int[3];
         
         index.forEachPair(new LongObjectProcedure()
         {
@@ -479,9 +482,6 @@ public class Helper
                 ObjectArrayList tiers = (ObjectArrayList) value;
                 Object[] tiersElements = tiers.elements();
                 int tierCount = tiers.size();
-                
-                int[] abci = new int[3];
-                int[] abcj = new int[3];
                 
                 for (int i = 0; i < tierCount - 1; i++)
                 {
@@ -613,117 +613,6 @@ public class Helper
         return varName3;
     }
     
-    /**
-     * 
-     * @param cts List of {@link ICompactTripletsStructureHolder}
-     * @return
-     * @throws EmptyStructureException
-     */
-    private static OpenLongObjectHashMap buildVarPairsIndex(ObjectArrayList cts) throws EmptyStructureException
-    {
-        LOGGER.debug("Building pairs index...");
-        
-        int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
-        int tierCount = varCount - 2;
-        int ctsCount = cts.size();
-        
-        final OpenLongObjectHashMap result = new OpenLongObjectHashMap();
-        
-        for(int i = 0; i < ctsCount; i++)
-        {
-            ITabularFormula s = ((ICompactTripletsStructureHolder) cts.get(i)).getCTS();
-            if(s.isEmpty())
-            {
-                throw new EmptyStructureException(s);
-            }
-            
-            Object[] tierElements = s.getTiers().elements();
-            
-            for (int j = 0; j < tierCount; j++)
-            {
-                ITier tier = (ITier) tierElements[j];
-                
-                ((SimpleTier)tier).setFormula(s);
-                
-                addTier(result, tier.getAName(), tier.getBName(), tier);
-                addTier(result, tier.getAName(), tier.getCName(), tier);
-                addTier(result, tier.getBName(), tier.getCName(), tier);
-            }
-        }
-        
-        final LongArrayList toBeRemoved = new LongArrayList();
-        
-        result.forEachPair(new LongObjectProcedure()
-        {
-            public boolean apply(long key, Object value)
-            {
-                //  List of ITier
-                ObjectArrayList tiers = (ObjectArrayList) value;
-                if (tiers.size() < 2)
-                {
-                    toBeRemoved.add(key);
-                }
-                else
-                {
-                    ITabularFormula formula = ((ITier)tiers.get(0)).getFormula();
-                    for (int i = 1; i < tiers.size(); i++)
-                    {
-                        if (formula != ((ITier)tiers.get(i)).getFormula())
-                        {
-                            //  Found distinct formulas
-                            return true;
-                        }
-                    }
-                    //  All triplets are from the same formula
-                    toBeRemoved.add(key);
-                }
-                return true;
-            }
-        });
-        
-        int size = toBeRemoved.size();
-        for (int i = 0; i < size; i++)
-        {
-            result.removeKey(toBeRemoved.getQuick(i));
-        }
-        LOGGER.debug("Removed {} triplet permutations from index", size);
-        
-        return result;
-    }
-
-    private static void addTier(OpenLongObjectHashMap hash, int varName1, int varName2, ITier tier)
-    {
-        long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
-
-        if (EnableAssertions)
-        {
-            int varName1_ = (int) (key >> 21);
-            int varName2_ = (int) (key & 0x1FFFFF);
-    
-            if (((varName1 != varName1_) && (varName1 != varName2_))
-                    || ((varName2 != varName1_) && (varName2 != varName2_)))
-            {
-                throw new AssertionError("Bad hash");
-            }
-        }
-
-        //  List of ITier
-        ObjectArrayList tiers = (ObjectArrayList) hash.get(key);
-        
-        if (tiers == null)
-        {
-            hash.put(key, new ObjectArrayList(new ITier[] {tier}));
-        }
-        else
-        {
-            if (!tier.hasVariable(varName1) || !tier.hasVariable(varName2))
-            {
-                throw new IllegalStateException();
-            }
-            tiers.add(tier);
-        }
-    }
-
     /**
      * 
      * @param filenamePrefix
@@ -1106,6 +995,42 @@ public class Helper
         }
     }
 
+    private static class StructuresForConcordantShift
+    {
+        public ObjectArrayList substructureEdges;
+        public OpenIntObjectHashMap hsIntersections;
+        public ObjectArrayList coincidentIntersections;
+        public StructuresForConcordantShift(int hssSize)
+        {
+            substructureEdges = new ObjectArrayList(hssSize);
+            hsIntersections = new OpenIntObjectHashMap(hssSize);
+            coincidentIntersections = new ObjectArrayList(hssSize);
+            for (int h = 0; h < hssSize; h++)
+            {
+                hsIntersections.put(h, new ObjectArrayList(8));
+            }
+        }
+        public void clear()
+        {
+            substructureEdges.clear();
+            coincidentIntersections.clear();
+            int hssSize = hsIntersections.size();
+            for (int h = 0; h < hssSize; h++)
+            {
+                hsIntersections.forEachPair(new IntObjectProcedure()
+                {
+                    public boolean apply(int key, Object value)
+                    {
+                        ((ObjectArrayList) value).clear();
+                        return true;
+                    }
+                });
+            }
+        }
+    }
+    
+    private static StructuresForConcordantShift structuresForConcordantShift;
+    
     /**
      * 
      * @param hss
@@ -1117,8 +1042,16 @@ public class Helper
     private static ObjectArrayList concordantShift(final ObjectArrayList hss, int nextTierIndex, int tierKeyOfTheVertexToShift, int cName, Value cValue,
             int vertexIndex, int verticesCount)
     {
-        ObjectArrayList substructureEdges = new ObjectArrayList(hss.size());
-
+        if (structuresForConcordantShift == null)
+        {
+            structuresForConcordantShift = new StructuresForConcordantShift(hss.size());
+        }
+        else
+        {
+            //  Performance improvement: Reuse structures
+            structuresForConcordantShift.clear();
+        }
+        
         //  Parallel concretization
         int prevTierIndex = nextTierIndex - 1;
         for (int h = 0; h < hss.size(); h++)
@@ -1129,9 +1062,9 @@ public class Helper
             //  Work with a copy of substructure-vertex to keep original substructure the same
             ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) vertexToShift.getCTS().clone();
             substructureEdge.concretize(cName, cValue);
-            substructureEdges.add(substructureEdge);
+            structuresForConcordantShift.substructureEdges.add(substructureEdge);
         }
-
+        
         try
         {
             if (LOGGER.isDebugEnabled())
@@ -1140,14 +1073,14 @@ public class Helper
                         new Object[] { SimpleTripletValueFactory.getTripletValue(tierKeyOfTheVertexToShift), prevTierIndex + 1, 
                         ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() });
             }
-            unifyIntermediateSubstructures(substructureEdges);
+            unifyIntermediateSubstructures(structuresForConcordantShift.substructureEdges);
         }
         catch (EmptyStructureException e)
         {
             //  If substructure-edge become empty after concretization step, then resulting substructure-edge will also be empty.
             //  And if substructure-edge is empty at least in one HS, it will be empty in the entire HSS
-            clear(substructureEdges);
-            return substructureEdges;
+            clear(structuresForConcordantShift.substructureEdges);
+            return structuresForConcordantShift.substructureEdges;
         }
         
         IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
@@ -1158,89 +1091,92 @@ public class Helper
             //  Parallel intersection
             int sTierSize = ((OpenIntObjectHashMap) basicGraph.getTiers().get(s)).size();
             
-            OpenIntObjectHashMap hsIntersections = new OpenIntObjectHashMap();
             for (int h = 0; h < hss.size(); h++)
             {
                 IHyperStructure hs = (IHyperStructure) hss.get(h);
                 OpenIntObjectHashMap sTierVertices = (OpenIntObjectHashMap) hs.getTiers().get(s);
-                ObjectArrayList intersections = new ObjectArrayList();
-                hsIntersections.put(h, intersections);
+                ObjectArrayList intersections = (ObjectArrayList) structuresForConcordantShift.hsIntersections.get(h);
+                intersections.clear();
                 
                 for (int sv = 0; sv < sTierSize; sv++)
                 {
                     IVertex sTierVertex = (IVertex) sTierVertices.values().get(sv);
                     
-                    ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) substructureEdges.get(h)).clone();
+                    ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structuresForConcordantShift.substructureEdges.get(h)).clone();
                     clone.intersect(sTierVertex.getCTS());
                     intersections.add(clone);
-                };
+                }
+                
+                ((ICompactTripletsStructure) structuresForConcordantShift.substructureEdges.get(h)).releaseClone();
             }
             
             //  Unify intersections
-            int intersectionsSize = ((ObjectArrayList) hsIntersections.get(0)).size();
+            int intersectionsSize = ((ObjectArrayList) structuresForConcordantShift.hsIntersections.get(0)).size();
             
             if (intersectionsSize == 0)
             {
-                clear(substructureEdges);
-                return substructureEdges;
+                clear(structuresForConcordantShift.substructureEdges);
+                return structuresForConcordantShift.substructureEdges;
             }
             
             for (int v = 0; v < intersectionsSize; v++)
             {
-                ObjectArrayList coincidentIntersections = new ObjectArrayList(hss.size());
+                structuresForConcordantShift.coincidentIntersections.clear();
                 for (int h = 0; h < hss.size(); h++)
                 {
-                    ObjectArrayList intersections = (ObjectArrayList) hsIntersections.get(h);
+                    ObjectArrayList intersections = (ObjectArrayList) structuresForConcordantShift.hsIntersections.get(h);
                     ICompactTripletsStructure intersection = (ICompactTripletsStructure) intersections.get(v);
-                    coincidentIntersections.add(intersection);
+                    structuresForConcordantShift.coincidentIntersections.add(intersection);
                 }
                 
                 try
                 {
-                    unifyIntermediateSubstructures(coincidentIntersections);
+                    unifyIntermediateSubstructures(structuresForConcordantShift.coincidentIntersections);
                 }
                 catch(EmptyStructureException e)
                 {
                     //  If some intersection is empty => all intersections should be empty
-                    clear(coincidentIntersections);
+                    clear(structuresForConcordantShift.coincidentIntersections);
                 }
-                
             }
-
+            
             //  Parallel union
             
             for (int h = 0; h < hss.size(); h++)
             {
-                ObjectArrayList intersections = (ObjectArrayList) hsIntersections.get(h);
+                ObjectArrayList intersections = (ObjectArrayList) structuresForConcordantShift.hsIntersections.get(h);
                 ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) intersections.get(0);
-                substructureEdges.set(h, substructureEdge);
+                structuresForConcordantShift.substructureEdges.set(h, substructureEdge);
             }
-
+            
             for (int ks = 1; ks < intersectionsSize; ks++)
             {
                 for (int h = 0; h < hss.size(); h++)
                 {
-                    ObjectArrayList intersections = (ObjectArrayList) hsIntersections.get(h);
-                    ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) substructureEdges.get(h);
-                    substructureEdge.union((ICompactTripletsStructure) intersections.get(ks));
-                    substructureEdges.set(h, substructureEdge);
+                    ObjectArrayList intersections = (ObjectArrayList) structuresForConcordantShift.hsIntersections.get(h);
+                    ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) structuresForConcordantShift.substructureEdges.get(h);
+                    ICompactTripletsStructure intersection = (ICompactTripletsStructure) intersections.get(ks);
+                    substructureEdge.union(intersection);
+                    
+                    intersection.releaseClone();
                 }
             }
             
             try
             {
                 LOGGER.info("Unify unions after parallel filtration: vertexIndex = {} of {}, sTierIndex = {} of {}, nextTierIndex = {} of {}",
-                        new Object[] { vertexIndex, verticesCount - 1, s, prevTierIndex - 1, nextTierIndex, ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
-                unifyIntermediateSubstructures(substructureEdges);
+                        new Object[] { vertexIndex, verticesCount - 1, s, prevTierIndex - 1, nextTierIndex, 
+                        ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
+                unifyIntermediateSubstructures(structuresForConcordantShift.substructureEdges);
             }
             catch (EmptyStructureException e)
             {
-                clear(substructureEdges);
-                return substructureEdges;
+                clear(structuresForConcordantShift.substructureEdges);
+                return structuresForConcordantShift.substructureEdges;
             }
         }
-
-        return substructureEdges;
+        
+        return structuresForConcordantShift.substructureEdges;
     }
 
     

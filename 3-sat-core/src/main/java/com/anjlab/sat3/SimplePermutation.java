@@ -33,12 +33,15 @@ public final class SimplePermutation implements IPermutation
     private final IntArrayList permutation;
     private final OpenIntIntHashMap permutationHash;
     private final OpenIntIntHashMap positionHash;
+    private boolean elementsHashDirty;
+    private int elementsHash;
     
     public SimplePermutation()
     {
         permutation = new IntArrayList();
         permutationHash = new OpenIntIntHashMap();
         positionHash = new OpenIntIntHashMap();
+        elementsHashDirty = true;
     }
 
     public boolean contains(int varName)
@@ -71,6 +74,8 @@ public final class SimplePermutation implements IPermutation
         
         permutationHash.put(varName, index);
         positionHash.put(index, varName);
+        
+        elementsHashDirty = true;
     }
 
     /**
@@ -98,6 +103,8 @@ public final class SimplePermutation implements IPermutation
         }
         
         positionHash.put(index, varName);
+        
+        elementsHashDirty = true;
     }
 
     public void shiftToStart(int from, int to)
@@ -120,6 +127,8 @@ public final class SimplePermutation implements IPermutation
             permutationHash.put(varName, i);
             positionHash.put(i, varName);
         }
+        
+        elementsHashDirty = true;
     }
     
     public void shiftToEnd(int from, int to)
@@ -142,6 +151,8 @@ public final class SimplePermutation implements IPermutation
             permutationHash.put(varName, i);
             positionHash.put(i, varName);
         }
+        
+        elementsHashDirty = true;
     }
     
     public void swap(int varName1, int varName2)
@@ -157,6 +168,8 @@ public final class SimplePermutation implements IPermutation
         
         permutation.setQuick(index1, varName2);
         permutation.setQuick(index2, varName1);
+        
+        elementsHashDirty = true;
     }
     
     private void assertNotContains(int varName)
@@ -204,5 +217,21 @@ public final class SimplePermutation implements IPermutation
         }
         
         return permutation;
+    }
+    
+    public int elementsHash()
+    {
+        if (elementsHashDirty)
+        {
+            //  Update elementsHash
+            if (permutation.size() > permutation.elements().length)
+            {
+                permutation.trimToSize();
+            }
+            
+            elementsHash = Arrays.hashCode(permutation.elements());
+        }
+        
+        return elementsHash;
     }
 }

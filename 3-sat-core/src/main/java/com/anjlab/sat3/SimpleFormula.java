@@ -51,7 +51,14 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         tiersHash2 = new OpenLongObjectHashMap();
         tiersHash3 = new OpenLongObjectHashMap();
     }
-
+    
+    public SimpleFormula(IPermutation permutation)
+    {
+        this.permutation = permutation;
+        tiers = new ObjectArrayList();
+        tiersHash3 = new OpenLongObjectHashMap();
+    }
+    
     /**
      * Creates copy of <code>formula</code>. 
      * 
@@ -74,6 +81,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         for (int i = 0; i < tiersCount; i++)
         {
             ITier clone = ((ITier) tiersElements[i]).clone();
+            ((SimpleTier) clone).setFormula(this);
             tiers.add(clone);
             if (fillTiersHash3)
             {
@@ -81,14 +89,14 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             }
         }
     }
-
-    public SimpleFormula(IPermutation permutation)
-    {
-        this.permutation = permutation;
-        tiers = new ObjectArrayList();
-        tiersHash3 = new OpenLongObjectHashMap();
-    }
-
+    
+    private static final SimpleObjectPool formulaPool = new SimpleObjectPool();
+    
+    private static int releaseEmptyCount = 0;
+    private static int cloneEmptyCount = 0;
+    private static int missesCount = 0;
+    private static int successCount = 0;
+    
     /**
      * Creates copy of this formula. 
      * 
@@ -98,7 +106,88 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
      */
     public SimpleFormula clone()
     {
-        return new SimpleFormula(this, false);
+        if (tiers.size() == 0)
+        {
+            cloneEmptyCount++;
+            return new SimpleFormula(this, false);
+        }
+        
+        SimpleFormula formula = (SimpleFormula) formulaPool.acquire(permutation.elementsHash());
+        if (formula == null)
+        {
+            missesCount++;
+            formula = new SimpleFormula(this, false);
+        }
+        else
+        {
+            successCount++;
+            //  Populate values from this instance to formula from pool
+            if (Helper.EnableAssertions)
+            {
+                if (!permutation.sameAs(formula.permutation))
+                {
+                    throw new AssertionError("Permutation doesn't match");
+                }
+            }
+            int tiersCount = tiers.size();
+            int formulaTiersCount = formula.tiers.size();
+            
+            if (formulaTiersCount == 0)
+            {
+                Object[] tiersElements = tiers.elements();
+                for (int j = 0; j < tiersCount; j++)
+                {
+                    ITier tier = ((ITier) tiersElements[j]).clone();
+                    ((SimpleTier) tier).setFormula(this);
+                    //  All formula's tiers are in pool
+                    formula.tiers.add(tier);
+                }
+            }
+            else
+            {
+                Object[] tiersElements = tiers.elements();
+                for (int j = 0; j < tiersCount; j++)
+                {
+                    ITier tier = ((ITier) tiersElements[j]).clone();
+                    ((SimpleTier) tier).setFormula(this);
+                    //  All formula's tiers are in pool
+                    formula.tiers.setQuick(j, tier);
+                }
+            }
+        }
+        return formula;
+    }
+    
+    public void releaseClone()
+    {
+        if (tiers.size() == 0)
+        {
+            releaseEmptyCount++;
+            //  Do not release empty formulas to pool
+//            return;
+        }
+        tiersReleaseClone();
+        formulaPool.release(permutation.elementsHash(), this);
+    }
+    
+    public void clear()
+    {
+        tiersReleaseClone();
+        tiers.clear();
+        
+        if (tiersHash1 != null) tiersHash1.clear();
+        if (tiersHash2 != null) tiersHash2.clear();
+        if (tiersHash3 != null) tiersHash3.clear();
+    }
+
+    private void tiersReleaseClone()
+    {
+        Object[] tiersElements = tiers.elements();
+        int tiersCount = tiers.size();
+        for (int j = 0; j < tiersCount; j++)
+        {
+            ((ITier) tiersElements[j]).releaseClone();
+        }
     }
     
     public int getClausesCount() {
@@ -552,7 +641,9 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             for (int i = 0; i < otherTiers.size(); i++)
             {
                 ITier otherTier = (ITier) otherTiers.get(i);
-                tiers.add(otherTier.clone());
+                ITier clone = otherTier.clone();
+                ((SimpleTier) clone).setFormula(this);
+                tiers.add(clone);
             }
         }
         else
@@ -709,15 +800,6 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     public boolean isEmpty()
     {
         return tiers.size() == 0;
-    }
-
-    public void clear()
-    {
-        tiers.clear();
-        
-        if (tiersHash1 != null) tiersHash1.clear();
-        if (tiersHash2 != null) tiersHash2.clear();
-        if (tiersHash3 != null) tiersHash3.clear();
     }
     
     public String toString()
@@ -908,7 +990,8 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                     {
                         return true;
                     }
-                } finally
+                }
+                finally
                 {
                     tier.transposeTo(abc);
                 }

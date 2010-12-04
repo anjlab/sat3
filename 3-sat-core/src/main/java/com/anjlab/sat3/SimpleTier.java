@@ -50,12 +50,33 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
         super(tier.getABC().clone(), tier.getCanonicalName(), tier.canonicalHashCode());
     }
     
+    private static final SimpleObjectPool tierPool = new SimpleObjectPool();
+    
     public ITier clone()
     {
-        SimpleTier tier = new SimpleTier(this);
+        SimpleTier tier;
+        tier = (SimpleTier) tierPool.acquire(getPoolKey());
+        if (tier == null)
+        {
+            tier = new SimpleTier(this);
+        }
         tier.keys_73516240 = keys_73516240;
         tier.size = size;
         return tier;
+    }
+    private int getPoolKey()
+    {
+        int result = Arrays.hashCode(getABC());
+        if (formula != null)
+        {
+            result = 31 * result + formula.getPermutation().elementsHash();
+        }
+        return result;
+    }
+    
+    public void releaseClone()
+    {
+        tierPool.release(getPoolKey(), this);
     }
     
     public void add(ITripletValue triplet)
@@ -461,6 +482,10 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 
     public void setFormula(ITabularFormula formula)
     {
+        if (this.formula != null && !this.formula.getPermutation().sameAs(formula.getPermutation()))
+        {
+            throw new AssertionError("Cannot reuse tier in formula with different permutation");
+        }
         this.formula = formula;
     }
     
