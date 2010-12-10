@@ -199,32 +199,7 @@ public class Program
                 return;
             }
             
-            stopWatch.start("Unify all CTS");
-            Helper.unify(ct);
-            timeElapsed = stopWatch.stop();
-            printFormulas(ct);
-            stopWatch.printElapsed();
-
-            statistics.put(Helper.CTS_UNIFICATION_TIME, String.valueOf(timeElapsed));
-            
-            LOGGER.info("CTF: {}", ct.size());
-            
-            ObjectArrayList hss = null;
-            try
-            {
-                stopWatch.start("Create HSS");
-                hss = Helper.createHyperStructuresSystem(ct, statistics);
-            }
-            finally
-            {
-                timeElapsed = stopWatch.stop();
-                stopWatch.printElapsed();
-                if (hss != null)
-                {
-                    statistics.put(Helper.BASIC_CTS_FINAL_CLAUSES_COUNT, String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
-                }
-                statistics.put(Helper.HSS_CREATION_TIME, String.valueOf(timeElapsed));
-            }
+            ObjectArrayList hss = unifyAndCreateHSS(statistics, stopWatch, ct);
             
             String hssPath = formulaFile + "-hss";
             stopWatch.start("Save HSS to " + hssPath + "...");
@@ -255,6 +230,38 @@ public class Program
         }
     }
 
+    private static ObjectArrayList unifyAndCreateHSS(Properties statistics, StopWatch stopWatch, ObjectArrayList cts)
+    {
+        long timeElapsed;
+        stopWatch.start("Unify all CTS");
+        Helper.unify(cts);
+        timeElapsed = stopWatch.stop();
+        printFormulas(cts);
+        stopWatch.printElapsed();
+
+        statistics.put(Helper.CTS_UNIFICATION_TIME, String.valueOf(timeElapsed));
+        
+        LOGGER.info("CTF: {}", cts.size());
+        
+        ObjectArrayList hss = null;
+        try
+        {
+            stopWatch.start("Create HSS");
+            hss = Helper.createHyperStructuresSystem(cts, statistics);
+        }
+        finally
+        {
+            timeElapsed = stopWatch.stop();
+            stopWatch.printElapsed();
+            if (hss != null)
+            {
+                statistics.put(Helper.BASIC_CTS_FINAL_CLAUSES_COUNT, String.valueOf(((IHyperStructure) hss.get(0)).getBasicCTS().getClausesCount()));
+            }
+            statistics.put(Helper.HSS_CREATION_TIME, String.valueOf(timeElapsed));
+        }
+        return hss;
+    }
+
     private static void findHSSRoute(CommandLine commandLine, String formulaFile,
             Properties statistics, StopWatch stopWatch,
             ITabularFormula formula, ITabularFormula formulaClone,
@@ -265,7 +272,7 @@ public class Program
         //  TODO Configure hssTempPath using CL options
         String hssTempPath = hssPath + "-temp"; 
         stopWatch.start("Find HSS route");
-        ObjectArrayList route = Helper.reduceHSS(hss, hssTempPath);
+        ObjectArrayList route = Helper.findHSSRouteByReduce(hss, hssTempPath);
         timeElapsed = stopWatch.stop();
         stopWatch.printElapsed();
         
@@ -290,7 +297,7 @@ public class Program
         }
         
         stopWatch.start("Write HSS as image to " + hssImageFile);
-        Helper.writeToImage(((SimpleVertex) route.get(0)).getHyperStructure(), route, null, hssImageFile);
+        Helper.writeToImage(((SimpleVertex) route.get(route.size() - 1)).getHyperStructure(), route, null, hssImageFile);
         stopWatch.stop();
         stopWatch.printElapsed();
         

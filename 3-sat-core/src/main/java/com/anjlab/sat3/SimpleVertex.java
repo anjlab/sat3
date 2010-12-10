@@ -138,4 +138,36 @@ public final class SimpleVertex implements IVertex
              ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex + 1)).get(tripletValue.getAdjoinRightTarget2().getTierKey())
              : null; 
     }
+    public IVertex getTopVertex1()
+    { 
+        IVertex topVertex = tierIndex > 0
+                          ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource1().getTierKey())
+                          : null;
+                          
+        //  Check has edge
+        if (topVertex != null)
+        {
+            if (topVertex.getBottomVertex1() == this || topVertex.getBottomVertex2() == this)
+            {
+                return topVertex;
+            }
+        }
+        return null;
+    }
+    public IVertex getTopVertex2()
+    {
+        IVertex topVertex = tierIndex > 0
+                          ? (IVertex) ((OpenIntObjectHashMap) hyperStructure.getTiers().get(tierIndex - 1)).get(tripletValue.getAdjoinLeftSource2().getTierKey())
+                          : null;
+                            
+        //  Check has edge
+        if (topVertex != null)
+        {
+            if (topVertex.getBottomVertex1() == this || topVertex.getBottomVertex2() == this)
+            {
+                return topVertex;
+            }
+        }
+        return null;
+    }
 }

@@ -55,10 +55,6 @@ public interface ITabularFormula
     ObjectArrayList findTiersFor(int varName1, int varName2);
     void sortTiers();
     ITabularFormula clone();
-    /**
-     * Return this instance to the {@link TabularFormulaFactory}
-     */
-    void releaseClone();
     
     /**
      * 

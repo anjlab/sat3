@@ -375,9 +375,13 @@ public class Helper
         {
             is = new FileInputStream(new File(filename));
             
-            //  TODO Clear SimpleFormula's tierHash3 after formula loaded
+            ITabularFormula formula = formulaReader.readFormula(is);
             
-            return formulaReader.readFormula(is);
+            //  Clear SimpleFormula's tierHash3 after formula loaded
+            
+            ((SimpleFormula) formula).clearTierHash3();
+            
+            return formula;
         }
         finally
         {
@@ -700,6 +704,8 @@ public class Helper
             
             IHyperStructure basicGraph = createFirstHSSTier(cts, hss, sBasic, basicTiers);
             
+            StructuresForConcordantShift structuresForConcordantShift = new StructuresForConcordantShift(hss.size());
+            
             for (int j = 1; j < basicTiers.size(); j++)
             {
                 if (LOGGER.isDebugEnabled())
@@ -742,13 +748,15 @@ public class Helper
                     if (basicNextTier.contains(adjoinTarget))
                     {
                         //  calculate substructure-edge for target edge 1
-                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom1, k, keysSize);
+                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom1, 
+                                                          k, keysSize, k == 0, structuresForConcordantShift);
                     }
                     adjoinTarget = tripletValue.getAdjoinRightTarget2();
                     if (basicNextTier.contains(adjoinTarget))
                     {
                         //  calculate substructure-edge for target edge 2
-                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom2, k, keysSize);
+                        createOrUpdateNextTierVertexInHSS(nextTierIndex, basicNextTier, hss, tierKeyOfTheVertexToShift, adjoinTarget, EdgeKind.Bottom2, 
+                                                          k, keysSize, k == 0, structuresForConcordantShift);
                     }
                 }
                 
@@ -950,12 +958,12 @@ public class Helper
     private static void createOrUpdateNextTierVertexInHSS(final int nextTierIndex,
             final ITier basicNextTier, final ObjectArrayList hss,
             int tierKeyOfTheVertexToShift, ITripletValue adjoinTarget, EdgeKind edgeKind,
-            int vertexIndex, int verticesCount)
+            int vertexIndex, int verticesCount, boolean showProgressToLog, StructuresForConcordantShift structuresForConcordantShift)
     {
         ObjectArrayList substructureEdges = concordantShift(
                 hss, nextTierIndex, tierKeyOfTheVertexToShift, basicNextTier.getCName(),
                 adjoinTarget.isNotC() ? Value.AllNegative : Value.AllPlain,
-                vertexIndex, verticesCount);
+                vertexIndex, verticesCount, showProgressToLog, structuresForConcordantShift);
 
         for (int h = 0; h < hss.size(); h++)
         {
@@ -1029,8 +1037,6 @@ public class Helper
         }
     }
     
-    private static StructuresForConcordantShift structuresForConcordantShift;
-    
     /**
      * 
      * @param hss
@@ -1040,17 +1046,10 @@ public class Helper
      * @return List of ICompactTripletsStructure
      */
     private static ObjectArrayList concordantShift(final ObjectArrayList hss, int nextTierIndex, int tierKeyOfTheVertexToShift, int cName, Value cValue,
-            int vertexIndex, int verticesCount)
+            int vertexIndex, int verticesCount, boolean showProgressToLog, StructuresForConcordantShift structuresForConcordantShift)
     {
-        if (structuresForConcordantShift == null)
-        {
-            structuresForConcordantShift = new StructuresForConcordantShift(hss.size());
-        }
-        else
-        {
-            //  Performance improvement: Reuse structures
-            structuresForConcordantShift.clear();
-        }
+        //  Performance improvement: Reuse structures
+        structuresForConcordantShift.clear();
         
         //  Parallel concretization
         int prevTierIndex = nextTierIndex - 1;
@@ -1106,8 +1105,6 @@ public class Helper
                     clone.intersect(sTierVertex.getCTS());
                     intersections.add(clone);
                 }
-                
-                ((ICompactTripletsStructure) structuresForConcordantShift.substructureEdges.get(h)).releaseClone();
             }
             
             //  Unify intersections
@@ -1157,16 +1154,27 @@ public class Helper
                     ICompactTripletsStructure substructureEdge = (ICompactTripletsStructure) structuresForConcordantShift.substructureEdges.get(h);
                     ICompactTripletsStructure intersection = (ICompactTripletsStructure) intersections.get(ks);
                     substructureEdge.union(intersection);
-                    
-                    intersection.releaseClone();
                 }
             }
             
             try
             {
-                LOGGER.info("Unify unions after parallel filtration: vertexIndex = {} of {}, sTierIndex = {} of {}, nextTierIndex = {} of {}",
-                        new Object[] { vertexIndex, verticesCount - 1, s, prevTierIndex - 1, nextTierIndex, 
-                        ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
+                if (showProgressToLog && s == 0)
+                {
+                    LOGGER.info("Unify unions after parallel filtration: vertexIndex = {} of {}, sTierIndex = {} of {}, nextTierIndex = {} of {}",
+                                new Object[] { vertexIndex, verticesCount - 1, s, prevTierIndex - 1, nextTierIndex, 
+                                ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
+                }
+                else
+                {
+                    //  Write the same at debug level
+                    if (LOGGER.isDebugEnabled())
+                    {
+                        LOGGER.debug("Unify unions after parallel filtration: vertexIndex = {} of {}, sTierIndex = {} of {}, nextTierIndex = {} of {}",
+                                     new Object[] { vertexIndex, verticesCount - 1, s, prevTierIndex - 1, nextTierIndex, 
+                                     ((IHyperStructure) hss.get(0)).getBasicCTS().getTiers().size() - 1 });
+                    }
+                }
                 unifyIntermediateSubstructures(structuresForConcordantShift.substructureEdges);
             }
             catch (EmptyStructureException e)
@@ -1179,7 +1187,6 @@ public class Helper
         return structuresForConcordantShift.substructureEdges;
     }
 
-    
     private static void unifyIntermediateSubstructures(ObjectArrayList cts)
     {
         if (cts.size() > 1)
@@ -1662,7 +1669,7 @@ public class Helper
      * @param hss
      * @return List of {@link IVertex} that form non-empty (n-2)-intersection, i.e. hyperstructure route.
      */
-    private static ObjectArrayList findHSSRoute(ObjectArrayList hss)
+    private static ObjectArrayList quickFindHSSRoute(ObjectArrayList hss)
     {
         IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
         int tiersCount = basicGraph.getTiers().size();
@@ -2059,6 +2066,7 @@ public class Helper
             
             structures.set(h, clone);
         }
+        unifyIntermediateSubstructures(structures);
     }
     
     /**
@@ -2408,10 +2416,9 @@ public class Helper
                                             + "-tier-" + leadingZeros(j, tiersLength)
                                             + "-" + triplet + ".cnf";
                     
-                    String substructureVertexPath = hssPath + File.separator 
-                                                    + vertexFilename; 
+                    String substructureVertexPath = hssPath + File.separator + vertexFilename; 
                     
-                    LOGGER.info("Saving ...", substructureVertexPath);
+                    LOGGER.info("Saving {}...", substructureVertexPath);
                     saveToDIMACSFileFormat(vertex.getCTS(), substructureVertexPath);
                     LOGGER.info("done");
                     
@@ -2421,7 +2428,7 @@ public class Helper
             }
             
             String verticesInfoPath = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + "-vertices.properties";
-            LOGGER.info("Saving ...", verticesInfoPath);
+            LOGGER.info("Saving {}...", verticesInfoPath);
             OutputStream os = new FileOutputStream(new File(verticesInfoPath));
             try
             {
@@ -2445,9 +2452,9 @@ public class Helper
         return result;
     }
 
-    public static ObjectArrayList reduceHSS(ObjectArrayList hss, String hssTempPath) throws IOException
+    public static ObjectArrayList findHSSRouteByReduce(ObjectArrayList hss, String hssTempPath) throws IOException
     {
-        ObjectArrayList route = findHSSRoute(hss);
+        ObjectArrayList route = quickFindHSSRoute(hss);
         if (isValidHSSRoute(route))
         {
             return route;
@@ -2476,9 +2483,7 @@ public class Helper
                     
                     ITier firstTier = basicCTS.getTier(0);
                     IVertex firstTierVertex = (IVertex) result.get(0);
-                    
                     firstTier.intersect(firstTierVertex.getTripletValue());
-                    
                     basicCTS.cleanup(0, 0);
                     
                     //  Unify CTS
@@ -2495,7 +2500,7 @@ public class Helper
                     hss = createHyperStructuresSystem(cts, statistics);
                     saveHSS(hssTempPathReduced, hss);
                     //  Check if its possible to find HSS route now
-                    route = findHSSRoute(hss);
+                    route = quickFindHSSRoute(hss);
                     if (isValidHSSRoute(route))
                     {
                         return route;
@@ -2549,7 +2554,7 @@ public class Helper
                     hss = createHyperStructuresSystem(cts, statistics);
                     saveHSS(hssTempPathReduced, hss);
                     //  Check if its possible to find HSS route now
-                    route = findHSSRoute(hss);
+                    route = quickFindHSSRoute(hss);
                     if (isValidHSSRoute(route))
                     {
                         return route;
@@ -2621,7 +2626,7 @@ public class Helper
                     }
                     saveHSS(hssTempPathReduced, hss);
                     //  Check if its possible to find HSS route now
-                    route = findHSSRoute(hss);
+                    route = quickFindHSSRoute(hss);
                     if (isValidHSSRoute(route))
                     {
                         return route;
@@ -2654,4 +2659,155 @@ public class Helper
         return true;
     }
     
+    public static ObjectArrayList findHSSRouteBottomToTop(ObjectArrayList hss)
+    {
+        IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
+        int tiersCount = basicGraph.getTiers().size();
+
+        ObjectArrayList result = new ObjectArrayList(tiersCount);
+        ObjectArrayList structures = new ObjectArrayList();
+
+        OpenIntObjectHashMap verticesFromLastTiers = new OpenIntObjectHashMap();
+        fillVerticesFromLastTier(hss, structures, verticesFromLastTiers);
+
+        byte bottomVertexTierKey = ((IVertex)verticesFromLastTiers.get(0)).getTripletValue().getTierKey();
+        
+        for (int j = tiersCount - 2; j >= 0; j--)
+        {
+            ObjectArrayList intersections = new ObjectArrayList();
+            
+            boolean allNotEmpty = true;
+            //  Check topVertex1
+            for (int h = 0; h < hss.size(); h++)
+            {
+                IHyperStructure hs = (IHyperStructure) hss.get(h);
+                
+                OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) hs.getTiers().get(j + 1);
+                
+                IVertex bottomVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
+                
+                IVertex topVertex1 = bottomVertex.getTopVertex1();
+
+                if (topVertex1 == null)
+                {
+                    allNotEmpty = false;
+                    break;
+                }
+                
+                ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
+                
+                clone.intersect(topVertex1.getCTS());
+                
+                if (clone.isEmpty())
+                {
+                    allNotEmpty = false;
+                    break;
+                }
+                
+                intersections.add(clone);
+            }
+            
+            if (allNotEmpty)
+            {
+                try
+                {
+                    unifyIntermediateSubstructures(intersections);
+                    
+                    //  Intersection with topVertex1
+                    OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) basicGraph.getTiers().get(j + 1);
+                    
+                    IVertex bottomTierVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
+                    
+                    IVertex topVertex = bottomTierVertex.getTopVertex1();
+                    
+                    result.beforeInsert(0, topVertex);
+                    
+                    bottomVertexTierKey = topVertex.getTripletValue().getTierKey();
+                    
+                    updateStructures(hss, structures, j, bottomVertexTierKey);
+                    
+                    continue;
+                }
+                catch (EmptyStructureException e)
+                {
+                    allNotEmpty = false;
+                }
+            }
+            intersections = new ObjectArrayList();
+            allNotEmpty = true;
+            //  Check topVertex2
+            for (int h = 0; h < hss.size(); h++)
+            {
+                IHyperStructure hs = (IHyperStructure) hss.get(h);
+                
+                OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) hs.getTiers().get(j + 1);
+                
+                IVertex bottomVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
+                
+                IVertex topVertex2 = bottomVertex.getTopVertex2();
+
+                if (topVertex2 == null)
+                {
+                    allNotEmpty = false;
+                    break;
+                }
+                
+                ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
+                
+                clone.intersect(topVertex2.getCTS());
+                
+                if (clone.isEmpty())
+                {
+                    allNotEmpty = false;
+                    break;
+                }
+                
+                intersections.add(clone);
+            }
+            
+            if (allNotEmpty)
+            {
+                try
+                {
+                    unifyIntermediateSubstructures(intersections);
+                    
+                    //  Intersection with topVertex2
+                    OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) basicGraph.getTiers().get(j + 1);
+                    
+                    IVertex bottomTierVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
+                    
+                    IVertex topVertex = bottomTierVertex.getTopVertex2();
+                    
+                    result.beforeInsert(0, topVertex);
+                    
+                    bottomVertexTierKey = topVertex.getTripletValue().getTierKey();
+                    
+                    updateStructures(hss, structures, j, bottomVertexTierKey);
+                    
+                    continue;
+                }
+                catch (EmptyStructureException e)
+                {
+                    allNotEmpty = false;
+                }
+            }
+            
+            //  Note: For debug purposes only. 
+            result.beforeInsert(0, null);
+            
+            bottomVertexTierKey = ((IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).values().get(0)).getTripletValue().getTierKey();
+            
+            System.err.println("Implementation error: " + (j+1) + " tier was built with errors. Please provide CNF file to developers.");
+        }
+        
+        result.add(verticesFromLastTiers.get(0));
+        
+        if (result.size() != basicGraph.getTiers().size())
+        {
+            //  This shouldn't happen if the implementation is correct
+            throw new AssertionError("Valid hyperstructure must contain at least one non-empty (n-2)-intersection");
+        }
+        
+        return result;
+    }
 }
