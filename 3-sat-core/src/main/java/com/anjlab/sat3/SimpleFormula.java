@@ -609,16 +609,46 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             return;
         }
         
-        for (int i = 0; i < tiers.size(); i++)
+        //  XXX Test when implementation with partial cleanups be better 
+        //  than the full single cleanup. The value 100 in condition was taken 
+        //  based just on few runs.
+        
+        if (permutation.size() > 100)
         {
-            ITier tier = (ITier) tiers.get(i);
-            
-            ITier otherTier = (ITier) other.tiers.get(i);
-            
-            tier.intersect(otherTier);
+            for (int i = 0; i < tiers.size(); i++)
+            {
+                SimpleTier tier = (SimpleTier) tiers.get(i);
+                
+                SimpleTier otherTier = (SimpleTier) other.tiers.get(i);
+                
+                if (tier.keys_73516240 != otherTier.keys_73516240)
+                {
+                    tier.intersect(otherTier);
+                    
+                    //  Partial cleanup each time triplets get removed from tier
+                    cleanup(i, i);
+                    
+                    if (isEmpty())
+                    {
+                        break;
+                    }
+                }
+            }
         }
-
-        cleanup();
+        else
+        {
+            for (int i = 0; i < tiers.size(); i++)
+            {
+                ITier tier = (SimpleTier) tiers.get(i);
+                
+                ITier otherTier = (SimpleTier) other.tiers.get(i);
+                
+                tier.intersect(otherTier);
+            }
+            
+            //  Full single cleanup after all tiers been intersected
+            cleanup();
+        }
     }
 
     public boolean concretize(int varName, Value value)

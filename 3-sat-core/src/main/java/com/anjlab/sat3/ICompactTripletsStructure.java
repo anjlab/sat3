@@ -47,8 +47,8 @@ public interface ICompactTripletsStructure extends ITabularFormula
      * 
      * <p>Such formulas usually appear as a result of concretization of 'clean' formula.</p>
      * 
-     * @param from
-     * @param to
+     * @param from Tier index from (inclusive)
+     * @param to Tier index to (inclusive)
      * @return
      */
     CleanupStatus cleanup(int from, int to);
