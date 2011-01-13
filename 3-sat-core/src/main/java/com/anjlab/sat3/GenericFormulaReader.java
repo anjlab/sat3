@@ -27,10 +27,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cern.colt.list.IntArrayList;
 
 public class GenericFormulaReader implements IFormulaReader
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericFormulaReader.class);
+    
     private int originalVarCount = 0;
     private int n = 0;
     private int m = 0;
@@ -89,7 +94,7 @@ public class GenericFormulaReader implements IFormulaReader
             } 
         }
         
-        System.out.println("Original VarCount: " + originalVarCount + ". Final VarCount: " + n + ". Added: " + (n - originalVarCount));
+        LOGGER.debug("Original VarCount: " + originalVarCount + ". Final VarCount: " + n + ". Added: " + (n - originalVarCount));
         
         return formula;
     }

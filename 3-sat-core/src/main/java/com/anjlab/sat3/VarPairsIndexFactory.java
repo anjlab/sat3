@@ -24,6 +24,11 @@ public class VarPairsIndexFactory
         return instance;
     }
     
+    public void clear()
+    {
+        indexCache.clear();
+    }
+    
     public class VarPairsIndex
     {
         private OpenLongObjectHashMap index = new OpenLongObjectHashMap();

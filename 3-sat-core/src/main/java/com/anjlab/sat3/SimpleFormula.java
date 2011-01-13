@@ -111,7 +111,8 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         if (tiersHash3 != null) tiersHash3.clear();
     }
     
-    public int getClausesCount() {
+    public int getClausesCount()
+    {
         int clausesCount = 0;
         for (int i = 0; i < tiers.size(); i++)
         {
@@ -121,7 +122,8 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         return clausesCount;
     }
     
-    public int getVarCount() {
+    public int getVarCount()
+    {
         return permutation.size();
     }
     

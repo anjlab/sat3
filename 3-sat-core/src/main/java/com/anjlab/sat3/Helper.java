@@ -691,12 +691,14 @@ public class Helper
      */
     public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts, Properties statistics) throws EmptyStructureException
     {
+        VarPairsIndexFactory.getInstance().clear();
+        
         final ObjectArrayList hss = new ObjectArrayList();
         
         try
         {
             ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
-    
+            
             statistics.put(BASIC_CTS_INITIAL_CLAUSES_COUNT, String.valueOf(sBasic.getClausesCount()));
             
             //  List of ITier
@@ -1187,7 +1189,7 @@ public class Helper
         return structuresForConcordantShift.substructureEdges;
     }
 
-    private static void unifyIntermediateSubstructures(ObjectArrayList cts)
+    private static void unifyIntermediateSubstructures(ObjectArrayList cts) throws EmptyStructureException
     {
         if (cts.size() > 1)
         {
@@ -1671,8 +1673,17 @@ public class Helper
      */
     private static ObjectArrayList quickFindHSSRoute(ObjectArrayList hss)
     {
+        LOGGER.info("Running quickFindHSSRoute");
+        
         IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
         int tiersCount = basicGraph.getTiers().size();
+        
+        //  For test purposes only 
+//        if (!basicGraph.getBasicCTS().isElementary())
+//        {
+//            LOGGER.info("Skipping quickFindHSSRoute to test full HSS reduction to elementary HSS");
+//            return new ObjectArrayList(new Object[] { null });
+//        }
 
         ObjectArrayList result = new ObjectArrayList(tiersCount);
         ObjectArrayList structures = new ObjectArrayList();
@@ -1817,21 +1828,19 @@ public class Helper
                 continue;
             }
             
-            //  Note: For debug purposes only. 
+            //  Note: For debug purposes, also isValidHSSRoute 
+            //  will check the route for absence of null vertices 
+            //  to ensure the route is valid 
             result.add(null);
             
             prevVertexTierKey = ((IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).values().get(0)).getTripletValue().getTierKey();
             
-            System.err.println("Implementation error: " + (j+1) + " tier was built with errors. Please provide CNF file to developers.");
+            LOGGER.info("quickFindHSSRoute failed: " + (j+1) + " tier has been built empty. Terminating quickFindHSSRoute");
+            
+            break;
         }
         
         result.add(verticesFromLastTiers.get(0));
-
-        if (result.size() != basicGraph.getTiers().size())
-        {
-            //  This shouldn't happen if the implementation is correct
-            throw new AssertionError("Valid hyperstructure must contain at least one non-empty (n-2)-intersection");
-        }
         
         return result;
     }
@@ -2273,12 +2282,22 @@ public class Helper
     
     public static ObjectArrayList loadHSS(String hssPath) throws IOException
     {
+        LOGGER.info("Load HSS from {}...", hssPath);
+        
         ObjectArrayList hss = new ObjectArrayList();
         
         String basicCTSPath = hssPath + File.separator + "basic-cts.cnf";
-        LOGGER.info("Load CTS from {}...", basicCTSPath);
+        LOGGER.info("Load Basic CTS from {}...", basicCTSPath);
         ITabularFormula basicCTS = loadFromFile(basicCTSPath);
-        LOGGER.info("done");
+        LOGGER.info("Basic CTS loaded");
+        
+        File[] allCTS = new File(hssPath).listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name)
+            {
+                return name.endsWith(".cnf");
+            }
+        });
+        LOGGER.info("{} more instances to load", allCTS.length - 1);
         
         String[] otherCTSPaths = new File(hssPath).list(new FilenameFilter()
         {
@@ -2296,9 +2315,9 @@ public class Helper
             matcher.find();
             final String hsIndex = matcher.group(1);
             
-            LOGGER.info("Load CTS from {}...", otherCTSPath);
+            LOGGER.debug("Load CTS from {}...", otherCTSPath);
             ITabularFormula otherCTS = loadFromFile(hssPath + File.separator + otherCTSPath);
-            LOGGER.info("done");
+            LOGGER.debug("CTS loaded");
             IHyperStructure hs = new SimpleHyperStructure((ICompactTripletsStructure) basicCTS, (ICompactTripletsStructure) otherCTS);
             hss.add(hs);
             
@@ -2339,9 +2358,9 @@ public class Helper
                 }
                 OpenIntObjectHashMap tier = (OpenIntObjectHashMap) hs.getTiers().get(j);
                 
-                LOGGER.info("Load CTS from {}...", substructurePath);
+                LOGGER.debug("Load CTS from {}...", substructurePath);
                 ITabularFormula substructure = loadFromFile(hssPath + File.separator + substructurePath);
-                LOGGER.info("done");
+                LOGGER.debug("CTS loaded");
                 
                 SimpleVertex vertex = new SimpleVertex(basicCTS.getTier(j), j, tripletValue, (ICompactTripletsStructure) substructure);
                 vertex.setHyperStructure(hs);
@@ -2356,11 +2375,15 @@ public class Helper
             }
         }
         
+        LOGGER.info("HSS loaded");
+        
         return hss;
     }
     
     public static void saveHSS(String hssPath, ObjectArrayList hss) throws IOException
     {
+        LOGGER.info("Saving HSS to filesystem {}...", hssPath);
+        
         File hssPathFile = new File(hssPath);
         
         if (!hssPathFile.exists() && !hssPathFile.mkdir())
@@ -2380,9 +2403,9 @@ public class Helper
         IHyperStructure hs = (IHyperStructure) hss.get(0);
         
         String basicCTSPath = hssPath + File.separator + "basic-cts.cnf";
-        LOGGER.info("Saving {}...", basicCTSPath);
+        LOGGER.info("Saving Basic CTS {}...", basicCTSPath);
         saveToDIMACSFileFormat(hs.getBasicCTS(), basicCTSPath);
-        LOGGER.info("done");
+        LOGGER.info("Basic CTS saved");
         
         int hssLength = String.valueOf(hss.size()).length();
         int tiersLength = String.valueOf(hs.getTiers().size()).length();
@@ -2392,14 +2415,14 @@ public class Helper
             hs = (IHyperStructure) hss.get(h);
             
             String hssImageFilename = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + ".png";
-            LOGGER.info("Saving {}...", hssImageFilename);
+            LOGGER.debug("Saving HSS({}) image {}...", h, hssImageFilename);
             writeToImage(hs, null, null, hssImageFilename);
-            LOGGER.info("done");
+            LOGGER.debug("Image saved");
             
             String otherCTSPath = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + "-other-cts.cnf";
-            LOGGER.info("Saving {}...", otherCTSPath);
+            LOGGER.debug("Saving CTS {}...", otherCTSPath);
             saveToDIMACSFileFormat(hs.getOtherCTS(), otherCTSPath);
-            LOGGER.info("done");
+            LOGGER.debug("CTS saved");
             
             Properties verticesInfo = new Properties();
             
@@ -2418,9 +2441,9 @@ public class Helper
                     
                     String substructureVertexPath = hssPath + File.separator + vertexFilename; 
                     
-                    LOGGER.info("Saving {}...", substructureVertexPath);
+                    LOGGER.debug("Saving substructure-vertex {}...", substructureVertexPath);
                     saveToDIMACSFileFormat(vertex.getCTS(), substructureVertexPath);
-                    LOGGER.info("done");
+                    LOGGER.debug("Substructure-vertex saved");
                     
                     verticesInfo.put(vertexFilename + "-bottom1empty", String.valueOf(vertex.isBottom1Empty()));
                     verticesInfo.put(vertexFilename + "-bottom2empty", String.valueOf(vertex.isBottom2Empty()));
@@ -2428,7 +2451,7 @@ public class Helper
             }
             
             String verticesInfoPath = hssPath + File.separator + "hss-" + leadingZeros(h, hssLength) + "-vertices.properties";
-            LOGGER.info("Saving {}...", verticesInfoPath);
+            LOGGER.debug("Saving vertices info {}...", verticesInfoPath);
             OutputStream os = new FileOutputStream(new File(verticesInfoPath));
             try
             {
@@ -2438,8 +2461,10 @@ public class Helper
             {
                 os.close();
             }
-            LOGGER.info("done");
+            LOGGER.debug("Vertices info saved");
+            LOGGER.info("HSS({}) saved", h);
         }
+        LOGGER.info("HSS saved");
     }
 
     private static String leadingZeros(int value, int length)
@@ -2659,155 +2684,4 @@ public class Helper
         return true;
     }
     
-    public static ObjectArrayList findHSSRouteBottomToTop(ObjectArrayList hss)
-    {
-        IHyperStructure basicGraph = (IHyperStructure) hss.get(0);
-        int tiersCount = basicGraph.getTiers().size();
-
-        ObjectArrayList result = new ObjectArrayList(tiersCount);
-        ObjectArrayList structures = new ObjectArrayList();
-
-        OpenIntObjectHashMap verticesFromLastTiers = new OpenIntObjectHashMap();
-        fillVerticesFromLastTier(hss, structures, verticesFromLastTiers);
-
-        byte bottomVertexTierKey = ((IVertex)verticesFromLastTiers.get(0)).getTripletValue().getTierKey();
-        
-        for (int j = tiersCount - 2; j >= 0; j--)
-        {
-            ObjectArrayList intersections = new ObjectArrayList();
-            
-            boolean allNotEmpty = true;
-            //  Check topVertex1
-            for (int h = 0; h < hss.size(); h++)
-            {
-                IHyperStructure hs = (IHyperStructure) hss.get(h);
-                
-                OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) hs.getTiers().get(j + 1);
-                
-                IVertex bottomVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
-                
-                IVertex topVertex1 = bottomVertex.getTopVertex1();
-
-                if (topVertex1 == null)
-                {
-                    allNotEmpty = false;
-                    break;
-                }
-                
-                ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
-                
-                clone.intersect(topVertex1.getCTS());
-                
-                if (clone.isEmpty())
-                {
-                    allNotEmpty = false;
-                    break;
-                }
-                
-                intersections.add(clone);
-            }
-            
-            if (allNotEmpty)
-            {
-                try
-                {
-                    unifyIntermediateSubstructures(intersections);
-                    
-                    //  Intersection with topVertex1
-                    OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) basicGraph.getTiers().get(j + 1);
-                    
-                    IVertex bottomTierVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
-                    
-                    IVertex topVertex = bottomTierVertex.getTopVertex1();
-                    
-                    result.beforeInsert(0, topVertex);
-                    
-                    bottomVertexTierKey = topVertex.getTripletValue().getTierKey();
-                    
-                    updateStructures(hss, structures, j, bottomVertexTierKey);
-                    
-                    continue;
-                }
-                catch (EmptyStructureException e)
-                {
-                    allNotEmpty = false;
-                }
-            }
-            intersections = new ObjectArrayList();
-            allNotEmpty = true;
-            //  Check topVertex2
-            for (int h = 0; h < hss.size(); h++)
-            {
-                IHyperStructure hs = (IHyperStructure) hss.get(h);
-                
-                OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) hs.getTiers().get(j + 1);
-                
-                IVertex bottomVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
-                
-                IVertex topVertex2 = bottomVertex.getTopVertex2();
-
-                if (topVertex2 == null)
-                {
-                    allNotEmpty = false;
-                    break;
-                }
-                
-                ICompactTripletsStructure clone = (ICompactTripletsStructure) ((ICompactTripletsStructure) structures.get(h)).clone();
-                
-                clone.intersect(topVertex2.getCTS());
-                
-                if (clone.isEmpty())
-                {
-                    allNotEmpty = false;
-                    break;
-                }
-                
-                intersections.add(clone);
-            }
-            
-            if (allNotEmpty)
-            {
-                try
-                {
-                    unifyIntermediateSubstructures(intersections);
-                    
-                    //  Intersection with topVertex2
-                    OpenIntObjectHashMap bottomTier = (OpenIntObjectHashMap) basicGraph.getTiers().get(j + 1);
-                    
-                    IVertex bottomTierVertex = (IVertex) bottomTier.get(bottomVertexTierKey);
-                    
-                    IVertex topVertex = bottomTierVertex.getTopVertex2();
-                    
-                    result.beforeInsert(0, topVertex);
-                    
-                    bottomVertexTierKey = topVertex.getTripletValue().getTierKey();
-                    
-                    updateStructures(hss, structures, j, bottomVertexTierKey);
-                    
-                    continue;
-                }
-                catch (EmptyStructureException e)
-                {
-                    allNotEmpty = false;
-                }
-            }
-            
-            //  Note: For debug purposes only. 
-            result.beforeInsert(0, null);
-            
-            bottomVertexTierKey = ((IVertex) ((OpenIntObjectHashMap) basicGraph.getTiers().get(j)).values().get(0)).getTripletValue().getTierKey();
-            
-            System.err.println("Implementation error: " + (j+1) + " tier was built with errors. Please provide CNF file to developers.");
-        }
-        
-        result.add(verticesFromLastTiers.get(0));
-        
-        if (result.size() != basicGraph.getTiers().size())
-        {
-            //  This shouldn't happen if the implementation is correct
-            throw new AssertionError("Valid hyperstructure must contain at least one non-empty (n-2)-intersection");
-        }
-        
-        return result;
-    }
 }
