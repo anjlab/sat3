@@ -81,7 +81,6 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         for (int i = 0; i < tiersCount; i++)
         {
             ITier clone = ((ITier) tiersElements[i]).clone();
-            ((SimpleTier) clone).setFormula(this);
             tiers.add(clone);
             if (fillTiersHash3)
             {
@@ -565,7 +564,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             {
                 ITier otherTier = (ITier) otherTiers.get(i);
                 ITier clone = otherTier.clone();
-                ((SimpleTier) clone).setFormula(this);
+//                ((SimpleTier) clone).setFormula(this);
                 tiers.add(clone);
             }
         }

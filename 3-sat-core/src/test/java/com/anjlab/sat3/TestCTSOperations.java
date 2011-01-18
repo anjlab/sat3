@@ -64,10 +64,10 @@ public class TestCTSOperations
 
         s1.concretize(3, Value.AllNegative);
 
-                                         //             x4 x1 x2 x3
-                                         //              0  1  1   
-                                         //                 1  1  1
-                                         //            VarCount: 4; ClausesCount: 2; TiersCount: 2
+                                          //        x1 x2 x3 x4
+                                          //        1  0  1   
+                                          //           0  1  0
+                                          //       VarCount: 4; ClausesCount: 2; TiersCount: 2
 
         Helper.prettyPrint(s1);
 

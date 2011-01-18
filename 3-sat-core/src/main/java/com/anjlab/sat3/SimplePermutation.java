@@ -230,6 +230,8 @@ public final class SimplePermutation implements IPermutation
             }
             
             elementsHash = Arrays.hashCode(permutation.elements());
+            
+            elementsHashDirty = false;
         }
         
         return elementsHash;

@@ -1,7 +1,5 @@
 package com.anjlab.sat3;
 
-import java.util.Arrays;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,20 +29,21 @@ public class VarPairsIndexFactory
     
     public class VarPairsIndex
     {
-        private OpenLongObjectHashMap index = new OpenLongObjectHashMap();
+        private OpenLongObjectHashMap pairsToTiersIndex = new OpenLongObjectHashMap();
+        private OpenIntObjectHashMap varNameToPairsIndex = new OpenIntObjectHashMap();
         
-        public void updateTier(int varName1, int varName2, ITier tier)
+        /**
+         * 
+         * @param varName1
+         * @param varName2
+         * @param formulaIndex Index of formula which tier is adding.
+         * @param tierIndex Index of tier, containing varName1 and varName2 in the formula.
+         * @param cts List of CTS. Used when {@link Helper#EnableAssertions} is <code>true</code>.
+         */
+        public void addTier(int varName1, int varName2, int formulaIndex, int tierIndex, ObjectArrayList cts)
         {
             long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
-
-            //  List of ITier
-            ObjectArrayList tiers = (ObjectArrayList) index.get(key);
-
-            if (tiers == null)
-            {
-                //  Nothing to update. varName1 and varName2 does not meet in two different formulas
-                return;
-            }
+            long formulaAndTierIndices = (long)formulaIndex << 32 | (long)tierIndex;
             
             if (Helper.EnableAssertions)
             {
@@ -57,75 +56,71 @@ public class VarPairsIndexFactory
                     throw new AssertionError("Bad hash");
                 }
             }
-            
-            for (int i = 0; i < tiers.size(); i++)
-            {
-                ITier t = (ITier) tiers.getQuick(i);
-                if (Arrays.equals(t.getABC(), tier.getABC()) 
-                        && t.getFormula().getPermutation().sameAs(tier.getFormula().getPermutation()))
-                {
-                    tiers.setQuick(i, tier);
-                    return;
-                }
-            }
-            throw new AssertionError("Update tier mismatch");
-        }
-        
-        public void addTier(int varName1, int varName2, ITier tier)
-        {
-            long key = varName1 < varName2 ? (long)varName1 << 21 | varName2 : (long)varName2 << 21 | varName1;
 
-            if (Helper.EnableAssertions)
-            {
-                int varName1_ = (int) (key >> 21);
-                int varName2_ = (int) (key & 0x1FFFFF);
-        
-                if (((varName1 != varName1_) && (varName1 != varName2_))
-                        || ((varName2 != varName1_) && (varName2 != varName2_)))
-                {
-                    throw new AssertionError("Bad hash");
-                }
-            }
-
-            //  List of ITier
-            ObjectArrayList tiers = (ObjectArrayList) index.get(key);
+            //  List of formulaAndTierIndices
+            LongArrayList tiers = (LongArrayList) pairsToTiersIndex.get(key);
             
             if (tiers == null)
             {
-                index.put(key, new ObjectArrayList(new ITier[] {tier}));
+                tiers = new LongArrayList(new long[] {formulaAndTierIndices});
+                pairsToTiersIndex.put(key, tiers);
             }
             else
             {
-                if (!tier.hasVariable(varName1) || !tier.hasVariable(varName2))
+                if (Helper.EnableAssertions)
                 {
-                    throw new IllegalStateException();
+                    ITier tier = ((ICompactTripletsStructureHolder) cts.get(formulaIndex)).getCTS().getTier(tierIndex);
+                    if (!tier.hasVariable(varName1) || !tier.hasVariable(varName2))
+                    {
+                        throw new IllegalStateException();
+                    }
                 }
-                tiers.add(tier);
+                
+                //  Ensure tier will be added only once
+                if (tiers.indexOf(formulaAndTierIndices) < 0)
+                {
+                    tiers.add(formulaAndTierIndices);
+                }
             }
         }
 
+        /**
+         * Remove pairs from index that only belong to single CTS
+         */
         public void purge()
         {
             final LongArrayList toBeRemoved = new LongArrayList();
             
-            index.forEachPair(new LongObjectProcedure()
+            pairsToTiersIndex.forEachPair(new LongObjectProcedure()
             {
                 public boolean apply(long key, Object value)
                 {
-                    //  List of ITier
-                    ObjectArrayList tiers = (ObjectArrayList) value;
-                    if (tiers.size() < 2)
+                    //  List of formulaAndTierIndices
+                    LongArrayList tiers = (LongArrayList) value;
+                    int tiersCount = tiers.size();
+                    if (tiersCount < 2)
                     {
                         toBeRemoved.add(key);
                     }
                     else
                     {
-                        ITabularFormula formula = ((ITier)tiers.get(0)).getFormula();
-                        for (int i = 1; i < tiers.size(); i++)
+                        long formulaAndTierIndex = tiers.getQuick(0);
+                        long formulaIndexPart = formulaAndTierIndex & 0xFFFFFFFF00000000L;
+                        for (int i = 1; i < tiersCount; i++)
                         {
-                            if (formula != ((ITier)tiers.get(i)).getFormula())
+                            long formulaAndTierIndex2 = tiers.getQuick(i);
+                            long formulaIndexPart2 = formulaAndTierIndex2 & 0xFFFFFFFF00000000L;
+                            if (formulaIndexPart != formulaIndexPart2)
                             {
                                 //  Found distinct formulas
+                                
+                                //  See VarPairsIndex#addTier() for details of key construction
+                                int varName1 = (int) (key >> 21);
+                                int varName2 = (int) (key & 0x1FFFFF);
+                                
+                                addVarNamePair(key, varName1);
+                                addVarNamePair(key, varName2);
+                                
                                 return true;
                             }
                         }
@@ -134,20 +129,93 @@ public class VarPairsIndexFactory
                     }
                     return true;
                 }
+
+                private void addVarNamePair(long key, int varName1)
+                {
+                    LongArrayList pairs = (LongArrayList) varNameToPairsIndex.get(varName1);
+                    if (pairs == null)
+                    {
+                        pairs = new LongArrayList(new long[]{ key });
+                        varNameToPairsIndex.put(varName1, pairs);
+                    }
+                    else
+                    {
+                        pairs.add(key);
+                    }
+                }
             });
             
             int size = toBeRemoved.size();
             for (int i = 0; i < size; i++)
             {
                 long key = toBeRemoved.getQuick(i);
-                index.removeKey(key);
+                pairsToTiersIndex.removeKey(key);
             }
             LOGGER.debug("Removed {} triplet permutations from index", size);
         }
 
         public void forEachPair(LongObjectProcedure procedure)
         {
-            index.forEachPair(procedure);
+            pairsToTiersIndex.forEachPair(procedure);
+        }
+
+        public LongArrayList pairs()
+        {
+            return pairsToTiersIndex.keys();
+        }
+
+        public LongArrayList getPairs(int varName)
+        {
+            return (LongArrayList) varNameToPairsIndex.get(varName);
+        }
+    }
+    
+    /**
+     *  
+     * 
+     * @param cts
+     * @param formula
+     * @param fromTier Index of start tier in the formula
+     * @param toTier Index of end tier in the formula
+     * @return
+     */
+    public VarPairsIndex buildPartialIndex(final ObjectArrayList cts, ICompactTripletsStructureHolder formula, int fromTier, int toTier)
+    {
+        int cacheKey = getCacheKey(cts);
+        
+        VarPairsIndex fullIndex = (VarPairsIndex) indexCache.get(cacheKey);
+        
+        if (fullIndex == null)
+        {
+            throw new IllegalStateException("Full index should be built first");
+        }
+        
+        VarPairsIndex index = new VarPairsIndex();
+        
+        for (int j = fromTier; j <= toTier; j++)
+        {
+            ITier tier = formula.getCTS().getTier(j);
+            
+            addVarName(fullIndex, index, tier.getAName());
+            addVarName(fullIndex, index, tier.getBName());
+            addVarName(fullIndex, index, tier.getCName());
+        }
+        
+        return index;
+    }
+
+    //  TODO Move this method to VarPairsIndex
+    private void addVarName(VarPairsIndex fullIndex, VarPairsIndex index, int varName)
+    {
+        LongArrayList pairs = fullIndex.getPairs(varName);
+        
+        for (int i = 0; i < pairs.size(); i++)
+        {
+            long key = pairs.getQuick(i);
+            if (!index.pairsToTiersIndex.containsKey(key))
+            {
+                index.pairsToTiersIndex.put(key, fullIndex.pairsToTiersIndex.get(key));
+            }
         }
     }
     
@@ -168,53 +236,50 @@ public class VarPairsIndexFactory
         if (creatingNewIndex)
         {
             index = new VarPairsIndex();
+            
+            LOGGER.debug("Building pairs index...");
+            
+            int tierCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size() - 2;
+            int ctsCount = cts.size();
+            
+            for(int i = 0; i < ctsCount; i++)
+            {
+                ITabularFormula s = ((ICompactTripletsStructureHolder) cts.getQuick(i)).getCTS();
+                if(s.isEmpty())
+                {
+                    throw new EmptyStructureException(s);
+                }
+                
+                Object[] tierElements = s.getTiers().elements();
+                
+                for (int j = 0; j < tierCount; j++)
+                {
+                    ITier tier = (ITier) tierElements[j];
+                    
+                    index.addTier(tier.getAName(), tier.getBName(), i, j, cts);
+                    index.addTier(tier.getAName(), tier.getCName(), i, j, cts);
+                    index.addTier(tier.getBName(), tier.getCName(), i, j, cts);
+                }
+            }
+            
             indexCache.put(cacheKey, index);
+            
+            index.purge();
         }
         else
         {
+            int ctsCount = cts.size();
+            
+            for(int i = 0; i < ctsCount; i++)
+            {
+                ITabularFormula s = ((ICompactTripletsStructureHolder) cts.getQuick(i)).getCTS();
+                if(s.isEmpty())
+                {
+                    throw new EmptyStructureException(s);
+                }
+            }
+            
             index = (VarPairsIndex) indexCache.get(cacheKey);
-        }
-            
-        LOGGER.debug("Building pairs index...");
-        
-        int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
-        int tierCount = varCount - 2;
-        int ctsCount = cts.size();
-        
-        for(int i = 0; i < ctsCount; i++)
-        {
-            ITabularFormula s = ((ICompactTripletsStructureHolder) cts.get(i)).getCTS();
-            if(s.isEmpty())
-            {
-                throw new EmptyStructureException(s);
-            }
-            
-            Object[] tierElements = s.getTiers().elements();
-            
-            for (int j = 0; j < tierCount; j++)
-            {
-                ITier tier = (ITier) tierElements[j];
-                
-                ((SimpleTier)tier).setFormula(s);
-                
-                if (creatingNewIndex)
-                {
-                    index.addTier(tier.getAName(), tier.getBName(), tier);
-                    index.addTier(tier.getAName(), tier.getCName(), tier);
-                    index.addTier(tier.getBName(), tier.getCName(), tier);
-                }
-                else
-                {
-                    index.updateTier(tier.getAName(), tier.getBName(), tier);
-                    index.updateTier(tier.getAName(), tier.getCName(), tier);
-                    index.updateTier(tier.getBName(), tier.getCName(), tier);
-                }
-            }
-        }
-        
-        if (creatingNewIndex)
-        {
-            index.purge();
         }
         
         return index;

@@ -39,7 +39,6 @@ public interface ITier extends Iterable<ITripletValue>, ITripletPermutation
     Value valueOfA();
     Value valueOfB();
     Value valueOfC();
-    ITabularFormula getFormula();
     void inverse();
     void intersect(ITripletValue tripletValue);
 }

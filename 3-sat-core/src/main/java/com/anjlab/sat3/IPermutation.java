@@ -41,7 +41,7 @@ public interface IPermutation
     void add(int index, int varName);
     int size();
     /**
-     * 
+     * Returns varName by index.
      * @param index Zero-based index
      * @return
      */

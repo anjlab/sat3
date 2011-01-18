@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory;
 import cern.colt.function.IntObjectProcedure;
 import cern.colt.function.LongObjectProcedure;
 import cern.colt.list.IntArrayList;
+import cern.colt.list.LongArrayList;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
 
@@ -460,10 +461,10 @@ public class Helper
      * @param cts List of {@link ICompactTripletsStructureHolder}
      * @throws EmptyStructureException
      */
-    private static void unify(VarPairsIndex index, ObjectArrayList cts) throws EmptyStructureException
+    private static void unify(VarPairsIndex index, final ObjectArrayList cts) throws EmptyStructureException
     {
         boolean someClausesRemoved = false;
-
+        
         LOGGER.debug("Running unify routine...");
         
         int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
@@ -478,30 +479,39 @@ public class Helper
         {
             public boolean apply(long key, Object value)
             {
-                //  See Helper#addTier() for details of key construction
+                //  See VarPairsIndex#addTier() for details of key construction
                 int varName1 = (int) (key >> 21);
                 int varName2 = (int) (key & 0x1FFFFF);
                 
-                //  List of ITier
-                ObjectArrayList tiers = (ObjectArrayList) value;
-                Object[] tiersElements = tiers.elements();
+                //  List of formulaAndTierIndices
+                LongArrayList tiers = (LongArrayList) value;
+                long[] tiersElements = tiers.elements();
                 int tierCount = tiers.size();
                 
                 for (int i = 0; i < tierCount - 1; i++)
                 {
-                    ITier ti = (ITier) tiersElements[i];
+                    long formulaAndTierIndex = tiersElements[i];
+                    int formulaIndex = (int)(formulaAndTierIndex >> 32);
+                    int tierIndex = (int)(formulaAndTierIndex & 0x00000000FFFFFFFFL);
+                    
+                    ICompactTripletsStructure si = ((ICompactTripletsStructureHolder) cts.getQuick(formulaIndex)).getCTS();
+                    ITier ti = si.getTier(tierIndex);
                     
                     //  Remember tier permutation
                     System.arraycopy(ti.getABC(), 0, abci, 0, 3);
                     
                     for (int j = i + 1; j < tierCount; j++)
                     {
-                        ITier tj = (ITier) tiersElements[j];
+                        long formulaAndTierIndex2 = tiersElements[j];
+                        int formulaIndex2 = (int)(formulaAndTierIndex2 >> 32);
+                        int tierIndex2 = (int)(formulaAndTierIndex2 & 0x00000000FFFFFFFFL);
                         
-                        if (ti.getFormula() == tj.getFormula())
+                        if (formulaIndex == formulaIndex2)
                         {
                             continue;
                         }
+                        
+                        ITier tj = ((ICompactTripletsStructureHolder) cts.getQuick(formulaIndex2)).getCTS().getTier(tierIndex2);
                         
                         //  Remember tier permutation
                         System.arraycopy(tj.getABC(), 0, abcj, 0, 3);
@@ -552,8 +562,8 @@ public class Helper
                         if (i == j) continue;
                         
                         ICompactTripletsStructure sj = ((ICompactTripletsStructureHolder) ctsElements[j]).getCTS();
+                        
                         someClausesRemoved |= sj.concretize(varName, value);
-
                         if (sj.isEmpty())
                         {
                             throw new EmptyStructureException(sj);

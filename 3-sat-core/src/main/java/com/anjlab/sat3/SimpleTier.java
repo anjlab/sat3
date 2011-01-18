@@ -30,7 +30,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
 {
     protected byte keys_73516240;
     protected int size;
-    private ITabularFormula formula;
 
     public static SimpleTier createCompleteTier(int a, int b, int c)
     {
@@ -445,27 +444,6 @@ public class SimpleTier extends SimpleTripletPermutation implements ITier
                  : (byte)(keys_73516240 & 0xAA) == keys_73516240 
                      ? Value.AllNegative
                      : Value.Mixed;
-    }
-
-    public ITabularFormula getFormula()
-    {
-        if (Helper.EnableAssertions)
-        {
-            if (formula == null)
-            {
-                throw new IllegalStateException("Formula instance was not set to any value");
-            }
-        }
-        return formula;
-    }
-
-    public void setFormula(ITabularFormula formula)
-    {
-        if (this.formula != null && !this.formula.getPermutation().sameAs(formula.getPermutation()))
-        {
-            throw new AssertionError("Cannot reuse tier in formula with different permutation");
-        }
-        this.formula = formula;
     }
     
     public void inverse()
