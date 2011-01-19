@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -452,25 +452,33 @@ public class Helper
 
         VarPairsIndex index = VarPairsIndexFactory.getInstance().buildIndex(cts);
         
-        unify(index, cts);
+        unify(index, ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation(), cts, 1);
     }
 
+    private static class UnificationContext
+    {
+        public VarPairsIndex partialIndex;
+        //  Debug information
+        public int numberOfClausesRemoved = 0;
+    }
+    
     /**
      * 
      * @param index
+     * @param varNames
      * @param cts List of {@link ICompactTripletsStructureHolder}
      * @throws EmptyStructureException
      */
-    private static void unify(VarPairsIndex index, final ObjectArrayList cts) throws EmptyStructureException
+    private static void unify(VarPairsIndex index, IPermutation varNames, final ObjectArrayList cts, int recursionLevel) throws EmptyStructureException
     {
-        boolean someClausesRemoved = false;
+        if (LOGGER.isDebugEnabled())
+        {
+            LOGGER.debug("Running unify routine ({} level)...", recursionLevel);
+            LOGGER.debug("# of pairs in index: {}; # of varNames in index: {}", index.pairs().size(), varNames.size());
+        }
         
-        LOGGER.debug("Running unify routine...");
-        
-        int varCount = ((ICompactTripletsStructureHolder) cts.get(0)).getCTS().getPermutation().size();
-        int ctsCount = cts.size();
-        
-        Object[] ctsElements = cts.elements();
+        final UnificationContext unificationContext = new UnificationContext();
+        final IPermutation partialPermutation = new SimplePermutation();
         
         final int[] abci = new int[3];
         final int[] abcj = new int[3];
@@ -500,6 +508,8 @@ public class Helper
                     //  Remember tier permutation
                     System.arraycopy(ti.getABC(), 0, abci, 0, 3);
                     
+                    int tiSize = ti.size();
+                    
                     for (int j = i + 1; j < tierCount; j++)
                     {
                         long formulaAndTierIndex2 = tiersElements[j];
@@ -511,7 +521,8 @@ public class Helper
                             continue;
                         }
                         
-                        ITier tj = ((ICompactTripletsStructureHolder) cts.getQuick(formulaIndex2)).getCTS().getTier(tierIndex2);
+                        ICompactTripletsStructure sj = ((ICompactTripletsStructureHolder) cts.getQuick(formulaIndex2)).getCTS();
+                        ITier tj = sj.getTier(tierIndex2);
                         
                         //  Remember tier permutation
                         System.arraycopy(tj.getABC(), 0, abcj, 0, 3);
@@ -523,33 +534,65 @@ public class Helper
                         ti.transposeTo(a, varName1, varName2);
                         tj.transposeTo(varName1, varName2, c);
                         
+                        int tjSize = tj.size();
+                        
                         //  Ensure values of varName1 and varName2 are the same in both tiers
                         ti.adjoinRight(tj);
                         tj.adjoinLeft(ti);
                         
+                        int tjSizeNew = tj.size();
+                        
                         //  Return tier permutation back
                         tj.transposeTo(abcj);
+                        
+                        //  Cleanup sj
+                        if (tjSize != tjSizeNew)
+                        {
+                            CleanupStatus status = sj.cleanup(tierIndex2, tierIndex2);
+                            if (status.someClausesRemoved)
+                            {
+                                updateIndicesAfterCleanupDuringUnification(status, sj, cts, unificationContext, partialPermutation);
+                            }
+                        }
                     }
                     //  Return tier permutation back
                     ti.transposeTo(abci);
+                    
+                    int tiSizeNew = ti.size();
+                    
+                    //  Cleanup si
+                    if (tiSize != tiSizeNew)
+                    {
+                        CleanupStatus status = si.cleanup(tierIndex, tierIndex);
+                        if (status.someClausesRemoved)
+                        {
+                            updateIndicesAfterCleanupDuringUnification(status, si, cts, unificationContext, partialPermutation);
+                        }
+                    }
                 }
                 return true;
             }
         });
 
-        for (int i = 0; i < ctsCount; i++)
-        {
-            ICompactTripletsStructure s = ((ICompactTripletsStructureHolder) ctsElements[i]).getCTS();
-            someClausesRemoved |= s.cleanup();
+//        for (int i = 0; i < ctsCount; i++)
+//        {
+//            ICompactTripletsStructure s = ((ICompactTripletsStructureHolder) ctsElements[i]).getCTS();
+//            someClausesRemoved |= s.cleanup();
+//
+//            if (s.isEmpty())
+//            {
+//                throw new EmptyStructureException(s);
+//            }
+//        }
 
-            if (s.isEmpty())
-            {
-                throw new EmptyStructureException(s);
-            }
-        }
-
-        for (int varName = 1; varName <= varCount; varName++)
+        int varCount = varNames.size();
+        int[] varNamesElements = varNames.elements();
+        int ctsCount = cts.size();
+        Object[] ctsElements = cts.elements();
+        
+        for (int v = 0; v < varCount; v++)
         {
+            int varName = varNamesElements[v];
             for (int i = 0; i < ctsCount; i++)
             {
                 ICompactTripletsStructure s = ((ICompactTripletsStructureHolder) ctsElements[i]).getCTS();
@@ -563,27 +606,55 @@ public class Helper
                         
                         ICompactTripletsStructure sj = ((ICompactTripletsStructureHolder) ctsElements[j]).getCTS();
                         
-                        someClausesRemoved |= sj.concretize(varName, value);
-                        if (sj.isEmpty())
+                        CleanupStatus status = sj.concretize(varName, value);
+                        
+                        if (status.someClausesRemoved)
                         {
-                            throw new EmptyStructureException(sj);
+                            updateIndicesAfterCleanupDuringUnification(status, sj, cts, unificationContext, partialPermutation);
                         }
                     }
                 }
             }
         }
         
-        if (someClausesRemoved)
+        LOGGER.debug("{} clauses removed during this recursion level", unificationContext.numberOfClausesRemoved);
+        if (unificationContext.partialIndex != null || partialPermutation.size() > 0)
         {
-            LOGGER.debug("Some clauses removed during unification");
-            unify(index, cts);
+            unify(unificationContext.partialIndex, partialPermutation, cts, recursionLevel + 1);
         }
         else
         {
-            LOGGER.debug("No clauses removed during unification");
+            LOGGER.debug("Unification completed on recursion level {}", recursionLevel);
         }
     }
-
+    
+    private static void updateIndicesAfterCleanupDuringUnification(
+            CleanupStatus status,
+            ICompactTripletsStructure formula, 
+            final ObjectArrayList cts,
+            final UnificationContext unificationContext,
+            final IPermutation partialPermutation)
+    {
+        if (formula.isEmpty())
+        {
+            throw new EmptyStructureException(formula);
+        }
+        unificationContext.numberOfClausesRemoved += status.numberOfClausesRemoved;
+        if (unificationContext.partialIndex == null)
+        {
+            unificationContext.partialIndex = VarPairsIndexFactory.getInstance().
+                                    buildPartialIndex(cts, (ICompactTripletsStructureHolder) formula, status.from, status.to);
+        }
+        else
+        {
+            unificationContext.partialIndex.rebuildIndex(cts, (ICompactTripletsStructureHolder) formula, status.from, status.to);
+        }
+        for (int t = status.from; t <= status.to; t++)
+        {
+            ITier tier = formula.getTier(t);
+            partialPermutation.put(tier.getABC());
+        }
+    }
     
     /**
      * @param varName1

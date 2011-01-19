@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -53,4 +53,9 @@ public interface IPermutation
     void shiftToEnd(int from, int to);
     
     int elementsHash();
+    /**
+     * Add each varName from the given array if the varName not already exists.
+     * @param varNames
+     */
+    void put(int[] varNames);
 }

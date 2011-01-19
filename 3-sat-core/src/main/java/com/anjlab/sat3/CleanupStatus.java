@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -25,6 +25,9 @@ package com.anjlab.sat3;
 
 public class CleanupStatus
 {
+    public static final CleanupStatus NOTHING_REMOVED = new CleanupStatus(false, 0, 0, 0);
+    public static final CleanupStatus ALL_REMOVED = new CleanupStatus(true, 0, 0, 0);
+
     public final boolean someClausesRemoved;
     public final int from;
     public final int to;

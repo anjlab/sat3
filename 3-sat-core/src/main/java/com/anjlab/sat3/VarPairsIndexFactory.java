@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2010, 2011 AnjLab
+ * 
+ * This file is part of 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem 
+ * is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem
+ * is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with
+ * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.anjlab.sat3;
 
 import org.slf4j.Logger;
@@ -31,6 +54,16 @@ public class VarPairsIndexFactory
     {
         private OpenLongObjectHashMap pairsToTiersIndex = new OpenLongObjectHashMap();
         private OpenIntObjectHashMap varNameToPairsIndex = new OpenIntObjectHashMap();
+        private VarPairsIndex fullIndex;
+        
+        public VarPairsIndex(VarPairsIndex fullIndex)
+        {
+            this.fullIndex = fullIndex;
+        }
+        
+        public VarPairsIndex()
+        {
+        }
         
         /**
          * 
@@ -118,8 +151,8 @@ public class VarPairsIndexFactory
                                 int varName1 = (int) (key >> 21);
                                 int varName2 = (int) (key & 0x1FFFFF);
                                 
-                                addVarNamePair(key, varName1);
-                                addVarNamePair(key, varName2);
+                                addVarNamePair(varName1, key);
+                                addVarNamePair(varName2, key);
                                 
                                 return true;
                             }
@@ -130,7 +163,7 @@ public class VarPairsIndexFactory
                     return true;
                 }
 
-                private void addVarNamePair(long key, int varName1)
+                private void addVarNamePair(int varName1, long key)
                 {
                     LongArrayList pairs = (LongArrayList) varNameToPairsIndex.get(varName1);
                     if (pairs == null)
@@ -168,6 +201,39 @@ public class VarPairsIndexFactory
         {
             return (LongArrayList) varNameToPairsIndex.get(varName);
         }
+
+        public void rebuildIndex(ObjectArrayList cts, ICompactTripletsStructureHolder formula, int fromTier, int toTier)
+        {
+            for (int j = fromTier; j <= toTier; j++)
+            {
+                ITier tier = formula.getCTS().getTier(j);
+                
+                addVarName(tier.getAName());
+                addVarName(tier.getBName());
+                addVarName(tier.getCName());
+            }
+        }
+
+        private void addVarName(int varName)
+        {
+            LongArrayList pairs = fullIndex.getPairs(varName);
+            
+            if (pairs == null)
+            {
+                //  There is no any pairs that contain this varName.
+                //  No need to add it to the index.
+                return;
+            }
+            
+            for (int i = 0; i < pairs.size(); i++)
+            {
+                long key = pairs.getQuick(i);
+                if (!pairsToTiersIndex.containsKey(key))
+                {
+                    pairsToTiersIndex.put(key, fullIndex.pairsToTiersIndex.get(key));
+                }
+            }
+        }
     }
     
     /**
@@ -190,33 +256,11 @@ public class VarPairsIndexFactory
             throw new IllegalStateException("Full index should be built first");
         }
         
-        VarPairsIndex index = new VarPairsIndex();
+        VarPairsIndex index = new VarPairsIndex(fullIndex);
         
-        for (int j = fromTier; j <= toTier; j++)
-        {
-            ITier tier = formula.getCTS().getTier(j);
-            
-            addVarName(fullIndex, index, tier.getAName());
-            addVarName(fullIndex, index, tier.getBName());
-            addVarName(fullIndex, index, tier.getCName());
-        }
+        index.rebuildIndex(cts, formula, fromTier, toTier);
         
         return index;
-    }
-
-    //  TODO Move this method to VarPairsIndex
-    private void addVarName(VarPairsIndex fullIndex, VarPairsIndex index, int varName)
-    {
-        LongArrayList pairs = fullIndex.getPairs(varName);
-        
-        for (int i = 0; i < pairs.size(); i++)
-        {
-            long key = pairs.getQuick(i);
-            if (!index.pairsToTiersIndex.containsKey(key))
-            {
-                index.pairsToTiersIndex.put(key, fullIndex.pairsToTiersIndex.get(key));
-            }
-        }
     }
     
     /**

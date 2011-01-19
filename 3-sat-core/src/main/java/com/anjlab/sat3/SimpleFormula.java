@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -381,13 +381,13 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     {
         if (tiers.size() == 1)
         {
-            return new CleanupStatus(false, from, to, 0);
+            return CleanupStatus.NOTHING_REMOVED;
         }
 
         if (tiers.size() != getVarCount() - 2)
         {
             clear();
-            return new CleanupStatus(true, 0, 0, 0);
+            return CleanupStatus.ALL_REMOVED;
         }
 
         if ((from > to) || (from < 0) || (to > tiers.size() - 1))
@@ -423,7 +423,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                 if (tier.isEmpty())
                 {
                     clear();
-                    return new CleanupStatus(true, 0, 0, 0);
+                    return CleanupStatus.ALL_REMOVED;
                 }
             }
             index--;
@@ -450,7 +450,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                 if (tier.isEmpty())
                 {
                     clear();
-                    return new CleanupStatus(true, 0, 0, 0);
+                    return CleanupStatus.ALL_REMOVED;
                 }
             }
             index++;
@@ -650,37 +650,25 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
         }
     }
 
-    public boolean concretize(int varName, Value value)
+    public CleanupStatus concretize(int varName, Value value)
     {
-        boolean someClausesRemoved = internalConcretize(varName, value);
-        
-//        if (someClausesRemoved)
-//        {
-//            return cleanup();
-//        }
-        
-        return someClausesRemoved;
+        return internalConcretize(varName, value);
     }
     
     public boolean concretize(ITripletPermutation tripletPermutation, ITripletValue tripletValue)
     {
-        boolean someClausesRemoved = internalConcretize(tripletPermutation.getAName(), tripletValue.isNotA() ? Value.AllNegative : Value.AllPlain)
-                                   | internalConcretize(tripletPermutation.getBName(), tripletValue.isNotB() ? Value.AllNegative : Value.AllPlain)
-                                   | internalConcretize(tripletPermutation.getCName(), tripletValue.isNotC() ? Value.AllNegative : Value.AllPlain);
-        
-//        if (someClausesRemoved)
-//        {
-//            return cleanup();
-//        }
+        boolean someClausesRemoved = internalConcretize(tripletPermutation.getAName(), tripletValue.isNotA() ? Value.AllNegative : Value.AllPlain).someClausesRemoved
+                                   | internalConcretize(tripletPermutation.getBName(), tripletValue.isNotB() ? Value.AllNegative : Value.AllPlain).someClausesRemoved
+                                   | internalConcretize(tripletPermutation.getCName(), tripletValue.isNotC() ? Value.AllNegative : Value.AllPlain).someClausesRemoved;
         
         return someClausesRemoved;
     }
     
-    private boolean internalConcretize(int varName, Value value)
+    private CleanupStatus internalConcretize(int varName, Value value)
     {
         if (isEmpty())
         {
-            return false;
+            return CleanupStatus.NOTHING_REMOVED;
         }
         
         int indexOf = permutation.indexOf(varName);
@@ -732,7 +720,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
                 if (tier.isEmpty())
                 {
                     clear();
-                    return true;
+                    return CleanupStatus.ALL_REMOVED;
                 }
             }
         }
@@ -743,10 +731,10 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             {
                 to = tiers.size() - 1;
             }
-            return cleanup(from, to).someClausesRemoved;
+            return cleanup(from, to);
         }
         
-        return someClausesRemoved;
+        return CleanupStatus.NOTHING_REMOVED;
     }
 
     public boolean isEmpty()

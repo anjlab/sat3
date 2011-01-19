@@ -32,9 +32,15 @@ public interface ICompactTripletsStructure extends ITabularFormula
      * 
      * @param varName
      * @param value
+     * @return {@link CleanupStatus} for this concretization.
+     */
+    CleanupStatus concretize(int varName, Value value);
+    /**
+     * 
+     * @param tripletPermutation
+     * @param tripletValue
      * @return True if some clauses were removed during concretization.
      */
-    boolean concretize(int varName, Value value);
     boolean concretize(ITripletPermutation tripletPermutation, ITripletValue tripletValue);
     /**
      * Runs clearing procedure on this formula.

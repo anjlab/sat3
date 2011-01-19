@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -60,7 +60,19 @@ public final class SimplePermutation implements IPermutation
              ? permutationHash.get(varName)
              : -1;
     }
-
+    
+    public void put(int[] varNames)
+    {
+        for (int i = 0; i < varNames.length; i++)
+        {
+            int varName = varNames[i];
+            if (!contains(varName))
+            {
+                quickAdd(varName);
+            }
+        }
+    }
+    
     public void add(int varName)
     {
         if (Helper.EnableAssertions)
@@ -68,6 +80,11 @@ public final class SimplePermutation implements IPermutation
             assertNotContains(varName);
         }
         
+        quickAdd(varName);
+    }
+
+    private void quickAdd(int varName)
+    {
         permutation.add(varName);
         
         int index = permutation.size() - 1;
