@@ -759,6 +759,7 @@ public class Helper
     {
         for (int i = 0; i < ctf.size(); i++)
         {
+            LOGGER.info("Completing CTF-{} of {} to CTS", i, ctf.size());
             ((ITabularFormula) ctf.get(i)).complete(variables);
         }
     }

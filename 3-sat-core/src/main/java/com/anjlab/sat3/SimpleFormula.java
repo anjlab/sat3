@@ -176,55 +176,55 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
 
     public void complete(IPermutation variables) throws EmptyStructureException
     {
-        try
+        tiersHash1 = null;
+        tiersHash2 = null;
+        
+        int varCount = variables.size();
+        int tiersCount = varCount - 2;
+        
+        int[] variablesElements = ((SimplePermutation)variables).elements();
+        for (int i = 0; i < varCount; i++)
         {
-            tiersHash1 = null;
-            tiersHash2 = null;
-            
-            int varCount = variables.size();
-            int tiersCount = varCount - 2;
-            
-            int[] variablesElements = ((SimplePermutation)variables).elements();
-            for (int i = 0; i < varCount; i++)
+            int varName = variablesElements[i];
+            if (!permutation.contains(varName))
             {
-                int varName = variablesElements[i];
-                if (!permutation.contains(varName))
-                {
-                    permutation.add(varName);
-                }
-            }
-            for (int i = 0; i < tiers.size(); i++)
-            {
-                ((ITier) tiers.get(i)).inverse();
-            }
-            int[] permutationElements = ((SimplePermutation)permutation).elements();
-            SimpleTripletPermutation buffer = new SimpleTripletPermutation(1, 2, 3);
-            for (int i = 0; i < tiersCount; i++)
-            {
-                int a = permutationElements[i];
-                int b = permutationElements[i + 1];
-                int c = permutationElements[i + 2];
-                
-                buffer.setCanonicalAttributes(a, b, c);
-                
-                if (!tiersHash3.containsKey(buffer.canonicalHashCode()))
-                {
-                    addTier(createCompleteTier(a, b, c));
-                }
+                permutation.add(varName);
             }
         }
-        finally
+        for (int i = 0; i < tiers.size(); i++)
         {
-            sortTiers();
-            if (Helper.EnableAssertions)
+            ((ITier) tiers.get(i)).inverse();
+        }
+        int[] permutationElements = ((SimplePermutation)permutation).elements();
+        SimpleTripletPermutation buffer = new SimpleTripletPermutation(1, 2, 3);
+        for (int i = 0; i < tiersCount; i++)
+        {
+            int a = permutationElements[i];
+            int b = permutationElements[i + 1];
+            int c = permutationElements[i + 2];
+            
+            buffer.setCanonicalAttributes(a, b, c);
+            
+            if (!tiersHash3.containsKey(buffer.canonicalHashCode()))
             {
-                assertTiersSorted();
+                addTier(createCompleteTier(a, b, c));
             }
-            cleanup();
-            if (isEmpty())
-            {
-                throw new EmptyStructureException(this);
-            }
+        }
+        
+        if (tiers.size() != tiersCount)
+        {
+            throw new AssertionError("tiers.size() != tiersCount (" + tiers.size() + " != " + tiersCount + ")");
+        }
+        
+        sortTiers();
+        if (Helper.EnableAssertions)
+        {
+            assertTiersSorted();
+        }
+        cleanup();
+        if (isEmpty())
+        {
+            throw new EmptyStructureException(this);
         }
     }
 
