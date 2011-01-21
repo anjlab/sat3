@@ -29,11 +29,10 @@ import static com.anjlab.sat3.Helper.prettyPrint;
 import static com.anjlab.sat3.Helper.saveToDIMACSFileFormat;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Random;
-
-import junit.framework.Assert;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -100,6 +99,77 @@ public class TestLoadSave
     }
     
     @Test
+    public void testGenericLoadVarMappings() throws IOException
+    {
+        ITabularFormula formula = loadFromFile("target/test-classes/var-mappings.cnf");
+        
+        prettyPrint(formula); 
+        assertEquals(7, formula.getVarCount());
+        assertEquals(3, formula.getClausesCount());
+        
+        assertEquals(10, formula.getOriginalVarName(1));
+        assertEquals(11, formula.getOriginalVarName(2));
+        assertEquals(12, formula.getOriginalVarName(3));
+        assertEquals(20, formula.getOriginalVarName(4));
+        assertEquals(30, formula.getOriginalVarName(5));
+        assertEquals(40, formula.getOriginalVarName(6));
+        assertEquals(50, formula.getOriginalVarName(7));
+    }
+    
+    @Test
+    public void testGenericLoadVarMappingsKSat() throws IOException
+    {
+        ITabularFormula formula = loadFromFile("target/test-classes/var-mappings-ksat.cnf");
+        
+        prettyPrint(formula);
+        
+        //  Some variables and clauses should be added due to k-SAT -> 3-SAT reduction
+        
+        assertEquals(10, formula.getVarCount());
+        assertEquals(8, formula.getClausesCount());
+        
+        assertEquals(10, formula.getOriginalVarName(1));
+        assertEquals(11, formula.getOriginalVarName(2));
+        assertEquals(12, formula.getOriginalVarName(3));
+        assertEquals(20, formula.getOriginalVarName(4));
+        assertEquals(30, formula.getOriginalVarName(5));
+        assertEquals(40, formula.getOriginalVarName(6));
+        assertEquals(50, formula.getOriginalVarName(7));
+        assertEquals(-1, formula.getOriginalVarName(8));
+        assertEquals(-1, formula.getOriginalVarName(9));
+        assertEquals(-1, formula.getOriginalVarName(10));
+    }
+    
+    @Test
+    public void testGenericLoadVarMappingsKSat2() throws IOException
+    {
+        ITabularFormula formula = loadFromFile("target/test-classes/var-mappings-ksat2.cnf");
+        
+        prettyPrint(formula);
+        
+        //  Some variables and clauses should be added due to k-SAT -> 3-SAT reduction
+        
+        assertEquals(15, formula.getVarCount());
+        assertEquals(10, formula.getClausesCount());
+        
+        assertEquals(10, formula.getOriginalVarName(1));
+        assertEquals(11, formula.getOriginalVarName(2));
+        assertEquals(12, formula.getOriginalVarName(3));
+        assertEquals(20, formula.getOriginalVarName(4));
+        assertEquals(30, formula.getOriginalVarName(5));
+        assertEquals(40, formula.getOriginalVarName(6));
+        assertEquals(50, formula.getOriginalVarName(7));
+        assertEquals(70, formula.getOriginalVarName(8));
+        assertEquals(80, formula.getOriginalVarName(9));
+        assertEquals(90, formula.getOriginalVarName(10));
+        assertEquals(100, formula.getOriginalVarName(11));
+        assertEquals(-1, formula.getOriginalVarName(12));
+        assertEquals(-1, formula.getOriginalVarName(13));
+        assertEquals(-1, formula.getOriginalVarName(14));
+        assertEquals(-1, formula.getOriginalVarName(15));
+    }
+    
+    @Test
     public void testGenericLoadSpeed() throws IOException
     {
         long start = System.currentTimeMillis();
@@ -152,7 +222,12 @@ public class TestLoadSave
         
         for (int j = 0; j < restoredFormula.getTiers().size(); j++)
         {
-            Assert.assertTrue(formula.containsAllValuesOf(restoredFormula.getTier(j)));
+            assertTrue(formula.containsAllValuesOf(restoredFormula.getTier(j)));
+        }
+        
+        for (int i = 1; i < restoredFormula.getVarCount(); i++)
+        {
+            assertEquals(i, restoredFormula.getOriginalVarName(i));
         }
     }
 }

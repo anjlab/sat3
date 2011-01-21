@@ -315,7 +315,7 @@ public class Program
         
         String resultsFilename = getResultsFilename(commandLine, formulaFile);
         stopWatch.start("Write HSS route to " + resultsFilename);
-        writeSatToFile(resultsFilename, statistics, route);
+        writeSatToFile(formula, resultsFilename, statistics, route);
         stopWatch.stop();
         stopWatch.printElapsed();
     }
@@ -364,7 +364,7 @@ public class Program
         }
     }
 
-    private static void writeSatToFile(String resultsFile, Properties statistics, ObjectArrayList route) throws IOException
+    private static void writeSatToFile(ITabularFormula formula, String resultsFile, Properties statistics, ObjectArrayList route) throws IOException
     {
         OutputStream out = null;
         try
@@ -375,12 +375,13 @@ public class Program
             for (int i = 0; i < route.size(); i++)
             {
                 vertex = (IVertex) route.get(i);
-                statistics.put(String.valueOf(vertex.getPermutation().getAName()), String.valueOf(vertex.getTripletValue().isNotA()));
+                
+                writeToStatistics(formula, statistics, vertex.getPermutation().getAName(), vertex.getTripletValue().isNotA());
             }
             if (vertex != null)
             {
-                statistics.put(String.valueOf(vertex.getPermutation().getBName()), String.valueOf(vertex.getTripletValue().isNotB()));
-                statistics.put(String.valueOf(vertex.getPermutation().getCName()), String.valueOf(vertex.getTripletValue().isNotC()));
+                writeToStatistics(formula, statistics, vertex.getPermutation().getBName(), vertex.getTripletValue().isNotB());
+                writeToStatistics(formula, statistics, vertex.getPermutation().getCName(), vertex.getTripletValue().isNotC());
             }
             
             statistics.store(out, "Satisfiable. Variable values from HSS route");
@@ -391,6 +392,18 @@ public class Program
             {
                 out.close();
             }
+        }
+    }
+
+    private static void writeToStatistics(ITabularFormula formula, Properties statistics, int varName, boolean varValue)
+    {
+        String stringValue = String.valueOf(varValue);
+        statistics.put("_" + varName, stringValue);
+        
+        int originalVarName = formula.getOriginalVarName(varName);
+        if (originalVarName > 0)
+        {
+            statistics.put(String.valueOf(originalVarName), stringValue);
         }
     }
 

@@ -65,4 +65,5 @@ public interface ITabularFormula
     boolean evaluate(ObjectArrayList route);
     boolean evaluate(Properties properties);
     boolean containsAllValuesOf(ITier tier);
+    public abstract int getOriginalVarName(int varName);
 }

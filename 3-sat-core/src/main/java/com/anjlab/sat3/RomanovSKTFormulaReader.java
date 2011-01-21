@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import cern.colt.list.ObjectArrayList;
+import cern.colt.map.OpenIntIntHashMap;
 
 public class RomanovSKTFormulaReader implements IFormulaReader
 {
@@ -34,7 +35,7 @@ public class RomanovSKTFormulaReader implements IFormulaReader
     {
         ObjectArrayList cts = new ObjectArrayList();
         
-        ITabularFormula formula = new SimpleFormula();
+        SimpleFormula formula = new SimpleFormula();
         
         while (true)
         {
@@ -74,6 +75,15 @@ public class RomanovSKTFormulaReader implements IFormulaReader
                 }
             }
         }
+        
+        OpenIntIntHashMap varMappings = new OpenIntIntHashMap();
+        
+        for (int i = 1; i <= formula.getVarCount(); i++)
+        {
+            varMappings.put(i, i);
+        }
+        
+        formula.setVarMappings(varMappings);
         
         return formula;
     }

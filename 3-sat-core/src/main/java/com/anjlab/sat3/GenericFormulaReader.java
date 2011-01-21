@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 AnjLab
+ * Copyright (c) 2010, 2011 AnjLab
  * 
  * This file is part of 
  * Reference Implementation of Romanov's Polynomial Algorithm for 3-SAT Problem.
@@ -31,31 +31,69 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cern.colt.list.IntArrayList;
+import cern.colt.map.OpenIntIntHashMap;
 
 public class GenericFormulaReader implements IFormulaReader
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericFormulaReader.class);
     
     private int originalVarCount = 0;
-    private int n = 0;
-    private int m = 0;
-    private int b = 0;
-    private int c = 0;
+    private int originalClausesCount = 0;
    
-    private final IntArrayList values = new IntArrayList();
+    private SimpleFormula formula = new SimpleFormula();
     
-    private ITabularFormula formula = new SimpleFormula();
-    
-    public String toString()
-    {
-        return "n=" + n + ", m=" + m;
-    }
-
     public ITabularFormula readFormula(InputStream input) throws IOException
     {
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, "ascii"));
         
         readMetadata(reader);
+        
+        // internal var name -> original var name
+        OpenIntIntHashMap internalToOriginalMap = new OpenIntIntHashMap();
+        // original var name -> internal var name
+        OpenIntIntHashMap sourceIndices = new OpenIntIntHashMap();
+        IntArrayList sourceValues = readSourceValues(reader, sourceIndices);
+        
+        for (int originalVarName : sourceIndices.keys().elements())
+        {
+            internalToOriginalMap.put(sourceIndices.get(originalVarName), originalVarName);
+        }
+        
+        IntArrayList values = new IntArrayList();
+
+        for (int i = 0; i < sourceValues.size(); i++)
+        {
+            int sourceVar = sourceValues.get(i);
+            if (sourceVar != 0)
+            {
+                int sign = sourceVar > 0 ? 1 : -1;
+                int var = sign * sourceIndices.get(Math.abs(sourceVar));
+                values.add(var);
+            }
+            else
+            {
+                if(!values.isEmpty())
+                {
+                    addTriplets(internalToOriginalMap, values);
+                    values.clear();
+                }
+            }
+        }
+        
+        formula.setVarMappings(internalToOriginalMap);
+        
+        LOGGER.debug("Original Var Count: {}; Original Clauses Count: {}; Final Var Count: {}; Final Clauses Count: {}",
+                     new Object[] { originalVarCount, originalClausesCount, formula.getVarCount(), formula.getClausesCount() });
+        
+        return formula;
+    }
+
+
+    private IntArrayList readSourceValues(BufferedReader reader, OpenIntIntHashMap sourceIndices)
+            throws IOException
+    {
+        IntArrayList sourceValues = new IntArrayList();
+        OpenIntIntHashMap originalVarNames = new OpenIntIntHashMap();
         
         int sign = 1;
         int r = 0;
@@ -64,11 +102,12 @@ public class GenericFormulaReader implements IFormulaReader
         {
             if (Character.isWhitespace(ch))
             {
-                if (r != 0) 
+                if (r != 0)
                 {
+                    originalVarNames.put(r, r);
                     r = r * sign;
-                    values.add(r);
-                            
+                    sourceValues.add(r);
+                    
                     r = 0;
                     sign = 1;
                 }
@@ -76,11 +115,7 @@ public class GenericFormulaReader implements IFormulaReader
             }
             if (ch == '0' && r == 0)
             {
-                if(!values.isEmpty())
-                {
-                    addTriplets();
-                    values.clear();
-                }
+                sourceValues.add(0);
                 continue;
             }
             if (ch == '-')
@@ -94,9 +129,14 @@ public class GenericFormulaReader implements IFormulaReader
             } 
         }
         
-        LOGGER.debug("Original VarCount: " + originalVarCount + ". Final VarCount: " + n + ". Added: " + (n - originalVarCount));
+        IntArrayList sortedVarNames = originalVarNames.keys();
+        sortedVarNames.sort();
+        for (int i = 0; i < sortedVarNames.size(); i++)
+        {
+            sourceIndices.put(sortedVarNames.get(i), i + 1);
+        }
         
-        return formula;
+        return sourceValues;
     }
 
     private void readMetadata(BufferedReader reader) throws IOException
@@ -104,6 +144,7 @@ public class GenericFormulaReader implements IFormulaReader
         String line;
         while ((line = reader.readLine()) != null)
         {
+            line = line.toLowerCase();
             if (line.startsWith("c"))
             {
                 continue;
@@ -116,10 +157,8 @@ public class GenericFormulaReader implements IFormulaReader
                     throw new AssertionError("Bad DIMACS CNF file format");
                 }
                 
-                n = Integer.parseInt(pLine[2]);
-                m = Integer.parseInt(pLine[3]);
-                
-                originalVarCount = n;
+                originalVarCount = Integer.parseInt(pLine[2]);
+                originalClausesCount = Integer.parseInt(pLine[3]);
                 
                 break;
             }
@@ -127,8 +166,13 @@ public class GenericFormulaReader implements IFormulaReader
     }
 
     private boolean createNewVars = true;
-    private void addTriplets()
+    private int b = 0;
+    private int c = 0;
+    
+    private void addTriplets(OpenIntIntHashMap varMappings, IntArrayList values)
     {
+        int n = varMappings.size();
+
         int count = values.size();
         int[] elements = values.elements();
         
@@ -138,39 +182,52 @@ public class GenericFormulaReader implements IFormulaReader
             {
                 b = ++n;
                 c = ++n;
+                
+                varMappings.put(b, -1);
+                varMappings.put(c, -1);
             }
-            createNewVars = !createNewVars;
+//            createNewVars = !createNewVars;
             
             formula.add(new SimpleTriplet(elements[0], b, c));
             formula.add(new SimpleTriplet(elements[0], b, -c));
             formula.add(new SimpleTriplet(elements[0], -b, c));
             formula.add(new SimpleTriplet(elements[0], -b, -c));
-        } else if(count == 2)
+        }
+        else if(count == 2)
         {
             if(createNewVars)
             {
                 b = ++n;
+                
+                varMappings.put(b, -1);
             }
-            createNewVars = !createNewVars;
+//            createNewVars = !createNewVars;
             
             formula.add(new SimpleTriplet(elements[0], elements[1], b));
             formula.add(new SimpleTriplet(elements[0], elements[1], -b));
-        } else if(count == 3)
+        }
+        else if(count == 3)
         {
             formula.add(new SimpleTriplet(elements[0], elements[1], elements[2]));
-        } else
+        }
+        else
         {
             int last = ++n;
+            
+            varMappings.put(last, -1);
+            
             formula.add(new SimpleTriplet(elements[0], elements[1], last));
             for(int v=2; v < count - 2; v++)
             {
-                formula.add(new SimpleTriplet(-last, elements[v], last = ++n));
+                formula.add(new SimpleTriplet(-last, elements[v], last + 1));
+                
+                last = ++n;
+                
+                varMappings.put(last, -1);
             }
             formula.add(new SimpleTriplet(-last, elements[count - 2], elements[count -1]));
             
             createNewVars = true;
         }
-        
-        //System.out.println(formula.getVarCount() + ";" + x);
     }
 }

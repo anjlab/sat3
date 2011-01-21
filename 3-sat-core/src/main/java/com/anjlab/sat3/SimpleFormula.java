@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.Properties;
 
 import cern.colt.list.ObjectArrayList;
+import cern.colt.map.OpenIntIntHashMap;
 import cern.colt.map.OpenIntObjectHashMap;
 import cern.colt.map.OpenLongObjectHashMap;
 
@@ -42,6 +43,7 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     private OpenLongObjectHashMap tiersHash2;
     private OpenLongObjectHashMap tiersHash3;
     private final IPermutation permutation;
+    private OpenIntIntHashMap internalToOriginalMap;
 
     public SimpleFormula()
     {
@@ -818,9 +820,9 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
             {
                 ITripletPermutation permutation = getTier(j);
                 
-                boolean aValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getAName()))));
-                boolean bValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getBName()))));
-                boolean cValue = parseBoolean(String.valueOf(properties.get(String.valueOf(permutation.getCName()))));
+                boolean aValue = parseBoolean(String.valueOf(properties.get("_" + permutation.getAName())));
+                boolean bValue = parseBoolean(String.valueOf(properties.get("_" + permutation.getBName())));
+                boolean cValue = parseBoolean(String.valueOf(properties.get("_" + permutation.getCName())));
 
                 if (tiplet.isNotA()) aValue = !aValue;
                 if (tiplet.isNotB()) bValue = !bValue;
@@ -965,5 +967,20 @@ public final class SimpleFormula implements ICompactTripletsStructure, ICompactT
     public void clearTierHash3()
     {
         if (tiersHash3 != null) tiersHash3.clear();
+    }
+
+    public void setVarMappings(OpenIntIntHashMap internalToOriginalMap)
+    {
+        this.internalToOriginalMap = internalToOriginalMap;
+    }
+    
+    public int getOriginalVarName(int varName)
+    {
+        int originalVarName = internalToOriginalMap.get(varName);
+        if (originalVarName == 0)
+        {
+            throw new IllegalArgumentException("Original variable not found for varName=" + varName);
+        }
+        return originalVarName;
     }
 }
