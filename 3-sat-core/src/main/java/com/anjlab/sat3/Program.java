@@ -46,6 +46,7 @@ import cern.colt.list.ObjectArrayList;
 
 public class Program
 {
+    private static final String GENERATE_3SAT_OPTION = "g";
     private static final String FIND_HSS_ROUTE_OPTION = "r";
     private static final String CREATE_SKT_OPTION = "c";
     private static final String EVALUATE_OPTION = "e";
@@ -101,6 +102,14 @@ public class Program
             long timeElapsed = stopWatch.stop();
             
             statistics.put(Helper.INITIAL_FORMULA_LOAD_TIME, String.valueOf(timeElapsed));
+            
+            if (commandLine.hasOption(GENERATE_3SAT_OPTION))
+            {
+                String generated3SatFilename = formulaFile + "-3sat.cnf";
+                
+                LOGGER.info("Saving 3-SAT formula to {}...", generated3SatFilename);
+                Helper.saveToDIMACSFileFormat(formula, generated3SatFilename);
+            }
             
             if (formula.getVarCount() > 26)
             {
@@ -470,6 +479,10 @@ public class Program
                                        .withArgName("dirname")
                                        .withDescription("Find route in HSS from folder <dirname>")
                                        .create(FIND_HSS_ROUTE_OPTION));
+
+        options.addOption(OptionBuilder.withLongOpt("generate-3sat-formula")
+                                       .withDescription("Generate 3-SAT formula from <input-file-name> and save it to <input-file-name>-3sat.cnf.")
+                                       .create(GENERATE_3SAT_OPTION));
 
         return options;
     }
