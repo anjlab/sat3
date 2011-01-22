@@ -759,9 +759,16 @@ public class Helper
     {
         for (int i = 0; i < ctf.size(); i++)
         {
-            LOGGER.info("Completing CTF-{} of {} to CTS", i, ctf.size());
+            LOGGER.info("Completing CTF-{} of {} to CTS", i, ctf.size() - 1);
             ((ITabularFormula) ctf.get(i)).complete(variables);
         }
+    }
+
+    public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts, Properties statistics) throws EmptyStructureException
+    {
+        ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
+        
+        return createHyperStructuresSystem(cts, sBasic, statistics);
     }
     
     /**
@@ -771,7 +778,7 @@ public class Helper
      * @return List of {@link IHyperStructure}
      * @throws EmptyStructureException
      */
-    public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts, Properties statistics) throws EmptyStructureException
+    public static ObjectArrayList createHyperStructuresSystem(ObjectArrayList cts, ICompactTripletsStructure sBasic, Properties statistics) throws EmptyStructureException
     {
         VarPairsIndexFactory.getInstance().clear();
         
@@ -779,8 +786,6 @@ public class Helper
         
         try
         {
-            ICompactTripletsStructure sBasic = chooseBasicStructure(cts);
-            
             statistics.put(BASIC_CTS_INITIAL_CLAUSES_COUNT, String.valueOf(sBasic.getClausesCount()));
             
             //  List of ITier
