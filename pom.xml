@@ -78,6 +78,7 @@
   <modules>
     <module>3-sat-core</module>
     <module>3-sat-experiment</module>
+    <module>3-sat-core-v2</module>
   </modules>
   
   <build>
